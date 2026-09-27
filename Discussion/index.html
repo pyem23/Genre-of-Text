@@ -1,0 +1,1335 @@
+<title>Weigh It Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,500;0,700;0,800;1,500&display=swap">
+<style>
+:root{
+  --ink:#2B2440; --soft:#6B6480; --paper:#FFFBF2; --white:#fff;
+  --sun:#FFC933; --coral:#FF6B5B; --teal:#1FB5A6; --sky:#3D8BFF; --grape:#8B5CF6; --pink:#FF8FB1; --orange:#FF9F1C; --mint:#7BE0B5;
+  --sun-t:#FFF1C2; --coral-t:#FFE1DC; --teal-t:#D3F5F0; --sky-t:#DDEAFF; --grape-t:#ECE3FF; --pink-t:#FFE3EC; --orange-t:#FFE9CC;
+  --o:var(--sky); --e:var(--orange); --r:var(--grape);
+  --good:#16A34A; --bad:#E5484D;
+  --display:"Fredoka","Baloo 2",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;
+  background:#FFE08A radial-gradient(rgba(255,255,255,.55) 2.5px,transparent 3px) 0 0/28px 28px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+
+/* ============ STAGE (fixed 1600x900, scaled to fit) ============ */
+.stagewrap{flex:1;min-height:0;position:relative;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center;transform:translate(-50%,-50%) scale(var(--s,.5));
+  background:var(--paper);border:5px solid var(--ink);border-radius:36px;box-shadow:12px 12px 0 var(--ink);overflow:hidden}
+
+/* ============ BOTTOM BAR ============ */
+.bar{flex:none;height:76px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:0 18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px var(--display);white-space:nowrap}
+.brand svg{width:40px;height:44px}
+.track{flex:1;position:relative;height:14px;background:rgba(255,255,255,.15);border-radius:99px;margin:0 14px;min-width:80px}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--sun);transition:width .45s,background .45s}
+.flag{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;border:3px solid var(--ink);transform:translate(-50%,-50%);outline:2px solid rgba(255,255,255,.5)}
+.hiker{position:absolute;top:50%;width:42px;height:46px;transform:translate(-50%,-72%);transition:left .45s cubic-bezier(.3,1.4,.5,1);pointer-events:none}
+.count{font:700 18px var(--display);min-width:78px;text-align:center;font-variant-numeric:tabular-nums}
+.ibtn{width:48px;height:48px;border-radius:50%;border:3px solid #fff;background:transparent;color:#fff;display:grid;place-items:center;font:700 20px var(--display);flex:none}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+.nav{background:var(--sun);color:var(--ink);border-color:var(--sun);font-size:24px}
+.nav:hover{background:#FFD95E}
+.nav:disabled{opacity:.35;cursor:default}
+@media (max-width:760px){.brand span,.hide-sm{display:none}.bar{gap:8px;padding:0 10px}.track{margin:0 8px}}
+
+/* ============ MENU OVERLAY ============ */
+.menu{position:fixed;inset:0;z-index:60;background:rgba(43,36,64,.72);display:none;place-items:center;padding:20px}
+.menu.open{display:grid}
+.menu-box{background:var(--paper);border:4px solid var(--ink);border-radius:28px;box-shadow:8px 8px 0 var(--ink);width:min(1000px,100%);max-height:88vh;overflow:auto;padding:24px}
+.menu-box h3{font:700 28px var(--display);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.mitem{text-align:left;border:3px solid var(--ink);border-radius:16px;background:#fff;padding:10px 12px;box-shadow:3px 3px 0 var(--ink);display:grid;gap:2px}
+.mitem b{font:700 13px var(--display);color:#fff;background:var(--c);border-radius:99px;padding:1px 9px;justify-self:start}
+.mitem span{font-weight:800;font-size:15px}
+.mitem.cur{outline:4px solid var(--sun)}
+.rotate-tip{position:fixed;left:12px;right:12px;top:12px;z-index:70;background:var(--ink);color:#fff;border-radius:16px;padding:10px 14px;font-weight:700;display:none;align-items:center;gap:10px}
+@media (max-width:700px) and (orientation:portrait){.rotate-tip.show{display:flex}}
+
+/* ============ SLIDE BASE ============ */
+.slide{position:absolute;inset:0;padding:54px 88px 56px;display:none;flex-direction:column;gap:22px;font-size:22px;line-height:1.5;
+  --c:var(--teal);--t:var(--teal-t);--on:#fff}
+.slide.active{display:flex;animation:pop .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.965) translateY(16px)}to{opacity:1;transform:none}}
+.slide[data-sec="1"]{--c:var(--teal);--t:var(--teal-t)}
+.slide[data-sec="2"]{--c:var(--sky);--t:var(--sky-t)}
+.slide[data-sec="3"]{--c:var(--sun);--t:var(--sun-t);--on:var(--ink)}
+.slide[data-sec="4"]{--c:var(--coral);--t:var(--coral-t)}
+.slide[data-sec="5"]{--c:var(--grape);--t:var(--grape-t)}
+.slide h1,.slide h2,.slide h3,.slide h4{font-family:var(--display);margin:0;line-height:1.08}
+.slide p{margin:0}
+.head{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2}
+.krow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:999px;padding:5px 16px;
+  font:700 16px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--ink)}
+.hint{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px dashed var(--ink);border-radius:999px;padding:4px 14px;font:600 16px var(--display);color:var(--soft)}
+.slide h2{font-size:58px;font-weight:700;letter-spacing:-.01em}
+.u{background:linear-gradient(transparent 58%,color-mix(in srgb,var(--c) 45%,transparent) 58%);padding:0 .08em;border-radius:6px}
+.body{flex:1;min-height:0;position:relative;z-index:2}
+.center{display:grid;align-content:center}
+.muted{color:var(--soft)}
+.id{font-style:italic;color:var(--soft)}
+
+/* doodles */
+.deco{position:absolute;z-index:1;pointer-events:none;overflow:visible}
+.spin{animation:spin 14s linear infinite}
+.bob{animation:bob 3.2s ease-in-out infinite}
+.twinkle{animation:tw 2.4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-12px)}}
+@keyframes tw{50%{transform:scale(.7) rotate(20deg);opacity:.6}}
+.kiko{overflow:visible}
+.kiko.bob{animation:bob 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.slide.active,.spin,.bob,.twinkle,.kiko.bob{animation:none!important}}
+
+/* stickers & buttons */
+.stk{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:22px 26px;position:relative}
+.stk.tint{background:var(--t)}
+.tl{transform:rotate(-1.6deg)} .tr{transform:rotate(1.6deg)}
+.hov{transition:transform .18s,box-shadow .18s}
+.hov:hover{transform:translate(-3px,-4px) rotate(0);box-shadow:9px 10px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 21px var(--display);background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:16px;
+  padding:11px 24px;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.sm{font-size:18px;padding:8px 18px}
+.btn:disabled{opacity:.55;cursor:default}
+.ico{width:88px;height:88px;border-radius:50%;background:var(--t);border:3px solid var(--ink);display:grid;place-items:center;font-size:46px;line-height:1;flex:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.bubble{position:relative;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;padding:12px 18px;font:600 20px/1.3 var(--display);box-shadow:4px 4px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;width:18px;height:18px;background:inherit;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);bottom:-11px;left:34px;transform:rotate(45deg)}
+.bubble.tr-tail::after{left:auto;right:34px}
+.bubble.side::after{bottom:auto;top:26px;left:-11px;transform:rotate(135deg)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:99px;font-weight:800;z-index:80;border:3px solid var(--sun)}
+.cf{position:fixed;top:-24px;z-index:90;pointer-events:none;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),112vh) rotate(var(--rot))}}
+
+/* ============ COVER ============ */
+.cover{display:none;flex-direction:row!important;align-items:center;gap:30px;padding:60px 70px 60px 96px;--c:var(--coral);--t:var(--coral-t)}
+.cover .left{flex:1;display:flex;flex-direction:column;gap:22px;position:relative;z-index:2}
+.cover h1{font-size:132px;font-weight:700;line-height:.92;letter-spacing:-.02em}
+.cover h1 .pop{color:var(--coral);text-shadow:6px 6px 0 var(--ink);display:inline-block;transform:rotate(-3deg)}
+.lead{font-size:27px;font-weight:700;max-width:640px}
+.tags{display:flex;flex-wrap:wrap;gap:12px}
+.tag{display:inline-flex;gap:8px;align-items:center;background:var(--tc);border:3px solid var(--ink);border-radius:999px;padding:6px 16px;font:600 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.school{font-size:19px;color:var(--soft)}
+.school b{color:var(--ink)}
+.cover .right{width:640px;height:640px;position:relative;flex:none;z-index:2}
+.cover .right>svg.scene{width:100%;height:100%}
+
+/* ============ DIVIDER ============ */
+.divider{background:var(--c);color:var(--on);justify-content:center;padding-left:120px}
+.divider .part-pill{align-self:flex-start;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;padding:6px 20px;font:700 22px var(--display);letter-spacing:.08em;box-shadow:4px 4px 0 var(--ink);transform:rotate(-3deg)}
+.divider h2{font-size:128px;color:#fff;text-shadow:7px 7px 0 var(--ink);max-width:980px;position:relative;z-index:2}
+.divider[data-sec="3"] h2{color:#fff}
+.divider p.sub{font:600 32px/1.3 var(--display);max-width:760px;position:relative;z-index:2}
+.divider .num{position:absolute;right:70px;top:10px;font:700 460px/1 var(--display);color:transparent;-webkit-text-stroke:7px rgba(255,255,255,.4);z-index:1}
+.divider[data-sec="3"] .num{-webkit-text-stroke-color:rgba(43,36,64,.18)}
+.divider .kwrap{position:absolute;right:120px;bottom:70px;display:flex;align-items:flex-end;gap:10px;z-index:2}
+.divider .kwrap .bubble{margin-bottom:190px;max-width:320px}
+
+/* ============ AGENDA ============ */
+.agenda{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;position:relative;z-index:2;align-items:start;padding-top:20px}
+.agenda .stop{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);padding:24px 16px 22px;transition:transform .18s,box-shadow .18s}
+.agenda .stop:nth-child(odd){transform:rotate(-2deg)}
+.agenda .stop:nth-child(even){transform:rotate(2deg) translateY(44px)}
+.agenda .stop:hover{transform:translateY(-8px) rotate(0);box-shadow:9px 12px 0 var(--ink)}
+.agenda .n{font:700 20px var(--display);background:var(--k);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 14px}
+.agenda .stop:nth-child(3) .n{color:var(--ink)}
+.agenda .ico{background:var(--kt)}
+.agenda b{font:700 28px var(--display)}
+.agenda .s{font-size:18px;color:var(--soft);line-height:1.35}
+
+/* ============ WARM-UP ============ */
+.breathe{display:grid;grid-template-columns:440px 1fr;gap:60px;align-items:center;height:100%}
+.orb-box{width:440px;height:440px;display:grid;place-items:center;position:relative}
+.orb-ring{position:absolute;inset:18px;border:4px dashed var(--teal);border-radius:50%}
+.orb{width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8FF0DF,var(--teal) 70%);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+  display:grid;place-items:center;color:#fff;font:700 30px var(--display);text-shadow:2px 2px 0 var(--ink);transition:transform 4s ease-in-out}
+.orb.in{transform:scale(1.75)}
+.cue{font:700 40px/1.2 var(--display);min-height:100px;margin:16px 0 26px}
+.flips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;height:100%;align-content:center}
+.flip{perspective:1000px;height:360px;border:none;background:none;padding:0;text-align:left}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.flip .f{background:var(--fc)}
+.flip .b{background:#fff;transform:rotateY(180deg)}
+.flip .emo{font-size:62px;line-height:1}
+.flip .q{font:700 28px/1.2 var(--display)}
+.flip .ans{font:600 25px/1.3 var(--display);color:var(--ink)}
+.flip small{font-size:17px;color:var(--soft);font-weight:700}
+.flip small.tap{display:inline-flex;align-self:flex-start;background:#fff;border:2px solid var(--ink);border-radius:99px;padding:2px 12px;color:var(--ink)}
+.flip .b b{background:var(--sun-t);padding:0 6px;border-radius:6px;color:var(--ink)}
+.chat{display:grid;gap:26px;max-width:1180px}
+.chat .row{display:flex;gap:18px;align-items:flex-start}
+.chat .row.me{justify-content:flex-end}
+.chat .av{width:80px;height:80px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;font-size:44px;flex:none;background:var(--sky-t)}
+.chat .me .av{background:var(--sun-t)}
+.chat .bubble{font:600 28px/1.35 var(--display);max-width:900px}
+.chat .bubble.q{background:var(--sky-t)}
+.chat .bubble.a{background:var(--sun-t)}
+.chat .bubble mark{background:#fff;border-radius:6px;padding:0 4px;color:inherit}
+.reveal{display:flex;align-items:center;gap:24px}
+.bigsticker{font:700 54px var(--display);background:var(--coral);color:#fff;text-shadow:3px 3px 0 var(--ink);border:4px solid var(--ink);border-radius:22px;padding:10px 30px;box-shadow:6px 6px 0 var(--ink);transform:rotate(-3deg);animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+
+/* ============ UNDERSTANDING ============ */
+.defn{font:600 50px/1.28 var(--display);max-width:1250px;background:#fff;border:4px solid var(--ink);border-radius:32px;box-shadow:8px 8px 0 var(--ink);padding:36px 44px;position:relative}
+.defn mark{background:var(--sun);border-radius:10px;padding:0 10px;color:var(--ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.08)}
+.defn .quote{position:absolute;top:-38px;left:34px;font:700 110px/1 var(--display);color:var(--sky)}
+.idline{display:flex;gap:14px;align-items:flex-start;font-size:24px;max-width:1150px}
+.idline .badge{flex:none;font:700 16px var(--display);background:var(--ink);color:#fff;border-radius:8px;padding:4px 10px;margin-top:4px}
+.fn .stk{display:flex;flex-direction:column;gap:18px;align-items:flex-start;min-height:380px;padding:32px}
+.fn h3{font-size:46px}
+.fn p{font-size:27px}
+.ben{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ben .stk{display:flex;gap:20px;align-items:center;padding:30px 26px;background:var(--bc);min-height:170px}
+.ben .ico{width:92px;height:92px;font-size:48px;background:#fff}
+.ben b{font:700 31px var(--display);display:block;margin-bottom:4px}
+.ben span{font-size:22px;color:#4A4460;line-height:1.35;display:block}
+.goals{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;align-items:stretch}
+.goal{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:36px 22px;min-height:400px}
+.medal{width:120px;height:120px;border-radius:50%;background:var(--gc);border:4px solid var(--ink);display:grid;place-items:center;font:700 56px var(--display);color:#fff;text-shadow:3px 3px 0 var(--ink);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),5px 5px 0 var(--ink);position:relative}
+.medal::before,.medal::after{content:"";position:absolute;top:100px;width:30px;height:46px;background:var(--gc);border:3px solid var(--ink);z-index:-1}
+.medal::before{left:26px;transform:rotate(18deg)} .medal::after{right:26px;transform:rotate(-18deg)}
+.goal b{font:700 34px var(--display);margin-top:26px}
+.goal span{font-size:24px;color:var(--soft)}
+.tabs{display:flex;flex-wrap:wrap;gap:14px}
+.tab{font:700 22px var(--display);padding:10px 22px;border:3px solid var(--ink);border-radius:999px;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform .12s}
+.tab:hover{transform:translateY(-2px)}
+.tab[aria-selected="true"]{background:var(--c);color:var(--on);transform:translateY(-3px) rotate(-1deg)}
+.typepanel{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:34px 38px;margin-top:10px}
+.typepanel .ico{width:150px;height:150px;font-size:84px}
+.typepanel h3{font-size:46px;margin-bottom:10px}
+.typepanel p{font-size:26px}
+.typepanel .ex{margin-top:16px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:12px 18px;font-size:22px}
+.vs{display:grid;grid-template-columns:1fr 110px 1fr;gap:0;align-items:stretch;height:100%}
+.vs .col{padding:26px 30px;display:flex;flex-direction:column;gap:14px}
+.vs .col h3{font-size:44px;text-align:center;padding:6px;border-radius:14px;border:3px solid var(--ink);color:#fff;text-shadow:3px 3px 0 var(--ink)}
+.vs .vsmid{display:grid;place-items:center}
+.vs .vsmid span{width:100px;height:100px;border-radius:50%;background:var(--sun);border:4px solid var(--ink);display:grid;place-items:center;font:700 38px var(--display);box-shadow:4px 4px 0 var(--ink);transform:rotate(-8deg)}
+.vs dl{margin:0;display:grid;gap:12px}
+.vs dt{font:700 15px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.vs dd{margin:0 0 4px;font-size:23px;font-weight:700;line-height:1.3}
+
+/* ============ STRUCTURE ============ */
+.explore{display:grid;grid-template-columns:1.3fr 1fr;gap:34px;height:100%;min-height:0}
+.paper{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:18px 24px;overflow:auto;font-size:18.5px;line-height:1.55;position:relative;
+  background-image:linear-gradient(90deg,transparent 0,transparent 100%)}
+.paper h4{font-size:26px;text-align:center;margin-bottom:12px}
+.part{padding:8px 14px 8px 16px;border-left:7px solid var(--line,#ddd);border-radius:0 14px 14px 0;margin-bottom:8px;transition:opacity .25s,background .25s;cursor:pointer}
+.part[data-part="o"]{--line:var(--o)} .part[data-part="e"]{--line:var(--e)} .part[data-part="r"]{--line:var(--r)}
+.lbl{display:inline-block;font:700 12.5px var(--display);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--line);padding:1px 10px;border-radius:99px;margin-right:6px;vertical-align:2px}
+[data-show="o"] .part:not([data-part="o"]),[data-show="e"] .part:not([data-part="e"]),[data-show="r"] .part:not([data-part="r"]){opacity:.28}
+[data-show="o"] .part[data-part="o"]{background:var(--sky-t)}
+[data-show="e"] .part[data-part="e"]{background:var(--orange-t)}
+[data-show="r"] .part[data-part="r"]{background:var(--grape-t)}
+.side{display:flex;flex-direction:column;gap:16px;min-height:0}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stage{border:3px solid var(--ink);border-radius:18px;background:#fff;box-shadow:3px 3px 0 var(--ink);padding:10px 8px;font:700 18px/1.15 var(--display);display:flex;flex-direction:column;align-items:center;gap:4px}
+.stage .dotn{width:40px;height:40px;border-radius:50%;background:var(--k);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font-size:20px}
+.stage[aria-pressed="true"]{background:var(--kt);transform:translateY(-3px);box-shadow:5px 6px 0 var(--ink)}
+.segcard{flex:1;min-height:0;overflow:auto;border-color:var(--ink);background:#fff}
+.segcard h3{font-size:34px;color:var(--k)}
+.seg-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.seg-list li{display:grid;grid-template-columns:92px 1fr;gap:10px;font-size:18.5px;line-height:1.35;padding-bottom:8px;border-bottom:2px dashed #E6E0EF}
+.seg-list li:last-child{border-bottom:none}
+.seg-list b{font-family:var(--display);color:var(--k)}
+.tipbox{margin-top:12px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:14px;padding:10px 14px;font-size:18px}
+.segsum{display:grid;gap:18px}
+.segrow{display:grid;grid-template-columns:260px 1fr 250px;gap:0;border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);background:#fff}
+.segrow>div{padding:22px 22px;font-size:23px;line-height:1.4}
+.segrow .nm{background:var(--k);color:#fff;font:700 30px var(--display);display:flex;flex-direction:column;justify-content:center;text-shadow:2px 2px 0 var(--ink);border-right:3px solid var(--ink)}
+.segrow .nm small{font:600 16px var(--display);text-shadow:none;opacity:.95}
+.segrow .len{background:var(--kt);border-left:3px dashed var(--ink);font-weight:700}
+.segrow .len i{display:block;font-weight:500;font-size:19px;color:#4A4460;margin-top:6px}
+
+/* ============ LANGUAGE ============ */
+.chips{display:flex;flex-wrap:wrap;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:10px;border:3px solid var(--ink);background:#fff;border-radius:999px;padding:6px 18px 6px 8px;font:700 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.chip i{width:26px;height:26px;border-radius:50%;background:var(--fc);border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:14px;color:#fff}
+.chip[aria-pressed="true"]{background:var(--ft)}
+.chip[aria-pressed="true"] i::after{content:"✓"}
+.chip[data-f="v"]{--fc:var(--coral);--ft:var(--coral-t)} .chip[data-f="c"]{--fc:var(--teal);--ft:var(--teal-t)} .chip[data-f="t"]{--fc:var(--sky);--ft:var(--sky-t)} .chip[data-f="p"]{--fc:var(--grape);--ft:var(--grape-t)} .chip[data-f="n"]{--fc:var(--orange);--ft:var(--orange-t)}
+.lf{font-size:22px;line-height:1.8}
+.lf .part{cursor:default;border-left-width:6px;margin-bottom:6px}
+.lf span.v,.lf span.c,.lf span.t,.lf span.p,.lf span.n{border-radius:5px;transition:background .2s,box-shadow .2s;padding:0 1px}
+.hl-v .v{background:var(--coral-t);box-shadow:inset 0 -3px 0 var(--coral)}
+.hl-c .c{background:var(--teal-t);box-shadow:inset 0 -3px 0 var(--teal)}
+.hl-t .t{background:var(--sky-t);box-shadow:inset 0 -3px 0 var(--sky)}
+.hl-p .p{background:var(--grape-t);box-shadow:inset 0 -3px 0 var(--grape)}
+.hl-n .n{background:var(--orange-t);box-shadow:inset 0 -3px 0 var(--orange)}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.feat{padding:24px 26px;display:flex;flex-direction:column;gap:12px;min-height:250px}
+.feat .top{display:flex;align-items:center;gap:12px}
+.feat .ico{width:70px;height:70px;font-size:36px;background:var(--ft)}
+.feat h3{font-size:29px;line-height:1.1}
+.feat p{font-size:21px;flex:1;line-height:1.4}
+.feat .ex{background:var(--ft);border-radius:12px;padding:8px 12px;font-weight:800;font-size:19px;border:2px solid var(--ink)}
+.analyzer{display:grid;grid-template-columns:1fr 1.3fr;gap:30px;height:100%;min-height:0}
+.sent-list{display:grid;gap:10px;align-content:start;overflow:auto;padding:4px 8px 8px 4px}
+.sent{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:19px;font-weight:700;box-shadow:3px 3px 0 var(--ink);display:flex;gap:10px;align-items:flex-start}
+.sent .sn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--coral-t);border:2px solid var(--ink);display:grid;place-items:center;font:700 15px var(--display)}
+.sent[aria-pressed="true"]{background:var(--coral-t)}
+.sent[aria-pressed="true"] .sn{background:var(--coral);color:#fff}
+.out{overflow:auto}
+.out .s{font:700 28px/1.3 var(--display);margin:6px 0 18px}
+.chunks{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.chunk{display:grid;border-radius:14px;overflow:hidden;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);animation:pop .4s both}
+.chunk .w{padding:8px 14px;font-weight:800;background:#fff;font-size:21px}
+.chunk .r{padding:3px 14px;font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k);border-top:3px solid var(--ink)}
+.pattern{display:inline-block;font:700 22px var(--display);background:var(--ink);color:var(--sun);border-radius:12px;padding:8px 16px}
+.note{margin-top:14px;font-size:20px}
+.xtable{width:100%;border-collapse:separate;border-spacing:0 10px}
+.xtable td{background:#fff;padding:12px 16px;font-size:20px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);vertical-align:middle}
+.xtable td:first-child{border-left:3px solid var(--ink);border-radius:16px 0 0 16px;font-weight:800;width:38%;background:var(--t)}
+.xtable td:last-child{border-right:3px solid var(--ink);border-radius:0 16px 16px 0;width:110px;text-align:right}
+.xtable td:nth-child(2){font-style:italic}
+.copy{border:2.5px solid var(--ink);background:var(--sun);border-radius:10px;font:700 16px var(--display);padding:4px 12px}
+.copy:hover{background:#FFD95E}
+.xwrap{overflow:auto;height:100%;padding-right:8px}
+
+/* ============ PRACTICE ============ */
+.pill{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:18.5px;font-weight:700;width:100%;box-shadow:3px 3px 0 var(--ink);line-height:1.3;transition:transform .12s}
+.pill:hover{transform:translateX(4px)}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.qcol{display:flex;flex-direction:column;gap:10px;min-height:0}
+.qcol h4{font-size:22px;display:flex;gap:8px;align-items:center}
+.pool,.answer{display:grid;gap:10px;align-content:start;flex:1;overflow:auto;padding:4px 8px 8px 4px}
+.answer{border:3px dashed var(--ink);border-radius:22px;padding:14px;counter-reset:a;background:var(--grape-t)}
+.answer:empty::before{content:"👈 Klik kalimat di kiri sesuai urutan kejadian…";color:var(--soft);font:600 20px var(--display)}
+.answer .pill{counter-increment:a;display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start}
+.answer .pill::before{content:counter(a);width:30px;height:30px;border-radius:50%;background:var(--grape);color:#fff;display:grid;place-items:center;font:700 16px var(--display);border:2px solid var(--ink)}
+.pill.ok{background:#DCFCE7;border-color:var(--good)}
+.pill.no{background:#FFE4E6;border-color:var(--bad)}
+.qbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.fb{font:700 22px var(--display);min-height:1.3em}
+.fb.good{color:var(--good)} .fb.bad{color:var(--bad)}
+.opt{border:3px solid var(--ink);background:#fff;border-radius:14px;padding:6px 16px;font:700 20px var(--display);box-shadow:3px 3px 0 var(--ink);min-width:58px}
+.opt:hover{transform:translateY(-2px)}
+.opt.ok{background:var(--good);color:#fff!important}
+.opt.no{background:var(--bad);color:#fff!important}
+.sq{display:grid;gap:14px}
+.sq-row{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 16px 12px 22px;box-shadow:4px 4px 0 var(--ink);font-size:21px;font-weight:700}
+.sq-btns{display:flex;gap:8px}
+.sq-btns .opt[data-a="o"]{color:var(--o)} .sq-btns .opt[data-a="e"]{color:var(--orange)} .sq-btns .opt[data-a="r"]{color:var(--r)}
+.legend{display:flex;gap:18px;font:600 19px var(--display);flex-wrap:wrap}
+.legend span{display:inline-flex;gap:8px;align-items:center}
+.legend i{width:30px;height:30px;border-radius:9px;border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;color:#fff;font-size:15px}
+.vq{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.vitem{border:3px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:12px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.vitem:nth-child(4n+1){background:var(--sky-t)} .vitem:nth-child(4n+2){background:var(--sun-t)} .vitem:nth-child(4n+3){background:var(--pink-t)} .vitem:nth-child(4n+4){background:var(--teal-t)}
+.vitem .base{font:700 32px var(--display)}
+.vitem .base small{font-size:20px;color:var(--soft)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--sun);border-radius:999px;padding:6px 16px;font:700 20px var(--display)}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.form{display:grid;gap:12px;overflow:auto;padding:4px 10px 10px 4px;align-content:start}
+.fset{border:3px solid var(--ink);border-radius:20px;padding:12px 14px 14px;background:var(--kt);display:grid;gap:10px;margin:0;box-shadow:4px 4px 0 var(--ink)}
+.fset legend{font:700 17px var(--display);color:#fff;background:var(--k);border:2.5px solid var(--ink);border-radius:99px;padding:2px 14px;text-shadow:1px 1px 0 var(--ink)}
+.flabel{font:600 14px var(--display);color:var(--soft);display:grid;gap:4px;letter-spacing:.03em}
+.form input,.form textarea,.form select{font:700 17px var(--body);color:var(--ink);background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:7px 11px;width:100%}
+.form textarea{resize:vertical;min-height:52px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ev-row{display:grid;grid-template-columns:190px 1fr;gap:8px;align-items:start}
+.bout{display:flex;flex-direction:column;gap:16px;min-height:0}
+.bout .paper{flex:1;font-size:18px}
+.checks{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:16px;font-weight:700}
+.checks li{display:flex;gap:8px;align-items:flex-start;line-height:1.3}
+.checks li::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;border:2.5px solid var(--soft);margin-top:1px}
+.checks li.ok::before{content:"✓";background:var(--good);border-color:var(--good);color:#fff;display:grid;place-items:center;font-size:13px}
+
+/* closing */
+.finale{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;align-items:center;height:100%}
+.feel{display:flex;gap:14px}
+.feel button{width:96px;height:96px;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:52px;box-shadow:4px 4px 0 var(--ink);transition:transform .15s}
+.feel button:hover{transform:translateY(-6px) rotate(-6deg)}
+.feel button[aria-pressed="true"]{background:var(--sun);transform:scale(1.1)}
+.t321{display:grid;gap:16px}
+.t321 .stk{display:grid;grid-template-columns:80px 1fr;gap:18px;align-items:center;padding:16px 20px}
+.t321 .n{width:74px;height:74px;border-radius:50%;background:var(--nc);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font:700 40px var(--display);text-shadow:2px 2px 0 var(--ink)}
+.t321 b{font:700 26px var(--display);display:block}
+.t321 span{font-size:19px;color:var(--soft)}
+
+
+/* ============ WEIGH IT UP overrides ============ */
+:root{--ps:var(--grape);--pf:var(--teal);--pa:var(--coral);--pc:var(--sky)}
+body{background:linear-gradient(rgba(255,255,255,.6) 2px,transparent 2px) 0 0/36px 36px,linear-gradient(90deg,rgba(255,255,255,.6) 2px,transparent 2px) 0 0/36px 36px,#FFD2BD}
+.cover h1 .pop{color:var(--orange)}
+.part[data-part="s"]{--line:var(--ps)} .part[data-part="f"]{--line:var(--pf)} .part[data-part="a"]{--line:var(--pa)} .part[data-part="c"]{--line:var(--pc)}
+[data-show="s"] .part:not([data-part="s"]),[data-show="f"] .part:not([data-part="f"]),[data-show="a"] .part:not([data-part="a"]),[data-show="c"] .part:not([data-part="c"]){opacity:.28}
+[data-show="s"] .part[data-part="s"]{background:var(--grape-t)}
+[data-show="f"] .part[data-part="f"]{background:var(--teal-t)}
+[data-show="a"] .part[data-part="a"]{background:var(--coral-t)}
+[data-show="c"] .part[data-part="c"]{background:var(--sky-t)}
+.part p{margin:0} .part p+p{margin-top:6px}
+.explore{grid-template-columns:1.4fr 1fr}
+.explore .paper{font-size:19.5px;line-height:1.5}
+.explore .paper h4{font-size:26px}
+.stages{grid-template-columns:repeat(4,1fr)}
+.stages .stage{font-size:15.5px}
+.side .tabs{gap:10px}
+.side .tab{font-size:17px;padding:6px 14px}
+.ttag{display:inline-block;font:700 14px var(--display);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--k);border:2.5px solid var(--ink);border-radius:99px;padding:2px 12px;vertical-align:5px;margin-left:10px;text-shadow:1px 1px 0 var(--ink)}
+.chat .bubble.side{display:block}
+.divider h2{font-size:112px;max-width:1150px}
+.tipline{font:600 22px/1.35 var(--display);background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:10px 18px;text-align:center}
+.vs .col{gap:10px}
+
+/* warm-up: live scale */
+.pp{display:grid;grid-template-columns:1fr 520px;gap:40px;align-items:center;height:100%}
+.issue{font:700 44px/1.18 var(--display);background:#fff;border:4px solid var(--ink);border-radius:30px;box-shadow:8px 8px 0 var(--ink);padding:26px 34px;min-height:200px;display:flex;flex-direction:column;justify-content:center;gap:10px;text-wrap:balance}
+.issue .ks{font-size:20px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
+.tally{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:20px}
+.btn.pro{--c:var(--teal);--on:#fff} .btn.con{--c:var(--coral);--on:#fff}
+.bigscale{width:520px;height:420px}
+.bigscale #beam{transition:transform .6s cubic-bezier(.3,1.5,.5,1);transform-origin:260px 120px}
+.bigscale .pan{transition:transform .6s cubic-bezier(.3,1.5,.5,1)}
+.score.t{background:var(--teal);color:#fff} .score.c{background:var(--coral);color:#fff}
+
+/* flips */
+.flip .emo{font-size:62px}
+.flip .q{font-size:26px}
+.flip .b{gap:8px}
+.flip .ans.sm{font:600 20px/1.3 var(--display)}
+.flip .ans.sm i{font-style:normal;font-weight:700}
+
+/* organise */
+.org{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.orgc{padding:22px 26px;display:flex;flex-direction:column;gap:12px}
+.orgc h3{font-size:34px}
+.orgc p{font-size:21px}
+.blocks{display:grid;gap:6px}
+.blocks span{display:block;border:2.5px solid var(--ink);border-radius:10px;padding:5px 12px;font:700 17px var(--display);color:#fff;text-shadow:1px 1px 0 var(--ink);background:var(--k)}
+.twoc{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:4px}
+.twoc div{background:#fff;border:2.5px dashed var(--ink);border-radius:16px;padding:12px 16px;font-size:20px;line-height:1.4}
+.twoc b{font-family:var(--display);font-size:22px}
+
+/* other issues */
+.mission{display:grid;grid-template-columns:1.05fr 1.25fr 1.25fr 1.1fr;gap:14px;margin-top:6px}
+.mblk{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:4px 4px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column}
+.mblk h4{font:700 17px var(--display);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--k);padding:8px 12px;border-bottom:3px solid var(--ink);text-shadow:1px 1px 0 var(--ink)}
+.mblk .mb{padding:14px 16px;font-size:21.5px;line-height:1.42}
+.mblk ul{margin:0;padding-left:20px;display:grid;gap:8px}
+.mtitle{font:700 34px var(--display);margin-top:4px}
+.segrow{grid-template-columns:320px 1fr 300px}
+.segrow>div{padding:16px 22px;font-size:22px}
+.segrow .nm{font-size:25px}
+
+/* highlighter */
+.chip[data-f="v"]{--fc:var(--sky);--ft:var(--sky-t)} .chip[data-f="g"]{--fc:var(--grape);--ft:var(--grape-t)} .chip[data-f="c"]{--fc:var(--coral);--ft:var(--coral-t)} .chip[data-f="d"]{--fc:var(--teal);--ft:var(--teal-t)} .chip[data-f="m"]{--fc:var(--orange);--ft:var(--orange-t)}
+#text2{font-size:21.5px;line-height:1.75}
+.lf span.g,.lf span.d,.lf span.m{border-radius:5px;transition:background .2s,box-shadow .2s;padding:0 1px}
+.hl-v .v{background:var(--sky-t);box-shadow:inset 0 -3px 0 var(--sky)}
+.hl-g .g{background:var(--grape-t);box-shadow:inset 0 -3px 0 var(--grape)}
+.hl-c .c{background:var(--coral-t);box-shadow:inset 0 -3px 0 var(--coral)}
+.hl-d .d{background:var(--teal-t);box-shadow:inset 0 -3px 0 var(--teal)}
+.hl-m .m{background:var(--orange-t);box-shadow:inset 0 -3px 0 var(--orange)}
+
+/* games */
+.sq-btns .opt[data-a="s"]{color:var(--ps)} .sq-btns .opt[data-a="f"]{color:var(--pf)} .sq-btns .opt[data-a="a"]{color:var(--pa)} .sq-btns .opt[data-a="c"]{color:var(--pc)}
+.sq-btns .opt[data-a="P"]{color:var(--teal)} .sq-btns .opt[data-a="C"]{color:var(--coral)}
+.sq-btns .opt[data-a="D"]{color:var(--orange)} .sq-btns .opt[data-a="E"]{color:var(--grape)}
+.game .body{justify-content:flex-start!important;gap:10px!important}
+.game .sq-row{font-size:19.5px;padding:8px 12px 8px 18px;border-radius:16px;box-shadow:3px 3px 0 var(--ink)}
+.game .sq-btns .opt{font-size:18px;padding:4px 12px;min-width:54px}
+.game .sq{gap:10px}
+.game .legend{font-size:19px}
+.vq.fill .vitem .base{font:700 22px/1.3 var(--display)}
+.vq.fill .vitem .base u{text-decoration:none;display:inline-block;min-width:70px;border-bottom:3px dashed var(--ink)}
+.vq.fill .opt{font-size:17px;padding:6px 11px}
+
+/* builder */
+.ev-row{grid-template-columns:220px 1fr}
+.tswitch{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tswitch .tab{font-size:16px;padding:5px 12px}
+.tswitch .tab[aria-selected="true"]{background:var(--k);color:#fff}
+.form{gap:9px}
+.fset{padding:10px 12px 12px;gap:8px}
+.form input,.form textarea,.form select{font-size:15px;padding:6px 10px}
+.form textarea{min-height:44px}
+.bout .paper{font-size:16.5px;line-height:1.5}
+.checks{font-size:15px}
+/* polish */
+.lblx{}
+.bigscale text{pointer-events:none}
+.explore .paper{font-size:18px;line-height:1.48}
+.seg-list li{grid-template-columns:118px 1fr}
+.orgc h3{font-size:40px}
+.orgc p{font-size:24px}
+.blocks span{font-size:21px;padding:8px 14px}
+.twoc div{font-size:23px}
+.twoc b{font-size:25px}
+#text2{font-size:24.5px;line-height:1.75}
+#g2 .sq-row,#g3 .sq-row{font-size:21.5px;padding:10px 14px 10px 20px}
+#g2,#g3{gap:12px}
+#g1 .sq-row{font-size:18.5px;padding:6px 12px 6px 18px}
+#g1{gap:8px}
+.ev-row{grid-template-columns:265px 1fr}
+#g3 .sq-row{font-size:19.5px;padding:8px 12px 8px 18px}
+#g3{gap:10px}
+.explore .paper{font-size:17.5px}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="tilly" viewBox="0 0 120 132">
+      <ellipse cx="60" cy="127" rx="34" ry="5" fill="#2B2440" opacity=".15"/>
+      <!-- base + feet -->
+      <ellipse cx="46" cy="121" rx="9" ry="5" fill="#FF6B5B" stroke="#2B2440" stroke-width="3.5"/>
+      <ellipse cx="74" cy="121" rx="9" ry="5" fill="#FF6B5B" stroke="#2B2440" stroke-width="3.5"/>
+      <path d="M38 117 L82 117 L73 102 L47 102 Z" fill="#8B5CF6" stroke="#2B2440" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="54" y="58" width="12" height="46" rx="3" fill="#8B5CF6" stroke="#2B2440" stroke-width="4"/>
+      <!-- beam (tilted) -->
+      <g transform="rotate(-7 60 42)">
+        <rect x="5" y="38" width="110" height="8" rx="4" fill="#FFC933" stroke="#2B2440" stroke-width="3.5"/>
+        <circle cx="9" cy="42" r="4" fill="#fff" stroke="#2B2440" stroke-width="3"/>
+        <circle cx="111" cy="42" r="4" fill="#fff" stroke="#2B2440" stroke-width="3"/>
+      </g>
+      <!-- left pan (heavier, lower) -->
+      <path d="M9.4 48 L2 80 M9.4 48 L25 80" stroke="#2B2440" stroke-width="2.5"/>
+      <circle cx="13.5" cy="72" r="8" fill="#1FB5A6" stroke="#2B2440" stroke-width="3"/>
+      <path d="M9.5 72 l3 3 l5.5 -6" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M0 79 Q13.5 97 27 79 Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- right pan (lighter, higher) -->
+      <path d="M110.6 36 L96 64 M110.6 36 L119 64" stroke="#2B2440" stroke-width="2.5"/>
+      <circle cx="107" cy="57" r="7.5" fill="#FF6B5B" stroke="#2B2440" stroke-width="3"/>
+      <path d="M104 54 l6 6 M110 54 l-6 6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M94 63 Q106.5 80 120 63 Z" fill="#FF6B5B" stroke="#2B2440" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- head -->
+      <path d="M55 20 L60 7 L65 20 Z" fill="#FF6B5B" stroke="#2B2440" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="60" cy="42" r="24" fill="#FFC933" stroke="#2B2440" stroke-width="4.5"/>
+      <path d="M44 30 Q48 25 54 28" fill="none" stroke="#2B2440" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M66 26 Q72 24 77 28" fill="none" stroke="#2B2440" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="51" cy="39" r="5.5" fill="#2B2440"/><circle cx="49.2" cy="37.2" r="2" fill="#fff"/>
+      <circle cx="70" cy="39" r="5.5" fill="#2B2440"/><circle cx="68.2" cy="37.2" r="2" fill="#fff"/>
+      <ellipse cx="44" cy="50" rx="4.5" ry="3" fill="#FF8FB1"/><ellipse cx="77" cy="50" rx="4.5" ry="3" fill="#FF8FB1"/>
+      <path d="M52 51 Q60 60 69 50" fill="none" stroke="#2B2440" stroke-width="4" stroke-linecap="round"/>
+      <path d="M43 36 Q44 27 51 23" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    </symbol>
+    <symbol id="star" viewBox="0 0 100 100"><path d="M50 6 L62 37 L95 39 L69 60 L78 93 L50 75 L22 93 L31 60 L5 39 L38 37Z" fill="currentColor" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/></symbol>
+    <symbol id="spark" viewBox="0 0 100 100"><path d="M50 4 C54 36 64 46 96 50 C64 54 54 64 50 96 C46 64 36 54 4 50 C36 46 46 36 50 4Z" fill="currentColor" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/></symbol>
+    <symbol id="squig" viewBox="0 0 130 30"><path d="M6 15 Q20 2 34 15 T62 15 T90 15 T118 15" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></symbol>
+    <symbol id="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="11"/></symbol>
+    <symbol id="dots" viewBox="0 0 100 60"><g fill="currentColor"><circle cx="10" cy="10" r="7"/><circle cx="40" cy="10" r="7"/><circle cx="70" cy="10" r="7"/><circle cx="25" cy="40" r="7"/><circle cx="55" cy="40" r="7"/><circle cx="85" cy="40" r="7"/></g></symbol>
+  </defs>
+</svg>
+<div class="stagewrap" id="wrap">
+<main id="stage" aria-roledescription="slide deck">
+
+<!-- 1 COVER -->
+<section class="slide cover" data-sec="0" data-title="Weigh it up!" style="--c:var(--orange);--t:var(--orange-t)">
+  <svg class="deco spin" style="left:40px;top:40px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:660px;top:70px;width:44px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="left:90px;bottom:36px;width:150px;color:var(--teal)"><use href="#squig"/></svg>
+  <svg class="deco" style="left:560px;bottom:60px;width:90px;color:var(--coral)"><use href="#dots"/></svg>
+  <div class="left">
+    <span class="kicker" style="align-self:flex-start">⚖️ English · Grade XI–XII</span>
+    <h1>Weigh It<br><span class="pop">Up!</span></h1>
+    <p class="lead">Every hot issue has two sides. Put the pros and cons on the scale, weigh them fairly, then decide wisely. 🤔</p>
+    <div class="tags">
+      <span class="tag" style="--tc:var(--grape-t)">❓ Issue</span>
+      <span class="tag" style="--tc:var(--teal-t)">👍 For</span>
+      <span class="tag" style="--tc:var(--coral-t)">👎 Against</span>
+      <span class="tag" style="--tc:var(--sky-t)">🏁 Conclusion</span>
+    </div>
+    <div style="display:flex;gap:22px;align-items:center;margin-top:6px">
+      <button class="btn" type="button" data-next style="font-size:24px;padding:14px 30px">Start weighing →</button>
+      <p class="school">By Mr. Fio 😎</p>
+    </div>
+  </div>
+  <div class="right">
+    <svg class="scene" viewBox="0 0 600 600" role="img" aria-label="Timbangan besar: kartu PRO berwarna hijau di kiri dan kartu CON berwarna merah di kanan, dengan tanda tanya di tengah">
+      <defs><clipPath id="blob"><path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z"/></clipPath>
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#fff" stroke-width="2" opacity=".5"/></pattern></defs>
+      <g clip-path="url(#blob)">
+        <rect width="600" height="600" fill="#8B5CF6"/>
+        <rect width="600" height="600" fill="url(#grid)"/>
+        <g stroke="#2B2440" stroke-width="6" stroke-linejoin="round">
+          <path d="M210 540 L390 540 L360 480 L240 480 Z" fill="#FFC933"/>
+          <rect x="285" y="200" width="30" height="285" rx="8" fill="#FFC933"/>
+          <g transform="rotate(-8 300 200)">
+            <rect x="80" y="188" width="440" height="24" rx="12" fill="#FFFBF2"/>
+          </g>
+          <path d="M103 231 L60 350 M103 231 L150 350" fill="none" stroke-width="4"/>
+          <path d="M497 169 L450 290 M497 169 L545 290" fill="none" stroke-width="4"/>
+          <path d="M40 350 Q105 420 170 350 Z" fill="#1FB5A6"/>
+          <path d="M430 290 Q497 360 565 290 Z" fill="#FF6B5B"/>
+          <rect x="55" y="270" width="100" height="72" rx="12" fill="#D3F5F0" transform="rotate(-6 105 306)"/>
+          <rect x="447" y="212" width="100" height="72" rx="12" fill="#FFE1DC" transform="rotate(6 497 248)"/>
+        </g>
+        <g font-family="Fredoka, sans-serif" font-weight="700" text-anchor="middle" fill="#2B2440">
+          <text x="105" y="318" font-size="30" transform="rotate(-6 105 306)">PRO 👍</text>
+          <text x="497" y="260" font-size="30" transform="rotate(6 497 248)">CON 👎</text>
+        </g>
+        <circle cx="300" cy="120" r="50" fill="#FFC933" stroke="#2B2440" stroke-width="6"/>
+        <text x="300" y="142" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="64" fill="#2B2440">?</text>
+      </g>
+      <path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z" fill="none" stroke="#2B2440" stroke-width="7"/>
+    </svg>
+    <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;left:-170px;bottom:-24px;width:200px"><use href="#tilly"/></svg>
+    <div class="bubble" style="position:absolute;left:-120px;bottom:200px;background:var(--sun-t)">Hi, I'm Tilly! ⚖️<br>Let's be fair to both sides.</div>
+  </div>
+</section>
+
+<!-- 2 MAP -->
+<section class="slide" data-sec="1" data-title="Debate map" style="--c:var(--orange);--t:var(--orange-t)">
+  <svg class="deco" style="left:0;right:0;top:360px;width:1600px;height:320px" viewBox="0 0 1600 320" preserveAspectRatio="none"><path d="M40 170 C240 20 360 300 560 170 S900 20 1060 170 S1400 300 1580 150" fill="none" stroke="#2B2440" stroke-width="5" stroke-dasharray="4 18" stroke-linecap="round" opacity=".45"/></svg>
+  <svg class="deco spin" style="right:80px;top:40px;width:64px;color:var(--sun)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🗺️ Debate map</span><span class="hint">👆 klik ronde untuk lompat</span></div><h2>Five rounds to <span class="u">win</span> today</h2></div>
+  <div class="body">
+    <div class="agenda">
+      <button class="stop" type="button" data-go="s-warm" style="--k:var(--teal);--kt:var(--teal-t)"><span class="n">ROUND 1</span><span class="ico">🏓</span><b>Warm-up</b><span class="s">Pros &amp; cons ping-pong</span></button>
+      <button class="stop" type="button" data-go="s-under" style="--k:var(--sky);--kt:var(--sky-t)"><span class="n">ROUND 2</span><span class="ico">💡</span><b>Understand</b><span class="s">Definition, function, vs exposition</span></button>
+      <button class="stop" type="button" data-go="s-struct" style="--k:var(--sun);--kt:var(--sun-t)"><span class="n">ROUND 3</span><span class="ico">🧩</span><b>Structure</b><span class="s">Issue, for, against, conclusion</span></button>
+      <button class="stop" type="button" data-go="s-lang" style="--k:var(--coral);--kt:var(--coral-t)"><span class="n">ROUND 4</span><span class="ico">🔤</span><b>Language</b><span class="s">Contrast, hedging, expressions</span></button>
+      <button class="stop" type="button" data-go="s-prac" style="--k:var(--grape);--kt:var(--grape-t)"><span class="n">FINAL ROUND</span><span class="ico">🏆</span><b>Practice</b><span class="s">Games and your own discussion</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 1 -->
+<section class="slide divider" data-sec="1" id="s-warm" data-title="Round 1 · Warm-up">
+  <span class="num">01</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:#fff;opacity:.6"><use href="#squig"/></svg>
+  <span class="part-pill">ROUND 01</span>
+  <h2>Warm-up 🏓</h2>
+  <p class="sub">One side gives a pro, the other side gives a con. Keep the ball moving!</p>
+  <div class="kwrap"><div class="bubble">Can you argue for BOTH sides? 🤔</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#tilly"/></svg></div>
+</section>
+
+<!-- PING-PONG -->
+<section class="slide" data-sec="1" data-title="Pros & cons ping-pong">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🏓 Game</span><span class="hint">kelompok kiri = PRO, kanan = CON; guru klik +1 tiap argumen bagus</span></div><h2>Pros &amp; cons <span class="u">ping-pong</span></h2></div>
+  <div class="body">
+    <div class="pp">
+      <div>
+        <div class="issue" id="ppIssue"><span class="ks">Motion</span><span>Press “New issue” to start! 👇</span></div>
+        <div class="tally"><button class="btn" id="ppNew" type="button">🎲 New issue</button><button class="btn pro" id="ppPro" type="button">👍 +1 Pro</button><button class="btn con" id="ppCon" type="button">👎 +1 Con</button><button class="btn ghost sm" id="ppReset" type="button">↺ Reset</button></div>
+        <p class="tipline" style="margin-top:18px;text-align:left">🗣️ PRO: “One advantage is that …” · CON: “On the other hand, …” — no repeating ideas!</p>
+      </div>
+      <svg class="bigscale" viewBox="0 0 520 420" role="img" aria-label="Timbangan pro dan kontra">
+        <g stroke="#2B2440" stroke-width="5" stroke-linejoin="round">
+          <path d="M180 400 L340 400 L315 350 L205 350 Z" fill="#8B5CF6"/>
+          <rect x="248" y="120" width="24" height="235" rx="6" fill="#8B5CF6"/>
+          <g id="beam"><rect x="50" y="110" width="420" height="20" rx="10" fill="#FFC933"/></g>
+          <g class="pan" id="panL"><path d="M60 120 L20 250 M60 120 L100 250" fill="none" stroke-width="3.5"/><path d="M0 250 Q60 320 120 250 Z" fill="#1FB5A6"/><text x="60" y="235" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="40" fill="#1FB5A6" stroke="none" id="nPro">0</text></g>
+          <g class="pan" id="panR"><path d="M460 120 L420 250 M460 120 L500 250" fill="none" stroke-width="3.5"/><path d="M400 250 Q460 320 520 250 Z" fill="#FF6B5B"/><text x="460" y="235" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="40" fill="#FF6B5B" stroke="none" id="nCon">0</text></g>
+          <circle cx="260" cy="120" r="34" fill="#FFC933"/>
+        </g>
+        <text x="260" y="134" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="38" fill="#2B2440">⚖</text>
+        <text x="60" y="276" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="22" fill="#fff" id="lPro">PRO</text>
+        <text x="460" y="276" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="22" fill="#fff" id="lCon">CON</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- TWO SIDES CARDS -->
+<section class="slide" data-sec="1" data-title="Two sides of every issue">
+  <svg class="deco spin" style="right:80px;top:48px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎴 Two sides</span><span class="hint">👆 pikirkan 1 pro &amp; 1 kontra, lalu balik kartunya</span></div><h2>Every coin has <span class="u">two sides</span></h2></div>
+  <div class="body">
+    <div class="flips">
+      <button class="flip" type="button" style="--fc:var(--sky-t)"><div class="in"><div class="f"><span class="emo">🤖</span><span class="q">Using AI for homework?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans sm"><i>👍 PRO:</i> It explains difficult topics step by step.</span><span class="ans sm"><i>👎 CON:</i> Students may stop thinking for themselves.</span><small>Both can be true!</small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--sun-t)"><div class="in"><div class="f"><span class="emo">🕗</span><span class="q">Full-day school?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans sm"><i>👍 PRO:</i> Students get Saturdays free for family.</span><span class="ans sm"><i>👎 CON:</i> Students feel tired in the afternoon.</span><small>Both can be true!</small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--teal-t)"><div class="in"><div class="f"><span class="emo">🛵</span><span class="q">Switching to electric motorbikes?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans sm"><i>👍 PRO:</i> No exhaust fumes on the road.</span><span class="ans sm"><i>👎 CON:</i> Charging stations are still limited.</span><small>Both can be true!</small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--pink-t)"><div class="in"><div class="f"><span class="emo">👕</span><span class="q">No more school uniforms?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans sm"><i>👍 PRO:</i> Students can show their personality.</span><span class="ans sm"><i>👎 CON:</i> Differences between rich and poor become visible.</span><small>Both can be true!</small></div></div></button>
+    </div>
+  </div>
+</section>
+
+<!-- APERSEPSI -->
+<section class="slide" data-sec="1" data-title="Help me decide">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:50px;color:var(--sun)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:60px;width:170px;color:var(--orange)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🤔 Think about it</span></div><h2>Help me decide…</h2></div>
+  <div class="body center">
+    <div class="chat">
+      <div class="row"><span class="av">🧑</span><div class="bubble side q">"Should I join OSIS this year? I really can't decide 😵‍💫"</div></div>
+      <div class="row me"><div class="bubble tr-tail a">"Well, <mark>on one hand</mark>, OSIS teaches leadership, and you'll make lots of friends. <mark>On the other hand</mark>, it takes a lot of time, so your grades <mark>might</mark> drop. <mark>All in all</mark>, if you can manage your time, I think you <mark>should</mark> give it a try!"</div><span class="av">😄</span></div>
+      <div class="reveal"><button class="btn" type="button" id="apBtn" style="font-size:24px">What did the friend just do? 🤔</button><span id="apOut" hidden class="bigsticker" style="background:var(--orange)">A DISCUSSION! 🎉</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 2 -->
+<section class="slide divider" data-sec="2" id="s-under" data-title="Round 2 · Understanding">
+  <span class="num">02</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:760px;top:120px;width:50px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">ROUND 02</span>
+  <h2>Understanding 💡</h2>
+  <p class="sub">What a discussion text is, why we write it, and how it differs from an exposition.</p>
+  <div class="kwrap"><div class="bubble">A fair judge listens to both sides! 👂</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#tilly"/></svg></div>
+</section>
+
+<!-- DEFINITION -->
+<section class="slide" data-sec="2" data-title="What is it?">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="right:40px;bottom:40px;width:120px;color:var(--sky)"><use href="#ring"/></svg>
+  <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;right:100px;bottom:60px;width:180px;z-index:3"><use href="#tilly"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">📖 Definition</span></div><h2>What is a <span class="u">discussion text</span>?</h2></div>
+  <div class="body center" style="gap:34px">
+    <p class="defn" style="max-width:1200px"><span class="quote">“</span>A discussion text presents <mark>an issue</mark> from <mark>at least two points of view</mark> (arguments for and against) before giving <mark>a conclusion or recommendation</mark>.</p>
+    <p class="idline"><span class="badge">ID</span><span class="id">Teks diskusi menyajikan suatu isu dari dua sudut pandang atau lebih (argumen pro dan kontra), lalu ditutup dengan kesimpulan atau rekomendasi.</span></p>
+  </div>
+</section>
+
+<!-- FUNCTION -->
+<section class="slide" data-sec="2" data-title="Why write it?">
+  <svg class="deco twinkle" style="right:90px;top:60px;width:48px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎯 Social function</span></div><h2>Why do people <span class="u">discuss</span> issues?</h2></div>
+  <div class="body center">
+    <div class="g3 fn">
+      <div class="stk tl hov" style="--t:var(--grape-t)"><span class="ico">❓</span><h3>To present an issue</h3><p>Introduce a <b>controversial</b> topic that people disagree about.</p></div>
+      <div class="stk tr hov" style="--t:var(--teal-t)"><span class="ico">⚖️</span><h3>To show both sides</h3><p>Give <b>arguments for and against</b> in a fair, balanced way.</p></div>
+      <div class="stk tl hov" style="--t:var(--sky-t)"><span class="ico">🏁</span><h3>To help decide</h3><p>End with a <b>wise conclusion</b> or recommendation after weighing everything.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- GOALS -->
+<section class="slide" data-sec="2" data-title="Learning goals">
+  <svg class="deco twinkle" style="right:100px;top:60px;width:48px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🚀 Round goals</span></div><h2>By the end of today, <span class="u">I can…</span></h2></div>
+  <div class="body center">
+    <div class="goals">
+      <div class="stk goal tl" style="--gc:var(--teal)"><span class="medal">1</span><b>Explain</b><span>the social function of a discussion text</span></div>
+      <div class="stk goal tr" style="--gc:var(--sky)"><span class="medal">2</span><b>Distinguish</b><span>discussion and exposition texts</span></div>
+      <div class="stk goal tl" style="--gc:var(--orange)"><span class="medal">3</span><b>Analyze</b><span>its structure and language features</span></div>
+      <div class="stk goal tr" style="--gc:var(--coral)"><span class="medal">4</span><b>Write</b><span>a balanced discussion with a wise conclusion</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section class="slide" data-sec="2" data-title="Where you'll use it">
+  <svg class="deco spin" style="right:70px;top:46px;width:60px;color:var(--sun)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🌍 Benefits</span></div><h2>Why is it <span class="u">useful</span> for you?</h2></div>
+  <div class="body center">
+    <div class="ben">
+      <div class="stk hov" style="--bc:var(--grape-t)"><span class="ico">🎤</span><div><b>Debates &amp; forums</b><span>Understand the other team before you answer them.</span></div></div>
+      <div class="stk hov" style="--bc:var(--sky-t)"><span class="ico">📝</span><div><b>Essays &amp; exams</b><span>Write balanced essays and read argumentative texts.</span></div></div>
+      <div class="stk hov" style="--bc:var(--sun-t)"><span class="ico">📰</span><div><b>News &amp; media</b><span>Recognise one-sided news and fake balance.</span></div></div>
+      <div class="stk hov" style="--bc:var(--teal-t)"><span class="ico">🧭</span><div><b>Big decisions</b><span>Choose a major, a university or a job wisely.</span></div></div>
+      <div class="stk hov" style="--bc:var(--coral-t)"><span class="ico">🤝</span><div><b>Respectful talk</b><span>Disagree politely and listen to different views.</span></div></div>
+      <div class="stk hov" style="--bc:var(--pink-t)"><span class="ico">🧠</span><div><b>Critical thinking</b><span>Weigh evidence before you believe or share.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VS EXPOSITION -->
+<section class="slide" data-sec="2" data-title="Discussion vs Exposition">
+  <div class="head"><div class="krow"><span class="kicker">⚔️ Don't mix them up!</span></div><h2>Discussion <span class="u">vs</span> Exposition</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px">
+    <div class="vs" style="height:auto;flex:1">
+      <div class="stk col tl" style="background:var(--orange-t)"><h3 style="background:var(--orange)">⚖️ DISCUSSION</h3>
+        <dl><dt>Sides</dt><dd>Presents <b>at least two</b> points of view</dd><dt>Structure</dt><dd>Issue → For → Against → Conclusion</dd><dt>Writer</dt><dd>Stays <b>balanced</b>; may decide only at the end</dd><dt>Typical language</dt><dd>Some people argue… · On the other hand…</dd></dl></div>
+      <div class="vsmid"><span>VS</span></div>
+      <div class="stk col tr" style="background:var(--grape-t)"><h3 style="background:var(--grape)">📣 EXPOSITION</h3>
+        <dl><dt>Sides</dt><dd>Presents <b>one</b> point of view only</dd><dt>Structure</dt><dd>Thesis → Arguments → Recommendation / Reiteration</dd><dt>Writer</dt><dd>Takes a side <b>from the first paragraph</b></dd><dt>Typical language</dt><dd>I strongly believe… · Firstly… · Therefore…</dd></dl></div>
+    </div>
+    <p class="tipline">🔑 Quick test: Does the text give the <b>other side</b> a fair chance? <b>Yes</b> → discussion · <b>No</b>, only one side → exposition</p>
+  </div>
+</section>
+
+<!-- ORGANISE -->
+<section class="slide" data-sec="2" data-title="Two patterns, two endings">
+  <svg class="deco spin" style="right:70px;top:46px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🧱 Level up · XI–XII</span></div><h2>Two patterns, two <span class="u">endings</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:16px;justify-content:center">
+    <div class="org">
+      <div class="stk orgc tl"><h3>🧱 Block pattern</h3><p>All the arguments <b>for</b> first, then all the arguments <b>against</b>. Easy to follow.</p>
+        <div class="blocks"><span style="--k:var(--ps)">Issue</span><span style="--k:var(--pf)">For 1 · For 2 · For 3</span><span style="--k:var(--pa)">Against 1 · Against 2 · Against 3</span><span style="--k:var(--pc)">Conclusion</span></div></div>
+      <div class="stk orgc tr"><h3>🔀 Point-by-point</h3><p>One <b>aspect</b> at a time, with its for <b>and</b> against side by side. Great for comparing.</p>
+        <div class="blocks"><span style="--k:var(--ps)">Issue</span><span style="--k:var(--orange)">Cost: for ⇄ against</span><span style="--k:var(--orange)">Health: for ⇄ against</span><span style="--k:var(--pc)">Conclusion</span></div></div>
+    </div>
+    <div class="twoc">
+      <div><b>🤝 Neutral conclusion</b><br>Sums up both sides without choosing: <i>“All in all, the answer depends on how … is used.”</i></div>
+      <div><b>📣 Conclusion + recommendation</b><br>Weighs both sides, then suggests an action: <i>“Having considered both sides, schools should …”</i></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 3 -->
+<section class="slide divider" data-sec="3" id="s-struct" data-title="Round 3 · Structure">
+  <span class="num">03</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:#fff"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:var(--orange)"><use href="#squig"/></svg>
+  <span class="part-pill">ROUND 03</span>
+  <h2>Generic Structure 🧩</h2>
+  <p class="sub">State the issue, weigh both sides, then close wisely.</p>
+  <div class="kwrap"><div class="bubble">Left pan, right pan, then the verdict! ⚖️</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#tilly"/></svg></div>
+</section>
+
+<!-- STRUCTURE EXPLORER -->
+<section class="slide" data-sec="3" data-title="Structure explorer" style="padding-top:40px">
+  <div class="head"><div class="krow"><span class="kicker">🧭 Explore</span><span class="hint">👆 pilih teks, lalu klik bagian teks atau tombol</span></div><h2>Four parts of a <span class="u">discussion</span></h2></div>
+  <div class="body">
+    <div class="explore">
+      <article class="paper" id="text1" data-show="s"></article>
+      <div class="side">
+        <div class="tabs" role="tablist" id="exTabs">
+          <button class="tab" role="tab" type="button" aria-selected="true" data-x="ph">📱 Phones</button>
+          <button class="tab" role="tab" type="button" aria-selected="false" data-x="ai">🤖 AI tools</button>
+          <button class="tab" role="tab" type="button" aria-selected="false" data-x="ev">🚗 Electric cars</button>
+        </div>
+        <div class="stages" id="stages">
+          <button class="stage" type="button" data-s="s" aria-pressed="true" style="--k:var(--ps);--kt:var(--grape-t)"><span class="dotn">1</span>Issue</button>
+          <button class="stage" type="button" data-s="f" aria-pressed="false" style="--k:var(--pf);--kt:var(--teal-t)"><span class="dotn">2</span>For</button>
+          <button class="stage" type="button" data-s="a" aria-pressed="false" style="--k:var(--pa);--kt:var(--coral-t)"><span class="dotn">3</span>Against</button>
+          <button class="stage" type="button" data-s="c" aria-pressed="false" style="--k:var(--pc);--kt:var(--sky-t)"><span class="dotn">4</span>Conclusion</button>
+        </div>
+        <div class="stk segcard" id="segCard"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OTHER ISSUES -->
+<section class="slide" data-sec="3" data-title="Same structure, other issues">
+  <svg class="deco spin" style="right:80px;top:50px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔁 Same map</span><span class="hint">👆 ganti isu, strukturnya tetap sama</span></div><h2>Same structure, <span class="u">different</span> issues</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px;justify-content:center">
+    <div class="tabs" role="tablist" id="mTabs"></div>
+    <p class="mtitle" id="mTitle"></p>
+    <div class="mission" id="mBody"></div>
+  </div>
+</section>
+
+<!-- SEGMENTATION -->
+<section class="slide" data-sec="3" data-title="What each part contains">
+  <div class="head"><div class="krow"><span class="kicker">📦 Segmentation</span></div><h2>What goes <span class="u">inside</span> each part?</h2></div>
+  <div class="body center">
+    <div class="segsum" style="gap:14px">
+      <div class="segrow" style="--k:var(--ps);--kt:var(--grape-t)"><div class="nm">① Issue<small>the question</small></div><div>Short <b>background</b> + the <b>controversial question</b>; shows that people disagree</div><div class="len">1 paragraph<i>“There is a debate about whether…” · “Should…?”</i></div></div>
+      <div class="segrow" style="--k:var(--pf);--kt:var(--teal-t)"><div class="nm">② Arguments For<small>the supporting side</small></div><div>2–3 <b>points</b> that support the issue, each with a reason, fact or example</div><div class="len">1–2 paragraphs<i>“Supporters argue that… Moreover…”</i></div></div>
+      <div class="segrow" style="--k:var(--pa);--kt:var(--coral-t)"><div class="nm">③ Arguments Against<small>the opposing side</small></div><div>2–3 <b>points</b> that oppose the issue, with the same amount of detail</div><div class="len">1–2 paragraphs<i>“On the other hand, critics believe…”</i></div></div>
+      <div class="segrow" style="--k:var(--pc);--kt:var(--sky-t)"><div class="nm">④ Conclusion<small>+ recommendation</small></div><div><b>Sums up</b> both sides, then gives a <b>balanced view</b> or a <b>recommendation</b></div><div class="len">1 paragraph<i>“Having considered both sides, …”</i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 4 -->
+<section class="slide divider" data-sec="4" id="s-lang" data-title="Round 4 · Language">
+  <span class="num">04</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:130px;bottom:80px;width:120px;color:#fff;opacity:.5"><use href="#dots"/></svg>
+  <span class="part-pill">ROUND 04</span>
+  <h2>Language Features 🔤</h2>
+  <p class="sub">The words that keep your text fair, careful and convincing.</p>
+  <div class="kwrap"><div class="bubble">“However” is my favourite word! 😄</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#tilly"/></svg></div>
+</section>
+
+<!-- SIX FEATURES -->
+<section class="slide" data-sec="4" data-title="Six language features">
+  <div class="head"><div class="krow"><span class="kicker">⚡ Fair-play tools</span></div><h2>Six <span class="u">language features</span></h2></div>
+  <div class="body center">
+    <div class="feats">
+      <div class="stk feat hov" style="--ft:var(--sky-t)"><div class="top"><span class="ico">🕒</span><h3>Simple present tense</h3></div><p>For facts, general truths and current opinions.</p><span class="ex">Phones distract students.</span></div>
+      <div class="stk feat hov" style="--ft:var(--grape-t)"><div class="top"><span class="ico">👥</span><h3>Generic participants</h3></div><p>Groups of people, not “I”, to stay objective.</p><span class="ex">supporters · critics · some people · experts</span></div>
+      <div class="stk feat hov" style="--ft:var(--pink-t)"><div class="top"><span class="ico">🗣️</span><h3>Reporting &amp; thinking verbs</h3></div><p>Show <b>whose</b> opinion it is.</p><span class="ex">argue · claim · believe · point out</span></div>
+      <div class="stk feat hov" style="--ft:var(--coral-t)"><div class="top"><span class="ico">↔️</span><h3>Contrastive connectives</h3></div><p>Switch from one side to the other.</p><span class="ex">However · On the other hand · Although · While</span></div>
+      <div class="stk feat hov" style="--ft:var(--teal-t)"><div class="top"><span class="ico">➕</span><h3>Additive &amp; causal connectives</h3></div><p>Add points and explain results.</p><span class="ex">Moreover · In addition · As a result · because</span></div>
+      <div class="stk feat hov" style="--ft:var(--orange-t)"><div class="top"><span class="ico">🎚️</span><h3>Modals &amp; hedging</h3></div><p>Sound careful, not extreme; recommend politely.</p><span class="ex">may · might · could · perhaps · should</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HIGHLIGHTER -->
+<section class="slide" data-sec="4" data-title="Colour highlighter" style="padding-top:40px">
+  <div class="head"><div class="krow"><span class="kicker">🖍️ Highlighter</span><span class="hint">👆 nyalakan warna, bisa lebih dari satu</span></div><h2>Spot the <span class="u">features</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px">
+    <div class="chips" id="featBar">
+      <button class="chip" type="button" data-f="g" aria-pressed="true"><i></i>Reporting phrases</button>
+      <button class="chip" type="button" data-f="c" aria-pressed="true"><i></i>Contrast</button>
+      <button class="chip" type="button" data-f="d" aria-pressed="false"><i></i>Adding &amp; concluding</button>
+      <button class="chip" type="button" data-f="m" aria-pressed="false"><i></i>Modals &amp; hedging</button>
+      <button class="chip" type="button" data-f="v" aria-pressed="false"><i></i>Simple present</button>
+    </div>
+    <article class="paper lf hl-g hl-c" id="text2" style="flex:1">
+      <div class="part" data-part="s"><span class="lbl">Issue</span><b>Phones at School</b> · Today, almost every teenager <span class="v">owns</span> a smartphone. Some schools <span class="v">allow</span> students to bring phones, <span class="c">while</span> others <span class="v">ban</span> them completely. <span class="m">Should</span> students be allowed to bring phones to school?</div>
+      <div class="part" data-part="f"><span class="lbl">For</span><span class="g">Supporters argue that</span> phones <span class="v">help</span> students learn. With a phone, students <span class="m">can</span> search for information, use online dictionaries and join learning apps. <span class="d">Moreover</span>, phones <span class="v">keep</span> students safe, because parents <span class="m">can</span> contact them quickly in an emergency.</div>
+      <div class="part" data-part="a"><span class="lbl">Against</span><span class="c">On the other hand</span>, <span class="g">many teachers believe that</span> phones <span class="v">distract</span> students. Notifications from games and social media <span class="m">can</span> break their concentration. <span class="d">Furthermore</span>, phones <span class="m">may</span> cause problems such as cheating and cyberbullying.</div>
+      <div class="part" data-part="c"><span class="lbl">Conclusion</span><span class="d">In conclusion</span>, phones <span class="v">bring</span> both benefits and risks. <span class="m">Perhaps</span> the best solution <span class="v">is</span> to allow phones at school <span class="c">but</span> to set clear rules for using them.</div>
+    </article>
+  </div>
+</section>
+
+<!-- SENTENCE LAB -->
+<section class="slide" data-sec="4" data-title="Sentence lab">
+  <svg class="deco twinkle" style="right:90px;top:56px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔬 Sentence lab</span><span class="hint">👆 pilih satu kalimat</span></div><h2>Break the <span class="u">sentence</span> apart</h2></div>
+  <div class="body">
+    <div class="analyzer">
+      <div class="sent-list" id="sentList"></div>
+      <div class="stk out" id="sentOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPRESSIONS -->
+<section class="slide" data-sec="4" data-title="Expression bank">
+  <div class="head"><div class="krow"><span class="kicker">💬 Expression bank</span><span class="hint">📋 klik Copy untuk menyalin</span></div><h2>Build-up <span class="u">expressions</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs" role="tablist" id="xTabs"></div>
+    <div class="xwrap"><table class="xtable" id="xTable"></table></div>
+  </div>
+</section>
+
+<!-- DIVIDER 5 -->
+<section class="slide divider" data-sec="5" id="s-prac" data-title="Final round · Practice">
+  <span class="num">05</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:820px;top:130px;width:52px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">FINAL ROUND</span>
+  <h2>Practice Time! 🏆</h2>
+  <p class="sub">Four mini games, then write your own balanced discussion.</p>
+  <div class="kwrap"><div class="bubble">Final round! Stay fair and sharp! 🎯</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#tilly"/></svg></div>
+</section>
+
+<!-- GAME 1 -->
+<section class="slide game" data-sec="5" data-title="Game 1 · Which part?" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 1</span><span class="score" id="g1Score">⭐ 0 / 8</span></div><h2>👕 Which <span class="u">part</span> is it?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px">
+    <div class="legend"><span>Text: <b>Should School Uniforms Be Abolished?</b></span><span><i style="background:var(--ps)">I</i>Issue</span><span><i style="background:var(--pf)">F</i>For abolishing</span><span><i style="background:var(--pa)">A</i>Against</span><span><i style="background:var(--pc)">C</i>Conclusion</span></div>
+    <div class="sq" id="g1"></div>
+    <p class="fb" id="g1Fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- GAME 2 -->
+<section class="slide game" data-sec="5" data-title="Game 2 · Pro or con?" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 2</span><span class="score" id="g2Score">⭐ 0 / 8</span></div><h2>📵 Pro or <span class="u">con</span>?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px">
+    <div class="legend"><span>Issue: <b>“Children under 16 should be banned from social media.”</b></span><span><i style="background:var(--teal)">P</i>Pro (supports the ban)</span><span><i style="background:var(--coral)">C</i>Con</span></div>
+    <div class="sq" id="g2"></div>
+    <p class="fb" id="g2Fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- GAME 3 -->
+<section class="slide game" data-sec="5" data-title="Game 3 · Discussion or exposition?" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 3</span><span class="score" id="g3Score">⭐ 0 / 8</span></div><h2>⚖️ Discussion or <span class="u">exposition</span>?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px">
+    <div class="legend"><span>Does the extract show <b>both sides</b> or only <b>one</b>?</span><span><i style="background:var(--orange)">D</i>Discussion</span><span><i style="background:var(--grape)">E</i>Exposition</span></div>
+    <div class="sq" id="g3"></div>
+    <p class="fb" id="g3Fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- GAME 4 -->
+<section class="slide" data-sec="5" data-title="Game 4 · Complete the discussion">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 4</span><span class="score" id="vqScore">⭐ 0 / 8</span></div><h2>Complete the <span class="u">discussion</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="vq fill" id="vq"></div>
+    <p class="fb" id="vqFb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- BUILDER -->
+<section class="slide" data-sec="5" data-title="Write your discussion" style="padding-top:40px">
+  <div class="head"><div class="krow"><span class="kicker">✍️ Your verdict</span><span class="hint">ganti contoh dengan isumu sendiri</span></div><h2>Write <span class="u">your own</span> discussion</h2></div>
+  <div class="body">
+    <div class="builder">
+      <form class="form" id="bForm" onsubmit="return false">
+        <fieldset class="fset" style="--k:var(--ps);--kt:var(--grape-t)"><legend>① Issue</legend>
+          <label class="flabel">TITLE (the question)<input id="bTitle" value="Should Homework Be Banned?"></label>
+          <textarea id="bIssue" rows="2">Many students complain that they have too much homework. Some people think homework should be banned, while others believe it is necessary.</textarea>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--pf);--kt:var(--teal-t)"><legend>② Arguments for</legend>
+          <div id="forWrap" style="display:grid;gap:8px"></div>
+          <div><button class="btn ghost sm" type="button" id="addFor">+ Add argument for</button></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--pa);--kt:var(--coral-t)"><legend>③ Arguments against</legend>
+          <div id="agWrap" style="display:grid;gap:8px"></div>
+          <div><button class="btn ghost sm" type="button" id="addAg">+ Add argument against</button></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--pc);--kt:var(--sky-t)"><legend>④ Conclusion</legend>
+          <div class="tswitch" role="tablist" id="bType"><button class="tab" role="tab" type="button" aria-selected="false" data-t="n" style="--k:var(--grape)">🤝 Neutral</button><button class="tab" role="tab" type="button" aria-selected="true" data-t="r" style="--k:var(--sky)">📣 + Recommendation</button></div>
+          <div class="ev-row"><select id="bConC"><option>In conclusion,</option><option>Having considered both sides,</option><option>All in all,</option><option>To sum up,</option></select><textarea id="bCon" rows="2">both sides have strong reasons. Instead of banning homework, teachers should give less but more meaningful tasks.</textarea></div>
+        </fieldset>
+      </form>
+      <div class="bout">
+        <article class="paper" id="bOut"></article>
+        <div class="stk" style="padding:14px 20px">
+          <ul class="checks" id="bChecks"></ul>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button class="btn sm" type="button" id="copyText">📋 Copy my text</button><button class="btn ghost sm" type="button" id="clearAll">🧹 Clear the example</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINALE -->
+<section class="slide" data-sec="1" data-title="The verdict!" id="finale" style="--c:var(--orange);--t:var(--orange-t)">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:200px;top:110px;width:46px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:40px;width:170px;color:var(--teal)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🏆 The verdict</span></div><h2>Fair, sharp and <span class="u">balanced</span>! 🎉</h2></div>
+  <div class="body">
+    <div class="finale">
+      <div style="display:flex;flex-direction:column;gap:22px;align-items:flex-start">
+        <p style="font:600 30px/1.3 var(--display)">How do you feel about discussion texts now?</p>
+        <div class="feel" id="feel">
+          <button type="button" data-m="Brilliant! You're ready to moderate a debate! 🎤">🤩</button>
+          <button type="button" data-m="Nice! Add one more counter-argument and you'll level up. ⚖️">🙂</button>
+          <button type="button" data-m="That's okay! Review the structure and the expression bank. 📚">😐</button>
+          <button type="button" data-m="No worries! Ask your teacher or a friend, and replay the games. 🤝">😵‍💫</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px">
+          <svg class="kiko bob" viewBox="0 0 120 132" style="width:180px"><use href="#tilly"/></svg>
+          <div class="bubble" id="feelMsg" style="max-width:420px;margin-bottom:150px;background:var(--sun-t)">Tap a face! 👆</div>
+        </div>
+      </div>
+      <div class="t321">
+        <p style="font:700 26px var(--display)">🎟️ Exit ticket: 4 · 2 · 1</p>
+        <div class="stk tl" style="--nc:var(--grape)"><span class="n">4</span><div><b>parts of a discussion text</b><span>that I can name and explain</span></div></div>
+        <div class="stk tr" style="--nc:var(--coral)"><span class="n">2</span><div><b>differences</b><span>between discussion and exposition</span></div></div>
+        <div class="stk tl" style="--nc:var(--teal)"><span class="n">1</span><div><b>issue I can discuss</b><span>with one pro and one con</span></div></div>
+        <p class="school" style="margin-top:6px">By Mr. Fio 😎</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<nav class="bar" aria-label="Slide controls">
+  <div class="brand"><svg viewBox="0 0 120 132"><use href="#tilly"/></svg><span>Weigh It Up!</span></div>
+  <div class="track" id="track"><div class="fill" id="fill"></div><svg class="hiker" id="hiker" viewBox="0 0 120 132"><use href="#tilly"/></svg></div>
+  <span class="count" id="count">1 / 1</span>
+  <button class="ibtn hide-sm" id="menuBtn" type="button" title="All slides (M)" aria-label="All slides">☰</button>
+  <button class="ibtn hide-sm" id="fsBtn" type="button" title="Fullscreen (F)" aria-label="Fullscreen">⛶</button>
+  <button class="ibtn nav" id="prev" type="button" aria-label="Previous slide">←</button>
+  <button class="ibtn nav" id="next" type="button" aria-label="Next slide">→</button>
+</nav>
+
+<div class="menu" id="menu" role="dialog" aria-label="All slides"><div class="menu-box"><h3>🗺️ All slides <button class="btn ghost sm" type="button" id="menuClose">✕ Close</button></h3><div class="mgrid" id="mgrid"></div></div></div>
+<div class="rotate-tip" id="rotateTip">📱↻ Putar HP ke mode landscape agar slide lebih besar. <button class="btn sm ghost" type="button" id="rtClose" style="margin-left:auto">OK</button></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const slides=$$('#stage > .slide');
+const N=slides.length;
+const SEC={0:'var(--coral)',1:'var(--teal)',2:'var(--sky)',3:'var(--sun)',4:'var(--coral)',5:'var(--grape)'};
+let cur=0;
+
+/* ---------- scale stage ---------- */
+function fit(){
+  const w=$('#wrap').clientWidth, h=$('#wrap').clientHeight;
+  const pad=Math.min(w,h)<500?10:28;
+  const s=Math.min((w-pad*2)/1616,(h-pad*2)/916);
+  $('#stage').style.setProperty('--s',Math.max(s,.1));
+}
+addEventListener('resize',fit);fit();
+
+/* ---------- helpers ---------- */
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,1800);}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('📋 Copied!'),()=>toast('Copy blocked: select the text manually'));}
+  else toast('Copy blocked: select the text manually');
+}
+function confetti(n=90){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cols=['#FFC933','#FF6B5B','#1FB5A6','#3D8BFF','#8B5CF6','#FF8FB1'];
+  for(let i=0;i<n;i++){
+    const d=document.createElement('i');d.className='cf';
+    const w=8+Math.random()*8;
+    d.style.cssText=`left:${Math.random()*100}vw;width:${w}px;height:${w*1.4}px;background:${cols[i%cols.length]};--dx:${(Math.random()-.5)*240}px;--rot:${(Math.random()*4-2)*360}deg;animation-duration:${2.2+Math.random()*1.8}s;animation-delay:${Math.random()*.4}s`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),4800);
+  }
+}
+
+/* ---------- navigation ---------- */
+const track=$('#track');
+slides.forEach((s,i)=>{if(s.classList.contains('divider')){const f=document.createElement('span');f.className='flag';f.style.left=(i/(N-1)*100)+'%';f.style.background=SEC[s.dataset.sec];track.appendChild(f);}});
+function go(i,push=true){
+  i=Math.max(0,Math.min(N-1,i));
+  slides[cur].classList.remove('active');
+  cur=i;const s=slides[cur];s.classList.add('active');
+  const pct=(cur/(N-1)*100);
+  $('#fill').style.width=pct+'%';$('#fill').style.background=SEC[s.dataset.sec]||'var(--sun)';
+  $('#hiker').style.left=pct+'%';
+  $('#count').textContent=(cur+1)+' / '+N;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===N-1;
+  if(push) try{history.replaceState(null,'','#'+(cur+1));}catch(e){}
+  $$('.mitem').forEach((m,j)=>m.classList.toggle('cur',j===cur));
+  if(s.id==='finale') setTimeout(()=>confetti(120),250);
+}
+$('#prev').addEventListener('click',()=>go(cur-1));
+$('#next').addEventListener('click',()=>go(cur+1));
+$$('[data-next]').forEach(b=>b.addEventListener('click',()=>go(cur+1)));
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById(b.dataset.go);go(slides.indexOf(t));}));
+const typing=()=>{const a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);};
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){$('#menu').classList.remove('open');return;}
+  if(typing()||e.altKey||e.ctrlKey||e.metaKey) return;
+  if(['ArrowRight','PageDown'].includes(e.key)||(e.key===' '&&document.activeElement.tagName!=='BUTTON')){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(N-1);
+  else if(e.key==='f'||e.key==='F')fs();
+  else if(e.key==='m'||e.key==='M')openMenu();
+});
+let tx=null,ty=null;
+$('#wrap').addEventListener('touchstart',e=>{if(typing())return;tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+$('#wrap').addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)go(cur+(dx<0?1:-1));tx=null;},{passive:true});
+function fs(){const d=document;if(!d.fullscreenElement){(d.documentElement.requestFullscreen||d.documentElement.webkitRequestFullscreen||function(){}).call(d.documentElement);}else{(d.exitFullscreen||d.webkitExitFullscreen).call(d);}}
+$('#fsBtn').addEventListener('click',fs);
+$('#mgrid').innerHTML=slides.map((s,i)=>`<button class="mitem" type="button" style="--c:${SEC[s.dataset.sec]}"><b>${i+1}</b><span>${s.dataset.title||''}</span></button>`).join('');
+$$('.mitem').forEach((m,i)=>m.addEventListener('click',()=>{go(i);$('#menu').classList.remove('open');}));
+function openMenu(){$('#menu').classList.add('open');}
+$('#menuBtn').addEventListener('click',openMenu);
+$('#menuClose').addEventListener('click',()=>$('#menu').classList.remove('open'));
+$('#menu').addEventListener('click',e=>{if(e.target.id==='menu')$('#menu').classList.remove('open');});
+$('#rotateTip').classList.add('show');$('#rtClose').addEventListener('click',()=>$('#rotateTip').classList.remove('show'));
+
+
+/* ---------- warm-up: pros & cons ping-pong ---------- */
+const ISS=['Students should be allowed to use AI for homework.','School should start at 8 a.m. instead of 7 a.m.','Homework should be banned.','Children under 16 should not use social media.','Online shopping is better than shopping at a traditional market.','Everyone should switch to electric motorbikes.','School uniforms should be abolished.','Working from home is better than working in an office.','E-sports should be an official school extracurricular.','Plastic bags should be banned in all shops.','Students should get money for good grades.','Tourism is good for small villages.','Full-day school is better than a six-day school week.','Every student should do volunteer work.'];
+let ppI=-1,pro=0,con=0;
+function ppDraw(){
+  $('#nPro').textContent=pro;$('#nCon').textContent=con;
+  const th=Math.max(-18,Math.min(18,(con-pro)*5)),dy=200*Math.sin(th*Math.PI/180);
+  $('#beam').style.transform=`rotate(${th}deg)`;
+  $('#panL').style.transform=`translateY(${-dy}px)`;$('#panR').style.transform=`translateY(${dy}px)`;
+  $('#lPro').style.transform=`translateY(${-dy}px)`;$('#lCon').style.transform=`translateY(${dy}px)`;
+}
+['#lPro','#lCon'].forEach(id=>$(id).style.transition='transform .6s cubic-bezier(.3,1.5,.5,1)');
+$('#ppNew').addEventListener('click',()=>{let i;do{i=Math.floor(Math.random()*ISS.length);}while(i===ppI);ppI=i;pro=0;con=0;ppDraw();$('#ppIssue').innerHTML=`<span class="ks">Motion</span><span>“${ISS[i]}”</span>`;});
+$('#ppPro').addEventListener('click',()=>{pro++;ppDraw();});
+$('#ppCon').addEventListener('click',()=>{con++;ppDraw();});
+$('#ppReset').addEventListener('click',()=>{pro=0;con=0;ppDraw();});
+ppDraw();
+$$('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('on')));
+$('#apBtn').addEventListener('click',()=>{$('#apOut').hidden=false;$('#apBtn').hidden=true;confetti(70);});
+
+/* ---------- structure explorer ---------- */
+const TX={
+ ph:{title:'📱 Should Students Bring Phones to School?',tag:'School issue',k:'var(--teal)',ct:'with recommendation',
+  s:'Today, almost every teenager owns a smartphone. Some schools allow students to bring phones, while others ban them completely. Should students be allowed to bring phones to school?',
+  f:['Supporters argue that phones help students learn. With a phone, students can search for information, use online dictionaries and join learning apps during lessons.','Moreover, phones keep students safe. Parents can contact their children quickly in an emergency or when plans change after school.'],
+  a:['On the other hand, many teachers believe that phones distract students. Notifications from games and social media can break their concentration in class.','Furthermore, phones may cause problems such as cheating in tests and cyberbullying among friends.'],
+  c:'In conclusion, phones bring both benefits and risks. Perhaps the best solution is to allow phones at school but to set clear rules, for example keeping them in bags unless the teacher asks students to use them.'},
+ ai:{title:'🤖 AI Chatbots for Schoolwork: Helpful or Harmful?',tag:'School + tech',k:'var(--sky)',ct:'neutral',
+  s:'AI chatbots can now answer questions, write essays and explain maths problems in seconds. Many students use them for homework, but not everyone agrees that this is a good idea.',
+  f:['Supporters claim that AI works like a personal tutor. It can explain a difficult topic again and again until a student understands it.','In addition, AI saves time. Students can use it to check grammar or find ideas, so they can focus on deeper learning.'],
+  a:['However, critics argue that students may become too dependent on AI and stop thinking for themselves.','What is more, AI sometimes gives wrong information, and copying its answers without permission is a form of cheating.'],
+  c:'All in all, AI can be a helpful study tool or a harmful shortcut. The result depends on how honestly and wisely students use it.'},
+ ev:{title:'🚗 Electric Cars: Are They the Future?',tag:'Social + tech',k:'var(--grape)',ct:'with recommendation',
+  s:'Electric vehicles (EVs) are becoming more common on Indonesian roads. The government supports them, yet many people are still unsure whether they are the right choice.',
+  f:['Supporters point out that electric cars produce no exhaust fumes, so they can help reduce air pollution in big cities.','Furthermore, charging an electric car is usually cheaper than buying petrol for the same distance.'],
+  a:['On the other hand, electric cars are still more expensive to buy than most petrol cars.','In addition, there are not enough charging stations yet, especially outside big cities, and charging takes longer than filling a tank.'],
+  c:'Having considered both sides, electric cars seem to be a promising option for the future. However, the government should build more charging stations and make EVs more affordable before everyone can switch.'}
+};
+const NM={s:'Issue',f:'Arguments for',a:'Arguments against',c:'Conclusion'},PCOL={s:'var(--ps)',f:'var(--pf)',a:'var(--pa)',c:'var(--pc)'};
+const SEG={
+ ph:{s:{d:'Introduces the topic and the question people disagree about.',rows:[['Background','almost every teen owns a phone'],['Two sides','some schools allow, others ban'],['Question','Should students be allowed…?']],tip:'Ending the issue with a <b>question</b> shows the reader that there are two possible answers.'},
+   f:{d:'Points that support phones at school.',rows:[['Point 1','phones help students learn'],['Point 2','phones keep students safe'],['Signals','Supporters argue that · Moreover']],tip:'Each point needs <b>elaboration</b>: a reason, fact or example.'},
+   a:{d:'Points that oppose phones at school.',rows:[['Point 1','phones distract students'],['Point 2','cheating and cyberbullying'],['Signals','On the other hand · Furthermore']],tip:'Give the other side the <b>same amount of detail</b>. That is what makes it fair.'},
+   c:{d:'Weighs both sides, then gives a recommendation.',rows:[['Summary','both benefits and risks'],['Recommendation','allow phones with clear rules'],['Signals','In conclusion · Perhaps the best solution is…']],tip:'<i>Perhaps</i> softens the recommendation, so it sounds wise, not bossy.'}},
+ ai:{s:{d:'Introduces the topic and shows the disagreement.',rows:[['Background','AI can answer and write in seconds'],['Disagreement','not everyone agrees it is good']],tip:'The issue can be a statement that shows disagreement, not only a question.'},
+   f:{d:'Points in favour of using AI.',rows:[['Point 1','works like a personal tutor'],['Point 2','saves time for deeper learning'],['Signals','Supporters claim that · In addition']],tip:'<b>claim</b> reports an opinion without saying it is 100% true.'},
+   a:{d:'Points against using AI.',rows:[['Point 1','students become too dependent'],['Point 2','wrong information; cheating'],['Signals','However, critics argue that · What is more']],tip:'<b>may</b> hedges the claim: it is a possibility, not a certainty.'},
+   c:{d:'A neutral conclusion: no side is chosen.',rows:[['Summary','helpful tool or harmful shortcut'],['Verdict','it depends on how students use it'],['Signal','All in all']],tip:'A <b>neutral</b> ending is fine in a discussion text, as long as it sums up both sides.'}},
+ ev:{s:{d:'Introduces the topic and the uncertainty.',rows:[['Background','EVs are more common in Indonesia'],['Disagreement','many people are still unsure'],['Signal','…, yet …']],tip:'<b>yet</b> works like <i>but</i>: it shows the two sides already in the issue.'},
+   f:{d:'Points in favour of electric cars.',rows:[['Point 1','no exhaust fumes → cleaner air'],['Point 2','cheaper to charge than petrol'],['Signals','Supporters point out that · Furthermore']],tip:'Cause → effect makes an argument stronger: <i>no fumes, <b>so</b> less pollution</i>.'},
+   a:{d:'Points against electric cars.',rows:[['Point 1','more expensive to buy'],['Point 2','few charging stations; slow charging'],['Signals','On the other hand · In addition']],tip:'Comparatives are useful: <i>more expensive than</i>, <i>longer than</i>.'},
+   c:{d:'Weighs both sides, then recommends an action.',rows:[['View','a promising option for the future'],['Recommendation','more stations, lower prices'],['Signals','Having considered both sides · should']],tip:'<b>Having considered both sides</b> shows that the verdict comes after weighing.'}}
+};
+let ex='ph',exSeg='s';
+function renderText(){
+  const d=TX[ex];
+  $('#text1').innerHTML=`<h4>${d.title}<span class="ttag" style="--k:${d.k}">${d.tag}</span></h4><div class="part" data-part="s"><span class="lbl">Issue</span>${d.s}</div><div class="part" data-part="f"><span class="lbl">For</span>${d.f.map(p=>`<p>${p}</p>`).join('')}</div><div class="part" data-part="a"><span class="lbl">Against</span>${d.a.map(p=>`<p>${p}</p>`).join('')}</div><div class="part" data-part="c"><span class="lbl">Conclusion · ${d.ct}</span>${d.c}</div>`;
+  $$('#text1 .part').forEach(p=>p.addEventListener('click',()=>showSeg(p.dataset.part)));
+  $$('#exTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.x===ex));
+}
+function showSeg(s){
+  exSeg=s;$('#text1').dataset.show=s;
+  $$('#stages .stage').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s));
+  const d=SEG[ex][s],c=$('#segCard');c.style.setProperty('--k',PCOL[s]);
+  c.innerHTML=`<h3>${NM[s]}</h3><p style="margin-top:6px;font-size:19px">${d.d}</p><ul class="seg-list">${d.rows.map(r=>`<li><b>${r[0]}</b><span>${r[1]}</span></li>`).join('')}</ul><p class="tipbox">💡 <b>Tip:</b> ${d.tip}</p>`;
+  const part=$(`#text1 .part[data-part="${s}"]`),pp=$('#text1');if(part)pp.scrollTo({top:Math.max(0,part.offsetTop-12),behavior:'smooth'});
+}
+$$('#exTabs .tab').forEach(t=>t.addEventListener('click',()=>{ex=t.dataset.x;renderText();showSeg(exSeg);}));
+$$('#stages .stage').forEach(b=>b.addEventListener('click',()=>showSeg(b.dataset.s)));
+renderText();showSeg('s');
+
+/* ---------- other issues ---------- */
+const M=[
+ {tab:'🕗 Full-day school',tag:'School',k:'var(--teal)',title:'Is Full-Day School a Good Idea?',s:'Many schools now run from morning until late afternoon, five days a week. Is this better than a six-day week?',f:['Students get Saturdays free for family and rest.','There is more time for clubs and projects at school.'],a:['Students often feel tired and lose focus in the afternoon.','There is less time to help at home or join community activities.'],c:'Full-day school can work well if schools add enough breaks and fun activities.'},
+ {tab:'👕 Uniforms',tag:'School',k:'var(--teal)',title:'Should School Uniforms Be Abolished?',s:'Some students want to wear their own clothes, while others think uniforms are important.',f:['Students can show their personality.','Parents do not need to buy several sets of uniforms.'],a:['Uniforms make students look equal.','They build school identity and discipline.'],c:'A fair compromise may be to keep uniforms but allow casual clothes one day a week.'},
+ {tab:'📵 Social media under 16',tag:'Social',k:'var(--grape)',title:'Should Children Under 16 Be Banned from Social Media?',s:'Some countries are introducing age limits for social media. Should Indonesia do the same?',f:['A ban protects children from cyberbullying and harmful content.','Children have more time for sleep, study and play.'],a:['Children may lose a way to learn and stay in touch with friends.','Age checks are easy to cheat and may put privacy at risk.'],c:'A ban alone is not enough; parents and schools also need to teach digital safety.'},
+ {tab:'🏠 Working from home',tag:'Social',k:'var(--grape)',title:'Working from Home: Better or Worse?',s:'After the pandemic, many companies still let employees work from home. Is it better than working in an office?',f:['Workers save time and money on travel.','They can organise their day more flexibly.'],a:['It is harder to separate work and family life.','Teamwork and friendships at work may suffer.'],c:'A hybrid system, with some days at home and some in the office, may offer the best of both.'},
+ {tab:'📚 Homework ban',tag:'School',k:'var(--teal)',title:'Should Homework Be Banned?',s:'Students often complain about homework, but teachers say it is important. Who is right?',f:['Students need time to rest and be with their families.','Too much homework causes stress and lack of sleep.'],a:['Homework helps students practise and remember lessons.','It trains discipline and time management.'],c:'Instead of banning it, teachers could give less but more meaningful homework.'}
+];
+$('#mTabs').innerHTML=M.map((m,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${m.tab}</button>`).join('');
+function showM(i){
+  $$('#mTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  const m=M[i];
+  $('#mTitle').innerHTML=`📜 ${m.title}<span class="ttag" style="--k:${m.k}">${m.tag}</span>`;
+  $('#mBody').innerHTML=`<div class="mblk" style="--k:var(--ps)"><h4>① Issue</h4><div class="mb">${m.s}</div></div><div class="mblk" style="--k:var(--pf)"><h4>② For</h4><div class="mb"><ul>${m.f.map(x=>`<li>${x}</li>`).join('')}</ul></div></div><div class="mblk" style="--k:var(--pa)"><h4>③ Against</h4><div class="mb"><ul>${m.a.map(x=>`<li>${x}</li>`).join('')}</ul></div></div><div class="mblk" style="--k:var(--pc)"><h4>④ Conclusion</h4><div class="mb">${m.c}</div></div>`;
+}
+$$('#mTabs .tab').forEach(t=>t.addEventListener('click',()=>showM(+t.dataset.i)));showM(0);
+
+/* ---------- highlighter ---------- */
+$$('#featBar .chip').forEach(c=>c.addEventListener('click',()=>{const on=c.getAttribute('aria-pressed')!=='true';c.setAttribute('aria-pressed',on);$('#text2').classList.toggle('hl-'+c.dataset.f,on);}));
+
+/* ---------- sentence lab ---------- */
+const K={con:'var(--coral)',add:'var(--teal)',subj:'#6B6480',obj:'#6B6480',verb:'var(--sky)',rep:'var(--grape)',mod:'var(--orange)',pass:'var(--pink)'};
+const sents=[
+ {s:'Should students be allowed to bring phones to school?',ch:[['Should','Modal (question)','mod'],['students','Generic participant','subj'],['be allowed','Passive (be + V3)','pass'],['to bring phones to school','to + V1 + object','obj']],p:'Should + S + be allowed + to V1 …?',n:'The <b>issue</b> is often a yes/no question. The passive <i>be allowed</i> focuses on the students, not on who gives permission.'},
+ {s:'Supporters argue that phones help students learn.',ch:[['Supporters','Generic participant','rep'],['argue that','Reporting verb','rep'],['phones','Subject','subj'],['help','Simple present','verb'],['students learn','Object + V1','obj']],p:'Generic participant + reporting verb + that + clause',n:'The writer <b>reports</b> other people’s opinion instead of saying “I think”, so the text stays objective.'},
+ {s:'On the other hand, many teachers believe that phones distract students.',ch:[['On the other hand,','Contrastive connective','con'],['many teachers','Generic participant','rep'],['believe that','Thinking verb','rep'],['phones distract students','Clause (simple present)','verb']],p:'Contrast + generic participant + believe that + clause',n:'<b>On the other hand</b> signals the switch to the <b>against</b> side.'},
+ {s:'Although AI saves time, students may become too dependent on it.',ch:[['Although','Contrastive conjunction','con'],['AI saves time,','Concession clause','verb'],['students','Subject','subj'],['may become','Modal (hedging) + V1','mod'],['too dependent on it','Complement','obj']],p:'Although + clause A, clause B (with may / might)',n:'<b>Although</b> joins both sides in one sentence. <b>may</b> makes the claim careful, not extreme.'},
+ {s:'Electric cars are still more expensive to buy than petrol cars.',ch:[['Electric cars','Subject','subj'],['are','Simple present','verb'],['still','Adverb','add'],['more expensive to buy','Comparative','mod'],['than petrol cars','Comparison','obj']],p:'S + are + more + adjective + than + noun',n:'Comparatives help you weigh two options: <i>cheaper than</i>, <i>more expensive than</i>, <i>longer than</i>.'},
+ {s:'Having considered both sides, I believe that schools should set clear rules.',ch:[['Having considered both sides,','Participle phrase (conclusion)','add'],['I believe that','Opinion phrase','rep'],['schools','Subject','subj'],['should set','Modal (recommendation) + V1','mod'],['clear rules','Object','obj']],p:'Having considered …, I believe that + S + should + V1',n:'In the <b>conclusion</b>, the writer may finally give a personal view and a recommendation.'}
+];
+$('#sentList').innerHTML=sents.map((d,i)=>`<button class="sent" type="button"><span class="sn">${i+1}</span><span>${d.s}</span></button>`).join('');
+function showSent(i){
+  $$('#sentList .sent').forEach((b,j)=>b.setAttribute('aria-pressed',i===j));
+  const d=sents[i];
+  $('#sentOut').innerHTML=`<span class="kicker" style="--c:var(--coral)">Sentence ${i+1}</span><p class="s">${d.s}</p><div class="chunks">${d.ch.map((c,j)=>`<span class="chunk" style="--k:${K[c[2]]};animation-delay:${j*70}ms"><span class="w">${c[0]}</span><span class="r">${c[1]}</span></span>`).join('')}</div><span class="pattern">${d.p}</span><p class="note">💡 ${d.n}</p>`;
+}
+$$('#sentList .sent').forEach((b,i)=>b.addEventListener('click',()=>showSent(i)));showSent(0);
+
+/* ---------- expressions ---------- */
+const X={
+ '❓ Issue':[['There is a debate about whether …','There is a debate about whether homework should be banned.'],['Should … ?','Should students be allowed to use AI for homework?'],['Nowadays, many people are discussing …','Nowadays, many people are discussing full-day school.'],['Opinions are divided on …','Opinions are divided on electric cars.'],['… has both advantages and disadvantages.','Working from home has both advantages and disadvantages.']],
+ '👍 For':[['Supporters argue that …','Supporters argue that uniforms make students look equal.'],['One advantage of … is that …','One advantage of online learning is that it is flexible.'],['Those in favour of … claim that …','Those in favour of the ban claim that it protects children.'],['Another benefit is that …','Another benefit is that it saves money.'],['Moreover, / Furthermore, …','Furthermore, it reduces air pollution.']],
+ '👎 Against':[['On the other hand, opponents believe that …','On the other hand, opponents believe that it is too expensive.'],['One disadvantage of … is that …','One disadvantage of full-day school is that students get tired.'],['Critics point out that …','Critics point out that age checks are easy to cheat.'],['Those against … say that …','Those against the idea say that it limits freedom.'],['A further problem is that …','A further problem is that charging takes a long time.']],
+ '↔️ Contrast':[['However, …','However, not everyone agrees.'],['Although …, …','Although AI is useful, it can make mistakes.'],['While some people …, others …','While some people love uniforms, others find them boring.'],['In contrast, …','In contrast, petrol cars are cheaper to buy.'],['Despite + noun / V-ing, …','Despite the benefits, many parents are worried.']],
+ '📊 Evidence':[['According to …, …','According to the school survey, 70% of students own a phone.'],['For example, / For instance, …','For example, students can use online dictionaries.'],['Research suggests that …','Research suggests that lack of sleep affects memory.'],['This is because …','This is because notifications break concentration.'],['As a result, …','As a result, students may get lower grades.']],
+ '🏁 Conclusion':[['In conclusion, …','In conclusion, both sides have valid points.'],['Having considered both sides, …','Having considered both sides, I believe a hybrid system is best.'],['All in all, …','All in all, the answer depends on how AI is used.'],['The best solution may be to …','The best solution may be to set clear rules.'],['I would recommend that …','I would recommend that schools provide more breaks.']]
+};
+const xk=Object.keys(X);
+$('#xTabs').innerHTML=xk.map((k,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${k}</button>`).join('');
+function showX(i){
+  $$('#xTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  $('#xTable').innerHTML=X[xk[i]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><button class="copy" type="button" data-c="${r[1].replace(/"/g,'&quot;')}">Copy</button></td></tr>`).join('');
+  $$('#xTable .copy').forEach(b=>b.addEventListener('click',()=>copyText(b.dataset.c)));
+}
+$$('#xTabs .tab').forEach(t=>t.addEventListener('click',()=>showX(+t.dataset.i)));showX(0);
+
+/* ---------- generic choice game ---------- */
+function choiceGame(box,data,opts,scoreEl,fbEl,doneMsg){
+  let s=0,d=0;
+  $(box).innerHTML=data.map((r,i)=>`<div class="sq-row"><span>${r[0]}</span><div class="sq-btns" data-i="${i}">${opts.map(o=>`<button class="opt" type="button" data-a="${o[0]}">${o[1]}</button>`).join('')}</div></div>`).join('');
+  $$(box+' .sq-btns').forEach(g=>g.addEventListener('click',e=>{
+    const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+    const ans=data[+g.dataset.i][1],ok=b.dataset.a===ans;b.classList.add(ok?'ok':'no');if(!ok)g.querySelector(`[data-a="${ans}"]`).classList.add('ok');
+    d++;if(ok)s++;$(scoreEl).textContent=`⭐ ${s} / ${data.length}`;
+    const fb=$(fbEl);
+    if(d===data.length){if(s===data.length){fb.textContent='🎉 Perfect! '+doneMsg;fb.className='fb good';confetti();}else{fb.textContent='👍 Good try! '+doneMsg;fb.className='fb bad';}}
+    else{fb.textContent=ok?'✅ Correct!':'❌ Oops, the green one is right.';fb.className='fb '+(ok?'good':'bad');}
+  }));
+}
+choiceGame('#g1',[
+ ['Some students want to wear their own clothes, while others think uniforms are important. Should schools stop requiring uniforms?','s'],
+ ['Supporters of abolishing uniforms argue that students should be free to express their personality through their clothes.','f'],
+ ['On the other hand, opponents believe that uniforms make all students look equal, whether they are rich or poor.','a'],
+ ['In conclusion, both sides have good points. A fair solution may be to keep uniforms but allow casual clothes on Fridays.','c'],
+ ['Moreover, without uniforms, parents would not need to buy expensive sets of school clothes every year.','f'],
+ ['Furthermore, uniforms help teachers recognise their students easily during school trips.','a'],
+ ['In addition, some students feel more comfortable and confident in their own clothes.','f'],
+ ['Those against the idea also say that uniforms build discipline and school pride.','a']
+],[['s','I'],['f','F'],['a','A'],['c','C']],'#g1Score','#g1Fb','Question → Issue · reasons to abolish → For · reasons to keep → Against · weighing + solution → Conclusion.');
+choiceGame('#g2',[
+ ['A ban protects children from cyberbullying and harmful content.','P'],
+ ['Social media helps children keep in touch with friends and family who live far away.','C'],
+ ['Children will have more time for sleep, study and outdoor play.','P'],
+ ['Age checks can be cheated easily, so a ban may not work.','C'],
+ ['Many apps are designed to be addictive, and young people are more easily affected.','P'],
+ ['Teenagers can use social media to learn skills and share their creative work.','C'],
+ ['Checking every user’s age may force people to share private data, such as ID cards.','C'],
+ ['Parents will worry less about strangers contacting their children online.','P']
+],[['P','P'],['C','C']],'#g2Score','#g2Fb','A good discussion collects strong points on BOTH sides.');
+choiceGame('#g3',[
+ ['I strongly believe that homework should be banned. Firstly, it causes stress. Therefore, schools must stop giving homework.','E'],
+ ['Some people think homework helps students practise, while others say it only causes stress.','D'],
+ ['Supporters of online learning praise its flexibility. However, critics argue that students miss face-to-face interaction.','D'],
+ ['Reading builds vocabulary, trains focus and opens the mind. It is clear that reading matters for every teenager.','E'],
+ ['Having considered the advantages and disadvantages, it seems that a hybrid system is the best option.','D'],
+ ['Let’s stop using plastic straws! They pollute the sea and harm turtles.','E'],
+ ['Electric cars reduce pollution; on the other hand, they are still expensive and charging stations are limited.','D'],
+ ['Sport keeps students fit, builds teamwork and reduces stress, so every student should join a sports club.','E']
+],[['D','D'],['E','E']],'#g3Score','#g3Fb','Both sides + weighing → discussion · one side only → exposition.');
+
+/* ---------- game 4 ---------- */
+const vq=[['Some people ___ that full-day school is tiring.',['argue','argues','arguing'],'argue'],['Phones are useful. ___, they can distract students.',['However','Moreover','Therefore'],'However'],['___ uniforms are practical, some students find them uncomfortable.',['Although','Because','Moreover'],'Although'],['AI saves time. ___, it can explain difficult topics.',['Furthermore','However','On the other hand'],'Furthermore'],['Electric cars are ___ than petrol cars.',['more expensive','expensiver','most expensive'],'more expensive'],['A ban ___ protect children, but it may not work.',['could','coulds','can to'],'could'],['___ considered both sides, I think a hybrid system is best.',['Having','Have','Had'],'Having'],['Students ___ use phones only for learning.',['should','should to','shoulds'],'should']];
+let vs=0,vd=0;
+$('#vq').innerHTML=vq.map((r,i)=>`<div class="vitem"><span class="base">${r[0].replace('___','<u>&nbsp;</u>')}</span><div class="opts" data-i="${i}">${r[1].map(o=>`<button class="opt" type="button">${o}</button>`).join('')}</div></div>`).join('');
+$$('#vq .opts').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+  const ans=vq[+g.dataset.i][2],ok=b.textContent===ans;b.classList.add(ok?'ok':'no');if(!ok)[...g.children].find(x=>x.textContent===ans).classList.add('ok');
+  const u=g.parentElement.querySelector('u');if(u)u.textContent=ans;
+  vd++;if(ok)vs++;$('#vqScore').textContent=`⭐ ${vs} / ${vq.length}`;
+  const fb=$('#vqFb');
+  if(vd===vq.length){fb.textContent=(vs===vq.length?'🎉 Perfect! ':'💡 ')+'Remember: However = switch sides, Furthermore = add a point, modal + V1, Having + V3 in conclusions.';fb.className='fb '+(vs===vq.length?'good':'bad');if(vs===vq.length)confetti();}
+  else{fb.textContent=ok?'✅ Nice!':'❌ Not quite, look at the green answer.';fb.className='fb '+(ok?'good':'bad');}
+}));
+
+/* ---------- builder ---------- */
+let bType='r';
+const FC=['Supporters argue that','Those in favour claim that','One advantage is that','Moreover,','Furthermore,','In addition,','Another benefit is that'];
+const AC=['On the other hand, opponents believe that','However, critics argue that','One disadvantage is that','Furthermore,','Moreover,','In addition,','A further problem is that'];
+function row(wrap,list,c,t){
+  const d=document.createElement('div');d.className='ev-row';
+  d.innerHTML=`<select>${list.map(o=>`<option${o===c?' selected':''}>${o}</option>`).join('')}<option value="">(none)</option></select><textarea rows="2" placeholder="Your point + a reason or example…"></textarea>`;
+  d.querySelector('textarea').value=t;d.querySelectorAll('select,textarea').forEach(el=>el.addEventListener('input',render));
+  $(wrap).appendChild(d);
+}
+[['Supporters argue that','students need time to rest, play and spend time with their families.'],['Moreover,','too much homework can cause stress and a lack of sleep.']].forEach(r=>row('#forWrap',FC,r[0],r[1]));
+[['On the other hand, opponents believe that','homework helps students practise and remember what they learn.'],['Furthermore,','it trains discipline and time management.']].forEach(r=>row('#agWrap',AC,r[0],r[1]));
+$('#addFor').addEventListener('click',()=>{if($$('#forWrap .ev-row').length>=4){toast('Four points is plenty! 😄');return;}row('#forWrap',FC,'In addition,','');render();});
+$('#addAg').addEventListener('click',()=>{if($$('#agWrap .ev-row').length>=4){toast('Four points is plenty! 😄');return;}row('#agWrap',AC,'In addition,','');render();});
+const esc=s=>s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const dot=s=>{s=s.trim();return s&&!/[.!?]$/.test(s)?s+'.':s;};
+const join=(a,b)=>{b=b.trim();if(!b)return '';if(!a)return dot(cap(b));return dot(a+' '+b);};
+function rows(w){return $$(w+' .ev-row').map(r=>({c:r.querySelector('select').value,t:r.querySelector('textarea').value.trim()})).filter(r=>r.t);}
+function parts(){const f=rows('#forWrap'),a=rows('#agWrap');return {title:$('#bTitle').value.trim(),issue:dot(cap($('#bIssue').value.trim())),f:f.map(r=>join(r.c,r.t)),a:a.map(r=>join(r.c,r.t)),con:join($('#bConC').value,$('#bCon').value),conRaw:$('#bCon').value.trim()};}
+function render(){
+  const p=parts(),rec=bType==='r';
+  $('#bOut').innerHTML=`<h4>${esc(p.title||'Your issue')}<span class="ttag" style="--k:${rec?'var(--sky)':'var(--grape)'}">${rec?'Recommendation':'Neutral'}</span></h4>`+
+   (p.issue?`<div class="part" data-part="s"><span class="lbl">Issue</span>${esc(p.issue)}</div>`:'')+
+   (p.f.length?`<div class="part" data-part="f"><span class="lbl">For</span>${p.f.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:'')+
+   (p.a.length?`<div class="part" data-part="a"><span class="lbl">Against</span>${p.a.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:'')+
+   (p.con?`<div class="part" data-part="c"><span class="lbl">Conclusion</span>${esc(p.con)}</div>`:'');
+  const all=[p.issue,...p.f,...p.a,p.con].join(' ').toLowerCase();
+  const recOk=/\b(should|recommend|best solution|must|need to|it would be better)\b/.test(p.conRaw.toLowerCase());
+  const checks=[[p.title.split(/\s+/).filter(Boolean).length>=3,'Title names the issue'],[/\?|\bwhile\b|\bothers\b|\bdebate\b|\bdisagree|\bhowever\b|\bbut\b/.test(p.issue.toLowerCase()),'Issue shows two sides or a question'],[p.f.length>=2,`2+ arguments for (${p.f.length})`],[p.a.length>=2,`2+ arguments against (${p.a.length})`],[p.f.length>0&&p.a.length>0&&Math.abs(p.f.length-p.a.length)<=1,'Balanced: for ≈ against'],[/\b(however|on the other hand|although|while|whereas|in contrast|despite)\b/.test(all),'Contrast connective'],[/\b(argue|argues|claim|claims|believe|believes|point out|points out|say|says)\b/.test(all),'Reporting verb (argue, claim…)'],rec?[p.conRaw.length>0&&recOk,'Conclusion gives a recommendation']:[p.conRaw.length>0&&!recOk,'Conclusion stays neutral']];
+  $('#bChecks').innerHTML=checks.map(c=>`<li class="${c[0]?'ok':''}">${c[1]}</li>`).join('');
+}
+function setType(t){bType=t;$$('#bType .tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$('#bCon').placeholder=t==='r'?'…both sides… The best solution may be to… / … should …':'sum up both sides without choosing one';render();}
+$$('#bType .tab').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.t)));
+$$('#bForm input,#bForm select,#bForm textarea').forEach(el=>el.addEventListener('input',render));
+$('#copyText').addEventListener('click',()=>{const p=parts();copyText([p.title,p.issue,...p.f,...p.a,p.con].filter(Boolean).join('\n\n'));});
+$('#clearAll').addEventListener('click',()=>{['#bTitle','#bIssue','#bCon'].forEach(id=>$(id).value='');$('#forWrap').innerHTML='';$('#agWrap').innerHTML='';['Supporters argue that','Moreover,'].forEach(c=>row('#forWrap',FC,c,''));['On the other hand, opponents believe that','Furthermore,'].forEach(c=>row('#agWrap',AC,c,''));render();toast('✨ Ready for your own issue!');});
+render();
+
+/* ---------- finale ---------- */
+$$('#feel button').forEach(b=>b.addEventListener('click',()=>{$$('#feel button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#feelMsg').textContent=b.dataset.m;}));
+/* ---------- start ---------- */
+addEventListener('hashchange',()=>{const h=parseInt(location.hash.slice(1),10);if(h>=1&&h<=N&&h-1!==cur)go(h-1,false);});
+const h=parseInt((location.hash||'').slice(1),10);
+slides[0].classList.add('active');
+go(h>=1&&h<=N?h-1:0,false);
+})();
+</script>
