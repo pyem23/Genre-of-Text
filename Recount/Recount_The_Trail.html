@@ -1,0 +1,1169 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recount Text · The Trail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,500;0,700;0,800;1,500&display=swap">
+<style>
+:root{
+  --ink:#2B2440; --soft:#6B6480; --paper:#FFFBF2; --white:#fff;
+  --sun:#FFC933; --coral:#FF6B5B; --teal:#1FB5A6; --sky:#3D8BFF; --grape:#8B5CF6; --pink:#FF8FB1; --orange:#FF9F1C; --mint:#7BE0B5;
+  --sun-t:#FFF1C2; --coral-t:#FFE1DC; --teal-t:#D3F5F0; --sky-t:#DDEAFF; --grape-t:#ECE3FF; --pink-t:#FFE3EC; --orange-t:#FFE9CC;
+  --o:var(--sky); --e:var(--orange); --r:var(--grape);
+  --good:#16A34A; --bad:#E5484D;
+  --display:"Fredoka","Baloo 2",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;
+  background:#FFE08A radial-gradient(rgba(255,255,255,.55) 2.5px,transparent 3px) 0 0/28px 28px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+
+/* ============ STAGE (fixed 1600x900, scaled to fit) ============ */
+.stagewrap{flex:1;min-height:0;position:relative;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center;transform:translate(-50%,-50%) scale(var(--s,.5));
+  background:var(--paper);border:5px solid var(--ink);border-radius:36px;box-shadow:12px 12px 0 var(--ink);overflow:hidden}
+
+/* ============ BOTTOM BAR ============ */
+.bar{flex:none;height:76px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:0 18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px var(--display);white-space:nowrap}
+.brand svg{width:40px;height:44px}
+.track{flex:1;position:relative;height:14px;background:rgba(255,255,255,.15);border-radius:99px;margin:0 14px;min-width:80px}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--sun);transition:width .45s,background .45s}
+.flag{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;border:3px solid var(--ink);transform:translate(-50%,-50%);outline:2px solid rgba(255,255,255,.5)}
+.hiker{position:absolute;top:50%;width:42px;height:46px;transform:translate(-50%,-72%);transition:left .45s cubic-bezier(.3,1.4,.5,1);pointer-events:none}
+.count{font:700 18px var(--display);min-width:78px;text-align:center;font-variant-numeric:tabular-nums}
+.ibtn{width:48px;height:48px;border-radius:50%;border:3px solid #fff;background:transparent;color:#fff;display:grid;place-items:center;font:700 20px var(--display);flex:none}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+.nav{background:var(--sun);color:var(--ink);border-color:var(--sun);font-size:24px}
+.nav:hover{background:#FFD95E}
+.nav:disabled{opacity:.35;cursor:default}
+@media (max-width:760px){.brand span,.hide-sm{display:none}.bar{gap:8px;padding:0 10px}.track{margin:0 8px}}
+
+/* ============ MENU OVERLAY ============ */
+.menu{position:fixed;inset:0;z-index:60;background:rgba(43,36,64,.72);display:none;place-items:center;padding:20px}
+.menu.open{display:grid}
+.menu-box{background:var(--paper);border:4px solid var(--ink);border-radius:28px;box-shadow:8px 8px 0 var(--ink);width:min(1000px,100%);max-height:88vh;overflow:auto;padding:24px}
+.menu-box h3{font:700 28px var(--display);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.mitem{text-align:left;border:3px solid var(--ink);border-radius:16px;background:#fff;padding:10px 12px;box-shadow:3px 3px 0 var(--ink);display:grid;gap:2px}
+.mitem b{font:700 13px var(--display);color:#fff;background:var(--c);border-radius:99px;padding:1px 9px;justify-self:start}
+.mitem span{font-weight:800;font-size:15px}
+.mitem.cur{outline:4px solid var(--sun)}
+.rotate-tip{position:fixed;left:12px;right:12px;top:12px;z-index:70;background:var(--ink);color:#fff;border-radius:16px;padding:10px 14px;font-weight:700;display:none;align-items:center;gap:10px}
+@media (max-width:700px) and (orientation:portrait){.rotate-tip.show{display:flex}}
+
+/* ============ SLIDE BASE ============ */
+.slide{position:absolute;inset:0;padding:54px 88px 56px;display:none;flex-direction:column;gap:22px;font-size:22px;line-height:1.5;
+  --c:var(--teal);--t:var(--teal-t);--on:#fff}
+.slide.active{display:flex;animation:pop .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.965) translateY(16px)}to{opacity:1;transform:none}}
+.slide[data-sec="1"]{--c:var(--teal);--t:var(--teal-t)}
+.slide[data-sec="2"]{--c:var(--sky);--t:var(--sky-t)}
+.slide[data-sec="3"]{--c:var(--sun);--t:var(--sun-t);--on:var(--ink)}
+.slide[data-sec="4"]{--c:var(--coral);--t:var(--coral-t)}
+.slide[data-sec="5"]{--c:var(--grape);--t:var(--grape-t)}
+.slide h1,.slide h2,.slide h3,.slide h4{font-family:var(--display);margin:0;line-height:1.08}
+.slide p{margin:0}
+.head{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2}
+.krow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:999px;padding:5px 16px;
+  font:700 16px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--ink)}
+.hint{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px dashed var(--ink);border-radius:999px;padding:4px 14px;font:600 16px var(--display);color:var(--soft)}
+.slide h2{font-size:58px;font-weight:700;letter-spacing:-.01em}
+.u{background:linear-gradient(transparent 58%,color-mix(in srgb,var(--c) 45%,transparent) 58%);padding:0 .08em;border-radius:6px}
+.body{flex:1;min-height:0;position:relative;z-index:2}
+.center{display:grid;align-content:center}
+.muted{color:var(--soft)}
+.id{font-style:italic;color:var(--soft)}
+
+/* doodles */
+.deco{position:absolute;z-index:1;pointer-events:none;overflow:visible}
+.spin{animation:spin 14s linear infinite}
+.bob{animation:bob 3.2s ease-in-out infinite}
+.twinkle{animation:tw 2.4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-12px)}}
+@keyframes tw{50%{transform:scale(.7) rotate(20deg);opacity:.6}}
+.kiko{overflow:visible}
+.kiko.bob{animation:bob 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.slide.active,.spin,.bob,.twinkle,.kiko.bob{animation:none!important}}
+
+/* stickers & buttons */
+.stk{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:22px 26px;position:relative}
+.stk.tint{background:var(--t)}
+.tl{transform:rotate(-1.6deg)} .tr{transform:rotate(1.6deg)}
+.hov{transition:transform .18s,box-shadow .18s}
+.hov:hover{transform:translate(-3px,-4px) rotate(0);box-shadow:9px 10px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 21px var(--display);background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:16px;
+  padding:11px 24px;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.sm{font-size:18px;padding:8px 18px}
+.btn:disabled{opacity:.55;cursor:default}
+.ico{width:88px;height:88px;border-radius:50%;background:var(--t);border:3px solid var(--ink);display:grid;place-items:center;font-size:46px;line-height:1;flex:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.bubble{position:relative;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;padding:12px 18px;font:600 20px/1.3 var(--display);box-shadow:4px 4px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;width:18px;height:18px;background:inherit;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);bottom:-11px;left:34px;transform:rotate(45deg)}
+.bubble.tr-tail::after{left:auto;right:34px}
+.bubble.side::after{bottom:auto;top:26px;left:-11px;transform:rotate(135deg)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:99px;font-weight:800;z-index:80;border:3px solid var(--sun)}
+.cf{position:fixed;top:-24px;z-index:90;pointer-events:none;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),112vh) rotate(var(--rot))}}
+
+/* ============ COVER ============ */
+.cover{display:none;flex-direction:row!important;align-items:center;gap:30px;padding:60px 70px 60px 96px;--c:var(--coral);--t:var(--coral-t)}
+.cover .left{flex:1;display:flex;flex-direction:column;gap:22px;position:relative;z-index:2}
+.cover h1{font-size:132px;font-weight:700;line-height:.92;letter-spacing:-.02em}
+.cover h1 .pop{color:var(--coral);text-shadow:6px 6px 0 var(--ink);display:inline-block;transform:rotate(-3deg)}
+.lead{font-size:27px;font-weight:700;max-width:640px}
+.tags{display:flex;flex-wrap:wrap;gap:12px}
+.tag{display:inline-flex;gap:8px;align-items:center;background:var(--tc);border:3px solid var(--ink);border-radius:999px;padding:6px 16px;font:600 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.school{font-size:19px;color:var(--soft)}
+.school b{color:var(--ink)}
+.cover .right{width:640px;height:640px;position:relative;flex:none;z-index:2}
+.cover .right>svg.scene{width:100%;height:100%}
+
+/* ============ DIVIDER ============ */
+.divider{background:var(--c);color:var(--on);justify-content:center;padding-left:120px}
+.divider .part-pill{align-self:flex-start;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;padding:6px 20px;font:700 22px var(--display);letter-spacing:.08em;box-shadow:4px 4px 0 var(--ink);transform:rotate(-3deg)}
+.divider h2{font-size:128px;color:#fff;text-shadow:7px 7px 0 var(--ink);max-width:980px;position:relative;z-index:2}
+.divider[data-sec="3"] h2{color:#fff}
+.divider p.sub{font:600 32px/1.3 var(--display);max-width:760px;position:relative;z-index:2}
+.divider .num{position:absolute;right:70px;top:10px;font:700 460px/1 var(--display);color:transparent;-webkit-text-stroke:7px rgba(255,255,255,.4);z-index:1}
+.divider[data-sec="3"] .num{-webkit-text-stroke-color:rgba(43,36,64,.18)}
+.divider .kwrap{position:absolute;right:120px;bottom:70px;display:flex;align-items:flex-end;gap:10px;z-index:2}
+.divider .kwrap .bubble{margin-bottom:190px;max-width:320px}
+
+/* ============ AGENDA ============ */
+.agenda{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;position:relative;z-index:2;align-items:start;padding-top:20px}
+.agenda .stop{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);padding:24px 16px 22px;transition:transform .18s,box-shadow .18s}
+.agenda .stop:nth-child(odd){transform:rotate(-2deg)}
+.agenda .stop:nth-child(even){transform:rotate(2deg) translateY(44px)}
+.agenda .stop:hover{transform:translateY(-8px) rotate(0);box-shadow:9px 12px 0 var(--ink)}
+.agenda .n{font:700 20px var(--display);background:var(--k);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 14px}
+.agenda .stop:nth-child(3) .n{color:var(--ink)}
+.agenda .ico{background:var(--kt)}
+.agenda b{font:700 28px var(--display)}
+.agenda .s{font-size:18px;color:var(--soft);line-height:1.35}
+
+/* ============ WARM-UP ============ */
+.breathe{display:grid;grid-template-columns:440px 1fr;gap:60px;align-items:center;height:100%}
+.orb-box{width:440px;height:440px;display:grid;place-items:center;position:relative}
+.orb-ring{position:absolute;inset:18px;border:4px dashed var(--teal);border-radius:50%}
+.orb{width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8FF0DF,var(--teal) 70%);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+  display:grid;place-items:center;color:#fff;font:700 30px var(--display);text-shadow:2px 2px 0 var(--ink);transition:transform 4s ease-in-out}
+.orb.in{transform:scale(1.75)}
+.cue{font:700 40px/1.2 var(--display);min-height:100px;margin:16px 0 26px}
+.flips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;height:100%;align-content:center}
+.flip{perspective:1000px;height:360px;border:none;background:none;padding:0;text-align:left}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.flip .f{background:var(--fc)}
+.flip .b{background:#fff;transform:rotateY(180deg)}
+.flip .emo{font-size:62px;line-height:1}
+.flip .q{font:700 28px/1.2 var(--display)}
+.flip .ans{font:600 25px/1.3 var(--display);color:var(--ink)}
+.flip small{font-size:17px;color:var(--soft);font-weight:700}
+.flip small.tap{display:inline-flex;align-self:flex-start;background:#fff;border:2px solid var(--ink);border-radius:99px;padding:2px 12px;color:var(--ink)}
+.flip .b b{background:var(--sun-t);padding:0 6px;border-radius:6px;color:var(--ink)}
+.chat{display:grid;gap:26px;max-width:1180px}
+.chat .row{display:flex;gap:18px;align-items:flex-start}
+.chat .row.me{justify-content:flex-end}
+.chat .av{width:80px;height:80px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;font-size:44px;flex:none;background:var(--sky-t)}
+.chat .me .av{background:var(--sun-t)}
+.chat .bubble{font:600 28px/1.35 var(--display);max-width:900px}
+.chat .bubble.q{background:var(--sky-t)}
+.chat .bubble.a{background:var(--sun-t)}
+.chat .bubble mark{background:#fff;border-radius:6px;padding:0 4px;color:inherit}
+.reveal{display:flex;align-items:center;gap:24px}
+.bigsticker{font:700 54px var(--display);background:var(--coral);color:#fff;text-shadow:3px 3px 0 var(--ink);border:4px solid var(--ink);border-radius:22px;padding:10px 30px;box-shadow:6px 6px 0 var(--ink);transform:rotate(-3deg);animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+
+/* ============ UNDERSTANDING ============ */
+.defn{font:600 50px/1.28 var(--display);max-width:1250px;background:#fff;border:4px solid var(--ink);border-radius:32px;box-shadow:8px 8px 0 var(--ink);padding:36px 44px;position:relative}
+.defn mark{background:var(--sun);border-radius:10px;padding:0 10px;color:var(--ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.08)}
+.defn .quote{position:absolute;top:-38px;left:34px;font:700 110px/1 var(--display);color:var(--sky)}
+.idline{display:flex;gap:14px;align-items:flex-start;font-size:24px;max-width:1150px}
+.idline .badge{flex:none;font:700 16px var(--display);background:var(--ink);color:#fff;border-radius:8px;padding:4px 10px;margin-top:4px}
+.fn .stk{display:flex;flex-direction:column;gap:18px;align-items:flex-start;min-height:380px;padding:32px}
+.fn h3{font-size:46px}
+.fn p{font-size:27px}
+.ben{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ben .stk{display:flex;gap:20px;align-items:center;padding:30px 26px;background:var(--bc);min-height:170px}
+.ben .ico{width:92px;height:92px;font-size:48px;background:#fff}
+.ben b{font:700 31px var(--display);display:block;margin-bottom:4px}
+.ben span{font-size:22px;color:#4A4460;line-height:1.35;display:block}
+.goals{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;align-items:stretch}
+.goal{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:36px 22px;min-height:400px}
+.medal{width:120px;height:120px;border-radius:50%;background:var(--gc);border:4px solid var(--ink);display:grid;place-items:center;font:700 56px var(--display);color:#fff;text-shadow:3px 3px 0 var(--ink);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),5px 5px 0 var(--ink);position:relative}
+.medal::before,.medal::after{content:"";position:absolute;top:100px;width:30px;height:46px;background:var(--gc);border:3px solid var(--ink);z-index:-1}
+.medal::before{left:26px;transform:rotate(18deg)} .medal::after{right:26px;transform:rotate(-18deg)}
+.goal b{font:700 34px var(--display);margin-top:26px}
+.goal span{font-size:24px;color:var(--soft)}
+.tabs{display:flex;flex-wrap:wrap;gap:14px}
+.tab{font:700 22px var(--display);padding:10px 22px;border:3px solid var(--ink);border-radius:999px;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform .12s}
+.tab:hover{transform:translateY(-2px)}
+.tab[aria-selected="true"]{background:var(--c);color:var(--on);transform:translateY(-3px) rotate(-1deg)}
+.typepanel{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:34px 38px;margin-top:10px}
+.typepanel .ico{width:150px;height:150px;font-size:84px}
+.typepanel h3{font-size:46px;margin-bottom:10px}
+.typepanel p{font-size:26px}
+.typepanel .ex{margin-top:16px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:12px 18px;font-size:22px}
+.vs{display:grid;grid-template-columns:1fr 110px 1fr;gap:0;align-items:stretch;height:100%}
+.vs .col{padding:26px 30px;display:flex;flex-direction:column;gap:14px}
+.vs .col h3{font-size:44px;text-align:center;padding:6px;border-radius:14px;border:3px solid var(--ink);color:#fff;text-shadow:3px 3px 0 var(--ink)}
+.vs .vsmid{display:grid;place-items:center}
+.vs .vsmid span{width:100px;height:100px;border-radius:50%;background:var(--sun);border:4px solid var(--ink);display:grid;place-items:center;font:700 38px var(--display);box-shadow:4px 4px 0 var(--ink);transform:rotate(-8deg)}
+.vs dl{margin:0;display:grid;gap:12px}
+.vs dt{font:700 15px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.vs dd{margin:0 0 4px;font-size:23px;font-weight:700;line-height:1.3}
+
+/* ============ STRUCTURE ============ */
+.explore{display:grid;grid-template-columns:1.3fr 1fr;gap:34px;height:100%;min-height:0}
+.paper{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:18px 24px;overflow:auto;font-size:18.5px;line-height:1.55;position:relative;
+  background-image:linear-gradient(90deg,transparent 0,transparent 100%)}
+.paper h4{font-size:26px;text-align:center;margin-bottom:12px}
+.part{padding:8px 14px 8px 16px;border-left:7px solid var(--line,#ddd);border-radius:0 14px 14px 0;margin-bottom:8px;transition:opacity .25s,background .25s;cursor:pointer}
+.part[data-part="o"]{--line:var(--o)} .part[data-part="e"]{--line:var(--e)} .part[data-part="r"]{--line:var(--r)}
+.lbl{display:inline-block;font:700 12.5px var(--display);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--line);padding:1px 10px;border-radius:99px;margin-right:6px;vertical-align:2px}
+[data-show="o"] .part:not([data-part="o"]),[data-show="e"] .part:not([data-part="e"]),[data-show="r"] .part:not([data-part="r"]){opacity:.28}
+[data-show="o"] .part[data-part="o"]{background:var(--sky-t)}
+[data-show="e"] .part[data-part="e"]{background:var(--orange-t)}
+[data-show="r"] .part[data-part="r"]{background:var(--grape-t)}
+.side{display:flex;flex-direction:column;gap:16px;min-height:0}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stage{border:3px solid var(--ink);border-radius:18px;background:#fff;box-shadow:3px 3px 0 var(--ink);padding:10px 8px;font:700 18px/1.15 var(--display);display:flex;flex-direction:column;align-items:center;gap:4px}
+.stage .dotn{width:40px;height:40px;border-radius:50%;background:var(--k);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font-size:20px}
+.stage[aria-pressed="true"]{background:var(--kt);transform:translateY(-3px);box-shadow:5px 6px 0 var(--ink)}
+.segcard{flex:1;min-height:0;overflow:auto;border-color:var(--ink);background:#fff}
+.segcard h3{font-size:34px;color:var(--k)}
+.seg-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.seg-list li{display:grid;grid-template-columns:92px 1fr;gap:10px;font-size:18.5px;line-height:1.35;padding-bottom:8px;border-bottom:2px dashed #E6E0EF}
+.seg-list li:last-child{border-bottom:none}
+.seg-list b{font-family:var(--display);color:var(--k)}
+.tipbox{margin-top:12px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:14px;padding:10px 14px;font-size:18px}
+.segsum{display:grid;gap:18px}
+.segrow{display:grid;grid-template-columns:260px 1fr 250px;gap:0;border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);background:#fff}
+.segrow>div{padding:22px 22px;font-size:23px;line-height:1.4}
+.segrow .nm{background:var(--k);color:#fff;font:700 30px var(--display);display:flex;flex-direction:column;justify-content:center;text-shadow:2px 2px 0 var(--ink);border-right:3px solid var(--ink)}
+.segrow .nm small{font:600 16px var(--display);text-shadow:none;opacity:.95}
+.segrow .len{background:var(--kt);border-left:3px dashed var(--ink);font-weight:700}
+.segrow .len i{display:block;font-weight:500;font-size:19px;color:#4A4460;margin-top:6px}
+
+/* ============ LANGUAGE ============ */
+.chips{display:flex;flex-wrap:wrap;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:10px;border:3px solid var(--ink);background:#fff;border-radius:999px;padding:6px 18px 6px 8px;font:700 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.chip i{width:26px;height:26px;border-radius:50%;background:var(--fc);border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:14px;color:#fff}
+.chip[aria-pressed="true"]{background:var(--ft)}
+.chip[aria-pressed="true"] i::after{content:"✓"}
+.chip[data-f="v"]{--fc:var(--coral);--ft:var(--coral-t)} .chip[data-f="c"]{--fc:var(--teal);--ft:var(--teal-t)} .chip[data-f="t"]{--fc:var(--sky);--ft:var(--sky-t)} .chip[data-f="p"]{--fc:var(--grape);--ft:var(--grape-t)} .chip[data-f="n"]{--fc:var(--orange);--ft:var(--orange-t)}
+.lf{font-size:22px;line-height:1.8}
+.lf .part{cursor:default;border-left-width:6px;margin-bottom:6px}
+.lf span.v,.lf span.c,.lf span.t,.lf span.p,.lf span.n{border-radius:5px;transition:background .2s,box-shadow .2s;padding:0 1px}
+.hl-v .v{background:var(--coral-t);box-shadow:inset 0 -3px 0 var(--coral)}
+.hl-c .c{background:var(--teal-t);box-shadow:inset 0 -3px 0 var(--teal)}
+.hl-t .t{background:var(--sky-t);box-shadow:inset 0 -3px 0 var(--sky)}
+.hl-p .p{background:var(--grape-t);box-shadow:inset 0 -3px 0 var(--grape)}
+.hl-n .n{background:var(--orange-t);box-shadow:inset 0 -3px 0 var(--orange)}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.feat{padding:24px 26px;display:flex;flex-direction:column;gap:12px;min-height:250px}
+.feat .top{display:flex;align-items:center;gap:12px}
+.feat .ico{width:70px;height:70px;font-size:36px;background:var(--ft)}
+.feat h3{font-size:29px;line-height:1.1}
+.feat p{font-size:21px;flex:1;line-height:1.4}
+.feat .ex{background:var(--ft);border-radius:12px;padding:8px 12px;font-weight:800;font-size:19px;border:2px solid var(--ink)}
+.analyzer{display:grid;grid-template-columns:1fr 1.3fr;gap:30px;height:100%;min-height:0}
+.sent-list{display:grid;gap:10px;align-content:start;overflow:auto;padding:4px 8px 8px 4px}
+.sent{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:19px;font-weight:700;box-shadow:3px 3px 0 var(--ink);display:flex;gap:10px;align-items:flex-start}
+.sent .sn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--coral-t);border:2px solid var(--ink);display:grid;place-items:center;font:700 15px var(--display)}
+.sent[aria-pressed="true"]{background:var(--coral-t)}
+.sent[aria-pressed="true"] .sn{background:var(--coral);color:#fff}
+.out{overflow:auto}
+.out .s{font:700 28px/1.3 var(--display);margin:6px 0 18px}
+.chunks{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.chunk{display:grid;border-radius:14px;overflow:hidden;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);animation:pop .4s both}
+.chunk .w{padding:8px 14px;font-weight:800;background:#fff;font-size:21px}
+.chunk .r{padding:3px 14px;font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k);border-top:3px solid var(--ink)}
+.pattern{display:inline-block;font:700 22px var(--display);background:var(--ink);color:var(--sun);border-radius:12px;padding:8px 16px}
+.note{margin-top:14px;font-size:20px}
+.xtable{width:100%;border-collapse:separate;border-spacing:0 10px}
+.xtable td{background:#fff;padding:12px 16px;font-size:20px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);vertical-align:middle}
+.xtable td:first-child{border-left:3px solid var(--ink);border-radius:16px 0 0 16px;font-weight:800;width:38%;background:var(--t)}
+.xtable td:last-child{border-right:3px solid var(--ink);border-radius:0 16px 16px 0;width:110px;text-align:right}
+.xtable td:nth-child(2){font-style:italic}
+.copy{border:2.5px solid var(--ink);background:var(--sun);border-radius:10px;font:700 16px var(--display);padding:4px 12px}
+.copy:hover{background:#FFD95E}
+.xwrap{overflow:auto;height:100%;padding-right:8px}
+
+/* ============ PRACTICE ============ */
+.pill{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:18.5px;font-weight:700;width:100%;box-shadow:3px 3px 0 var(--ink);line-height:1.3;transition:transform .12s}
+.pill:hover{transform:translateX(4px)}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.qcol{display:flex;flex-direction:column;gap:10px;min-height:0}
+.qcol h4{font-size:22px;display:flex;gap:8px;align-items:center}
+.pool,.answer{display:grid;gap:10px;align-content:start;flex:1;overflow:auto;padding:4px 8px 8px 4px}
+.answer{border:3px dashed var(--ink);border-radius:22px;padding:14px;counter-reset:a;background:var(--grape-t)}
+.answer:empty::before{content:"👈 Klik kalimat di kiri sesuai urutan kejadian…";color:var(--soft);font:600 20px var(--display)}
+.answer .pill{counter-increment:a;display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start}
+.answer .pill::before{content:counter(a);width:30px;height:30px;border-radius:50%;background:var(--grape);color:#fff;display:grid;place-items:center;font:700 16px var(--display);border:2px solid var(--ink)}
+.pill.ok{background:#DCFCE7;border-color:var(--good)}
+.pill.no{background:#FFE4E6;border-color:var(--bad)}
+.qbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.fb{font:700 22px var(--display);min-height:1.3em}
+.fb.good{color:var(--good)} .fb.bad{color:var(--bad)}
+.opt{border:3px solid var(--ink);background:#fff;border-radius:14px;padding:6px 16px;font:700 20px var(--display);box-shadow:3px 3px 0 var(--ink);min-width:58px}
+.opt:hover{transform:translateY(-2px)}
+.opt.ok{background:var(--good);color:#fff!important}
+.opt.no{background:var(--bad);color:#fff!important}
+.sq{display:grid;gap:14px}
+.sq-row{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 16px 12px 22px;box-shadow:4px 4px 0 var(--ink);font-size:21px;font-weight:700}
+.sq-btns{display:flex;gap:8px}
+.sq-btns .opt[data-a="o"]{color:var(--o)} .sq-btns .opt[data-a="e"]{color:var(--orange)} .sq-btns .opt[data-a="r"]{color:var(--r)}
+.legend{display:flex;gap:18px;font:600 19px var(--display);flex-wrap:wrap}
+.legend span{display:inline-flex;gap:8px;align-items:center}
+.legend i{width:30px;height:30px;border-radius:9px;border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;color:#fff;font-size:15px}
+.vq{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.vitem{border:3px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:12px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.vitem:nth-child(4n+1){background:var(--sky-t)} .vitem:nth-child(4n+2){background:var(--sun-t)} .vitem:nth-child(4n+3){background:var(--pink-t)} .vitem:nth-child(4n+4){background:var(--teal-t)}
+.vitem .base{font:700 32px var(--display)}
+.vitem .base small{font-size:20px;color:var(--soft)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--sun);border-radius:999px;padding:6px 16px;font:700 20px var(--display)}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.form{display:grid;gap:12px;overflow:auto;padding:4px 10px 10px 4px;align-content:start}
+.fset{border:3px solid var(--ink);border-radius:20px;padding:12px 14px 14px;background:var(--kt);display:grid;gap:10px;margin:0;box-shadow:4px 4px 0 var(--ink)}
+.fset legend{font:700 17px var(--display);color:#fff;background:var(--k);border:2.5px solid var(--ink);border-radius:99px;padding:2px 14px;text-shadow:1px 1px 0 var(--ink)}
+.flabel{font:600 14px var(--display);color:var(--soft);display:grid;gap:4px;letter-spacing:.03em}
+.form input,.form textarea,.form select{font:700 17px var(--body);color:var(--ink);background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:7px 11px;width:100%}
+.form textarea{resize:vertical;min-height:52px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ev-row{display:grid;grid-template-columns:190px 1fr;gap:8px;align-items:start}
+.bout{display:flex;flex-direction:column;gap:16px;min-height:0}
+.bout .paper{flex:1;font-size:18px}
+.checks{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:16px;font-weight:700}
+.checks li{display:flex;gap:8px;align-items:flex-start;line-height:1.3}
+.checks li::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;border:2.5px solid var(--soft);margin-top:1px}
+.checks li.ok::before{content:"✓";background:var(--good);border-color:var(--good);color:#fff;display:grid;place-items:center;font-size:13px}
+
+/* closing */
+.finale{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;align-items:center;height:100%}
+.feel{display:flex;gap:14px}
+.feel button{width:96px;height:96px;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:52px;box-shadow:4px 4px 0 var(--ink);transition:transform .15s}
+.feel button:hover{transform:translateY(-6px) rotate(-6deg)}
+.feel button[aria-pressed="true"]{background:var(--sun);transform:scale(1.1)}
+.t321{display:grid;gap:16px}
+.t321 .stk{display:grid;grid-template-columns:80px 1fr;gap:18px;align-items:center;padding:16px 20px}
+.t321 .n{width:74px;height:74px;border-radius:50%;background:var(--nc);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font:700 40px var(--display);text-shadow:2px 2px 0 var(--ink)}
+.t321 b{font:700 26px var(--display);display:block}
+.t321 span{font-size:19px;color:var(--soft)}
+
+/* ===== MOBILE FULLSCREEN FIX (28/09/2026) ===== */
+@media (max-width:760px){
+  .bar{height:62px;gap:6px;padding:0 8px}
+  .brand{display:none}
+  .track{min-width:40px;margin:0 6px}
+  .count{min-width:50px;font-size:15px}
+  .ibtn{width:42px;height:42px;font-size:18px;border-width:2.5px}
+  .nav{font-size:20px}
+  #fsBtn.hide-sm,#menuBtn.hide-sm{display:grid}
+  #fsBtn{background:#fff;color:#2B2440;border-color:#fff}
+}
+@media (max-width:420px){
+  #menuBtn.hide-sm{display:none}
+  .ibtn{width:38px;height:38px}
+  .hiker{width:32px;height:35px}
+}
+.toast{max-width:calc(100vw - 24px);text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ===== reusable drawings ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="kiko" viewBox="0 0 120 132">
+      <ellipse cx="60" cy="127" rx="34" ry="5" fill="#2B2440" opacity=".15"/>
+      <ellipse cx="44" cy="117" rx="13" ry="8" fill="#FF6B5B" stroke="#2B2440" stroke-width="4"/>
+      <ellipse cx="76" cy="117" rx="13" ry="8" fill="#FF6B5B" stroke="#2B2440" stroke-width="4"/>
+      <path d="M99 76 Q114 62 112 46" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="112" cy="43" r="7" fill="#FFC933" stroke="#2B2440" stroke-width="4"/>
+      <circle cx="60" cy="74" r="42" fill="#FFC933" stroke="#2B2440" stroke-width="4.5"/>
+      <path d="M36 42 Q36 12 60 12 Q84 12 84 42Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M38 34 Q60 28 82 34" fill="none" stroke="#FF6B5B" stroke-width="7"/>
+      <path d="M14 44 Q60 30 106 44 Q60 54 14 44Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="4.5" stroke-linejoin="round"/>
+      <circle cx="46" cy="72" r="6.5" fill="#2B2440"/><circle cx="48.5" cy="69.5" r="2.2" fill="#fff"/>
+      <circle cx="74" cy="72" r="6.5" fill="#2B2440"/><circle cx="76.5" cy="69.5" r="2.2" fill="#fff"/>
+      <ellipse cx="35" cy="84" rx="7" ry="4.5" fill="#FF8FB1"/><ellipse cx="85" cy="84" rx="7" ry="4.5" fill="#FF8FB1"/>
+      <path d="M50 86 Q60 97 70 86" fill="none" stroke="#2B2440" stroke-width="4.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="star" viewBox="0 0 100 100"><path d="M50 6 L62 37 L95 39 L69 60 L78 93 L50 75 L22 93 L31 60 L5 39 L38 37Z" fill="currentColor" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/></symbol>
+    <symbol id="spark" viewBox="0 0 100 100"><path d="M50 4 C54 36 64 46 96 50 C64 54 54 64 50 96 C46 64 36 54 4 50 C36 46 46 36 50 4Z" fill="currentColor" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/></symbol>
+    <symbol id="squig" viewBox="0 0 130 30"><path d="M6 15 Q20 2 34 15 T62 15 T90 15 T118 15" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></symbol>
+    <symbol id="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="11"/></symbol>
+    <symbol id="cloud" viewBox="0 0 160 90"><path d="M36 78 Q8 78 10 58 Q12 40 34 42 Q36 16 64 16 Q88 14 96 36 Q104 24 120 28 Q140 32 138 52 Q154 56 150 70 Q146 80 128 78Z" fill="#fff" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/></symbol>
+    <symbol id="dots" viewBox="0 0 100 60"><g fill="currentColor"><circle cx="10" cy="10" r="7"/><circle cx="40" cy="10" r="7"/><circle cx="70" cy="10" r="7"/><circle cx="25" cy="40" r="7"/><circle cx="55" cy="40" r="7"/><circle cx="85" cy="40" r="7"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="stagewrap" id="wrap">
+<main id="stage" aria-roledescription="slide deck">
+
+<!-- 1 COVER -->
+<section class="slide cover" data-sec="0" data-title="Welcome!">
+  <svg class="deco spin" style="left:40px;top:40px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:660px;top:70px;width:44px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="left:90px;bottom:36px;width:150px;color:var(--teal)"><use href="#squig"/></svg>
+  <svg class="deco" style="left:560px;bottom:60px;width:90px;color:var(--sky)"><use href="#dots"/></svg>
+  <div class="left">
+    <span class="kicker" style="align-self:flex-start">✏️ English · Grade X–XI</span>
+    <h1>Recount<br><span class="pop">Text!</span></h1>
+    <p class="lead">Retelling the <u style="text-decoration-color:var(--sun);text-decoration-thickness:6px;text-underline-offset:6px">trail</u> you've walked, step by step, from start to finish. 🥾</p>
+    <div class="tags">
+      <span class="tag" style="--tc:var(--sky-t)">⏪ Past experience</span>
+      <span class="tag" style="--tc:var(--sun-t)">🔢 Chronological order</span>
+      <span class="tag" style="--tc:var(--coral-t)">📝 Simple past</span>
+    </div>
+    <div style="display:flex;gap:22px;align-items:center;margin-top:6px">
+      <button class="btn" type="button" data-next style="font-size:24px;padding:14px 30px">Let's start the trail →</button>
+      <p class="school">By Mr. Fio 😎</p>
+    </div>
+  </div>
+  <div class="right">
+    <svg class="scene" viewBox="0 0 600 600" role="img" aria-label="Gunung cerah dengan jalur pendakian dan tiga bendera: O, E, R">
+      <defs><clipPath id="blob"><path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z"/></clipPath></defs>
+      <g clip-path="url(#blob)">
+        <rect width="600" height="600" fill="#9ED8FF"/>
+        <circle cx="450" cy="150" r="58" fill="#FFC933" stroke="#2B2440" stroke-width="5"/>
+        <g stroke="#2B2440" stroke-width="5" stroke-linecap="round"><path d="M450 64v-22M536 150h22M511 89l16-16M511 211l16 16M389 89l-16-16"/></g>
+        <use href="#cloud" x="70" y="90" width="150" height="84"/>
+        <use href="#cloud" x="250" y="40" width="110" height="62"/>
+        <path d="M0 380 L150 205 L240 292 L360 128 L480 262 L600 185 L600 600 L0 600Z" fill="#7BE0B5" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M360 128 L326 175 L346 166 L360 182 L375 164 L396 176Z" fill="#fff" stroke="#2B2440" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M0 468 L120 342 L220 420 L330 330 L460 440 L600 362 L600 600 L0 600Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M0 540 C150 500 300 562 600 508 L600 600 L0 600Z" fill="#FFC933" stroke="#2B2440" stroke-width="5"/>
+        <path d="M110 548 C170 520 180 468 236 430 S304 336 330 300 S352 204 360 146" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="3 14" stroke-linecap="round"/>
+        <g font-family="Fredoka, sans-serif" font-weight="700" font-size="24" text-anchor="middle" stroke-linejoin="round">
+          <path d="M112 548 V486" stroke="#2B2440" stroke-width="5"/><path d="M112 486 L160 500 L112 516Z" fill="#3D8BFF" stroke="#2B2440" stroke-width="4"/><text x="128" y="509" fill="#fff" font-size="20">O</text>
+          <path d="M238 430 V368" stroke="#2B2440" stroke-width="5"/><path d="M238 368 L286 382 L238 398Z" fill="#FF9F1C" stroke="#2B2440" stroke-width="4"/><text x="255" y="391" fill="#fff" font-size="20">E</text>
+          <path d="M360 140 V78" stroke="#2B2440" stroke-width="5"/><path d="M360 78 L408 92 L360 108Z" fill="#8B5CF6" stroke="#2B2440" stroke-width="4"/><text x="377" y="101" fill="#fff" font-size="20">R</text>
+        </g>
+      </g>
+      <path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z" fill="none" stroke="#2B2440" stroke-width="7"/>
+    </svg>
+    <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;left:-40px;bottom:-10px;width:190px"><use href="#kiko"/></svg>
+    <div class="bubble" style="position:absolute;left:-80px;bottom:200px;background:var(--sun-t)">Hi, I'm Kiko! 👋<br>Let's hike together!</div>
+  </div>
+</section>
+
+<!-- 2 AGENDA -->
+<section class="slide" data-sec="1" data-title="Today's trail" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco" style="left:0;right:0;top:360px;width:1600px;height:320px" viewBox="0 0 1600 320" preserveAspectRatio="none"><path d="M40 170 C240 20 360 300 560 170 S900 20 1060 170 S1400 300 1580 150" fill="none" stroke="#2B2440" stroke-width="5" stroke-dasharray="4 18" stroke-linecap="round" opacity=".45"/></svg>
+  <svg class="deco spin" style="right:80px;top:40px;width:64px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:190px;top:110px;width:34px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🗺️ Agenda</span><span class="hint">👆 klik untuk lompat</span></div><h2>Today's <span class="u">trail map</span></h2></div>
+  <div class="body">
+    <div class="agenda">
+      <button class="stop" type="button" data-go="s-warm" style="--k:var(--teal);--kt:var(--teal-t)"><span class="n">STOP 1</span><span class="ico">🌬️</span><b>Warm-up</b><span class="s">Breathe, remember, get ready</span></button>
+      <button class="stop" type="button" data-go="s-under" style="--k:var(--sky);--kt:var(--sky-t)"><span class="n">STOP 2</span><span class="ico">💡</span><b>Understand</b><span class="s">Definition, function, types</span></button>
+      <button class="stop" type="button" data-go="s-struct" style="--k:var(--sun);--kt:var(--sun-t)"><span class="n">STOP 3</span><span class="ico">🧩</span><b>Structure</b><span class="s">Orientation, events, reorientation</span></button>
+      <button class="stop" type="button" data-go="s-lang" style="--k:var(--coral);--kt:var(--coral-t)"><span class="n">STOP 4</span><span class="ico">🔤</span><b>Language</b><span class="s">Features, sentences, expressions</span></button>
+      <button class="stop" type="button" data-go="s-prac" style="--k:var(--grape);--kt:var(--grape-t)"><span class="n">STOP 5</span><span class="ico">🏆</span><b>Practice</b><span class="s">Games and your own recount</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 1 -->
+<section class="slide divider" data-sec="1" id="s-warm" data-title="Part 1 · Warm-up">
+  <span class="num">01</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:#fff;opacity:.6"><use href="#squig"/></svg>
+  <span class="part-pill">PART 01</span>
+  <h2>Warm-up 🌬️</h2>
+  <p class="sub">Slow down, take a breath, and bring back one memory.</p>
+  <div class="kwrap"><div class="bubble">Ready? Let's warm up our brains first!</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- BREATHE -->
+<section class="slide" data-sec="1" data-title="Pause & breathe">
+  <svg class="deco twinkle" style="left:470px;top:170px;width:40px;color:var(--sun)"><use href="#spark"/></svg>
+  <svg class="deco bob" style="left:60px;bottom:50px;width:120px;color:var(--pink)"><use href="#dots"/></svg>
+  <svg class="deco" style="right:60px;top:40px;width:190px"><use href="#cloud"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🧘 Mindful moment</span></div><h2>Pause, <span class="u">breathe</span>, remember</h2></div>
+  <div class="body">
+    <div class="breathe">
+      <div class="orb-box"><div class="orb-ring spin"></div><div class="orb" id="orb">ready?</div></div>
+      <div>
+        <p class="id" style="font-size:22px">Tarik napas saat bola membesar, hembuskan saat mengecil. Pilih satu pengalaman yang ingin kamu ceritakan.</p>
+        <p class="cue" id="breatheText">Three slow breaths. Think of one moment from last week that you still remember clearly. ✨</p>
+        <button class="btn" id="breatheBtn" type="button" style="font-size:24px">▶ Start breathing (±24 s)</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROMPTS -->
+<section class="slide" data-sec="1" data-title="Memory cards">
+  <svg class="deco spin" style="right:80px;top:48px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎴 Memory cards</span><span class="hint">👆 jawab dulu, lalu balik kartunya</span></div><h2>Tell me about… <span class="u">your week!</span></h2></div>
+  <div class="body">
+    <div class="flips">
+      <button class="flip" type="button" style="--fc:var(--sky-t)"><div class="in"><div class="f"><span class="emo">📍</span><span class="q">Where were you last Sunday morning?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"Last Sunday, I <b>was</b> at Car Free Day on Slamet Riyadi Street."</span><small>Notice: <b>was</b>, not <i>am</i></small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--sun-t)"><div class="in"><div class="f"><span class="emo">🎒</span><span class="q">What did you do after school yesterday?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"<b>First</b>, I ate lunch. <b>Then</b>, I took a nap."</span><small>Notice: <b>First… Then…</b></small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--pink-t)"><div class="in"><div class="f"><span class="emo">🏅</span><span class="q">When did you feel really proud of yourself?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"I <b>felt</b> proud when my team <b>won</b> the futsal match."</span><small>Notice: <b>felt</b>, <b>won</b></small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--teal-t)"><div class="in"><div class="f"><span class="emo">🏝️</span><span class="q">Which holiday trip do you still remember?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"It was <b>the best trip</b> I have ever had!"</span><small>Notice: a <b>closing comment</b></small></div></div></button>
+    </div>
+  </div>
+</section>
+
+<!-- APERSEPSI -->
+<section class="slide" data-sec="1" data-title="Guess the text">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:50px;color:var(--sun)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:60px;width:170px;color:var(--teal)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🤔 Think about it</span></div><h2>A chat with a friend…</h2></div>
+  <div class="body center">
+    <div class="chat">
+      <div class="row"><span class="av">🧑</span><div class="bubble side q">"Hey! How was your holiday?"</div></div>
+      <div class="row me"><div class="bubble tr-tail a">"<mark>Last week</mark>, I went to Tawangmangu with my family. <mark>First</mark>, we visited Grojogan Sewu. <mark>Then</mark>, we ate sate kelinci. It was so much fun!"</div><span class="av">😄</span></div>
+      <div class="reveal"><button class="btn" type="button" id="apBtn" style="font-size:24px">So… what kind of text did you just tell? 🤔</button><span id="apOut" hidden class="bigsticker">It's a RECOUNT TEXT! 🎉</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 2 -->
+<section class="slide divider" data-sec="2" id="s-under" data-title="Part 2 · Understanding">
+  <span class="num">02</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:760px;top:120px;width:50px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">PART 02</span>
+  <h2>Understanding 💡</h2>
+  <p class="sub">What a recount is, why we write it, and its four types.</p>
+  <div class="kwrap"><div class="bubble">Let's find out what a recount really is!</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- DEFINITION -->
+<section class="slide" data-sec="2" data-title="What is it?">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="right:40px;bottom:40px;width:120px;color:var(--sky)"><use href="#ring"/></svg>
+  <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;right:110px;bottom:70px;width:170px;z-index:3"><use href="#kiko"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">📖 Definition</span></div><h2>What is a <span class="u">recount text</span>?</h2></div>
+  <div class="body center" style="gap:34px">
+    <p class="defn"><span class="quote">“</span>A recount text is a text that <mark>retells past events</mark> or experiences in the order they happened: <mark>chronological order</mark>.</p>
+    <p class="idline"><span class="badge">ID</span><span class="id">Recount text adalah teks yang menceritakan kembali peristiwa atau pengalaman di masa lalu secara berurutan sesuai waktu terjadinya.</span></p>
+  </div>
+</section>
+
+<!-- FUNCTION -->
+<section class="slide" data-sec="2" data-title="Why write it?">
+  <svg class="deco twinkle" style="right:90px;top:60px;width:48px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎯 Social function</span></div><h2>Why do people <span class="u">write</span> it?</h2></div>
+  <div class="body center">
+    <div class="g3 fn">
+      <div class="stk tl hov" style="--t:var(--sky-t)"><span class="ico">📢</span><h3>To inform</h3><p>Tell the reader <b>what happened</b>, clearly and in order.</p></div>
+      <div class="stk tr hov" style="--t:var(--sun-t)"><span class="ico">😂</span><h3>To entertain</h3><p>Share an <b>interesting or funny</b> experience with the reader.</p></div>
+      <div class="stk tl hov" style="--t:var(--pink-t)"><span class="ico">💭</span><h3>To reflect</h3><p>Look back on an experience and <b>share a lesson</b>.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section class="slide" data-sec="2" data-title="Where you'll use it">
+  <svg class="deco spin" style="right:70px;top:46px;width:60px;color:var(--sun)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🌍 Real life</span></div><h2>Where will <span class="u">you</span> use it?</h2></div>
+  <div class="body center">
+    <div class="ben">
+      <div class="stk hov" style="--bc:var(--sky-t)"><span class="ico">📔</span><div><b>Diary & journal</b><span>Write your daily experiences and reflections.</span></div></div>
+      <div class="stk hov" style="--bc:var(--sun-t)"><span class="ico">🎤</span><div><b>Speaking tests</b><span>"Tell me about your last holiday."</span></div></div>
+      <div class="stk hov" style="--bc:var(--pink-t)"><span class="ico">📋</span><div><b>Event reports</b><span>Field trips, OSIS events, class projects.</span></div></div>
+      <div class="stk hov" style="--bc:var(--teal-t)"><span class="ico">📸</span><div><b>Blogs & captions</b><span>Share your trip on social media in English.</span></div></div>
+      <div class="stk hov" style="--bc:var(--grape-t)"><span class="ico">⏰</span><div><b>Grammar in context</b><span>Master the simple past tense naturally.</span></div></div>
+      <div class="stk hov" style="--bc:var(--orange-t)"><span class="ico">📰</span><div><b>Reading skills</b><span>Understand news, biographies, history texts.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GOALS -->
+<section class="slide" data-sec="2" data-title="Learning goals">
+  <svg class="deco twinkle" style="right:100px;top:60px;width:48px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🚀 Learning goals</span></div><h2>By the end of today, <span class="u">I can…</span></h2></div>
+  <div class="body center">
+    <div class="goals">
+      <div class="stk goal tl" style="--gc:var(--teal)"><span class="medal">1</span><b>Explain</b><span>the social function of a recount text</span></div>
+      <div class="stk goal tr" style="--gc:var(--sky)"><span class="medal">2</span><b>Identify</b><span>its structure and what each part contains</span></div>
+      <div class="stk goal tl" style="--gc:var(--orange)"><span class="medal">3</span><b>Analyze</b><span>its language features in a text</span></div>
+      <div class="stk goal tr" style="--gc:var(--coral)"><span class="medal">4</span><b>Write</b><span>my own recount text independently</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPES -->
+<section class="slide" data-sec="2" data-title="Four types">
+  <svg class="deco spin" style="right:80px;top:50px;width:62px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎭 Types</span><span class="hint">👆 klik tiap jenis</span></div><h2>Four <span class="u">types</span> of recount</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="tabs" role="tablist" id="typeTabs">
+      <button class="tab" role="tab" type="button" aria-selected="true" data-t="0">🧑 Personal</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-t="1">📰 Factual</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-t="2">🦸 Imaginative</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-t="3">👑 Biographical</button>
+    </div>
+    <div class="stk typepanel" id="typePanel" role="tabpanel"></div>
+  </div>
+</section>
+
+<!-- VS -->
+<section class="slide" data-sec="2" data-title="Recount vs Narrative">
+  <div class="head"><div class="krow"><span class="kicker">⚔️ Don't mix them up!</span></div><h2>Recount <span class="u">vs</span> Narrative</h2></div>
+  <div class="body">
+    <div class="vs">
+      <div class="stk col tl" style="background:var(--sky-t)"><h3 style="background:var(--sky)">RECOUNT</h3>
+        <dl><dt>Purpose</dt><dd>Retells real (or realistic) past events</dd><dt>Structure</dt><dd>Orientation → Events → Reorientation</dd><dt>Focus</dt><dd>The sequence of events</dd><dt>Example</dt><dd>🏔️ My Trip to Mount Lawu</dd></dl></div>
+      <div class="vsmid"><span>VS</span></div>
+      <div class="stk col tr" style="background:var(--pink-t)"><h3 style="background:var(--coral)">NARRATIVE</h3>
+        <dl><dt>Purpose</dt><dd>Entertains with a story that has a conflict</dd><dt>Structure</dt><dd>Orientation → Complication → Resolution</dd><dt>Focus</dt><dd>A problem and how it is solved</dd><dt>Example</dt><dd>🪨 Malin Kundang</dd></dl></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 3 -->
+<section class="slide divider" data-sec="3" id="s-struct" data-title="Part 3 · Structure">
+  <span class="num">03</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:#fff"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:var(--coral)"><use href="#squig"/></svg>
+  <span class="part-pill">PART 03</span>
+  <h2>Generic Structure 🧩</h2>
+  <p class="sub">Three stops on the trail: where it starts, what happens, and how it ends.</p>
+  <div class="kwrap"><div class="bubble">Every good trail has a start, a middle and a top!</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- STRUCTURE EXPLORER -->
+<section class="slide" data-sec="3" data-title="Structure explorer" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🧭 Explore</span><span class="hint">👆 klik bagian teks atau tombol</span></div><h2>Three parts of the <span class="u">trail</span></h2></div>
+  <div class="body">
+    <div class="explore">
+      <article class="paper" id="text1" data-show="o">
+        <h4>🏔️ A Sunrise Hike to Mount Lawu</h4>
+        <div class="part" data-part="o"><span class="lbl">Orientation</span>Last June, during the school holiday, my cousin Raka and I went hiking to Mount Lawu, on the border of Central Java and East Java. We wanted to see the famous sunrise from Hargo Dumilah, the highest peak.</div>
+        <div class="part" data-part="e"><span class="lbl">Event 1</span>We left Solo on Friday afternoon by motorbike and arrived at the Cemoro Sewu basecamp at around 5 p.m. After we registered and checked our equipment, we started climbing at 7 p.m.</div>
+        <div class="part" data-part="e"><span class="lbl">Event 2</span>The trail was steep and rocky, so we walked slowly. While we were walking, the wind blew harder. At midnight, we stopped at Post 3 and rested in a small shelter. It was so cold that my fingers felt stiff.</div>
+        <div class="part" data-part="e"><span class="lbl">Event 3</span>At 3 a.m., we continued the climb. Finally, we reached the peak just before the sun came up. The sky slowly turned orange, and a sea of clouds spread below us.</div>
+        <div class="part" data-part="r"><span class="lbl">Reorientation</span>We came down the mountain later that morning, tired but happy. It was the most unforgettable holiday I have ever had, and I learned that patience is the key to reaching the top.</div>
+      </article>
+      <div class="side">
+        <div class="stages" id="stages">
+          <button class="stage" type="button" data-s="o" aria-pressed="true" style="--k:var(--o);--kt:var(--sky-t)"><span class="dotn">1</span>Orientation</button>
+          <button class="stage" type="button" data-s="e" aria-pressed="false" style="--k:var(--e);--kt:var(--orange-t)"><span class="dotn">2</span>Events</button>
+          <button class="stage" type="button" data-s="r" aria-pressed="false" style="--k:var(--r);--kt:var(--grape-t)"><span class="dotn">3</span>Reorientation</button>
+        </div>
+        <div class="stk segcard" id="segCard"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEGMENTATION SUMMARY -->
+<section class="slide" data-sec="3" data-title="What each part contains">
+  <svg class="deco spin" style="right:80px;top:50px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">📦 Segmentation</span></div><h2>What goes <span class="u">inside</span> each part?</h2></div>
+  <div class="body center">
+    <div class="segsum">
+      <div class="segrow" style="--k:var(--o);--kt:var(--sky-t)"><div class="nm">① Orientation<small>sets the scene</small></div><div><b>Who</b> · <b>when</b> · <b>where</b> · <b>what</b> · why (optional)</div><div class="len">1 paragraph, 2–4 sentences<i>Open with a time phrase: "Last June, …"</i></div></div>
+      <div class="segrow" style="--k:var(--e);--kt:var(--orange-t)"><div class="nm">② Events<small>step by step</small></div><div>Actions in <b>time order</b> · details (time, place, how) · small reactions or feelings · a surprise moment (optional)</div><div class="len">2–4 paragraphs, one stage each<i>Start with First, Then, After that, Finally</i></div></div>
+      <div class="segrow" style="--k:var(--r);--kt:var(--grape-t)"><div class="nm">③ Reorientation<small>closing</small></div><div>How it ended · <b>personal feeling</b> · comment · <b>lesson learned</b> · hope (optional)</div><div class="len">1 short paragraph<i>An ending + a feeling is enough</i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 4 -->
+<section class="slide divider" data-sec="4" id="s-lang" data-title="Part 4 · Language">
+  <span class="num">04</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:130px;bottom:80px;width:120px;color:#fff;opacity:.5"><use href="#dots"/></svg>
+  <span class="part-pill">PART 04</span>
+  <h2>Language Features 🔤</h2>
+  <p class="sub">The tools that make a recount sound like a recount.</p>
+  <div class="kwrap"><div class="bubble">Time to grab our language toolkit! 🧰</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- HIGHLIGHTER -->
+<section class="slide" data-sec="4" data-title="Colour highlighter">
+  <div class="head"><div class="krow"><span class="kicker">🖍️ Highlighter</span><span class="hint">👆 nyalakan warna, bisa lebih dari satu</span></div><h2>Spot the <span class="u">features</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px">
+    <div class="chips" id="featBar">
+      <button class="chip" type="button" data-f="v" aria-pressed="true"><i></i>Past verbs</button>
+      <button class="chip" type="button" data-f="c" aria-pressed="true"><i></i>Connectives</button>
+      <button class="chip" type="button" data-f="t" aria-pressed="false"><i></i>Time adverbials</button>
+      <button class="chip" type="button" data-f="p" aria-pressed="false"><i></i>Place adverbials</button>
+      <button class="chip" type="button" data-f="n" aria-pressed="false"><i></i>Participants</button>
+    </div>
+    <article class="paper lf hl-v hl-c" id="text2" style="flex:1">
+      <div class="part" data-part="o"><span class="lbl">Orientation</span><span class="t">Last June</span>, <span class="t">during the school holiday</span>, <span class="n">my cousin Raka and I</span> <span class="v">went</span> hiking <span class="p">to Mount Lawu</span>, <span class="p">on the border of Central Java and East Java</span>. <span class="n">We</span> <span class="v">wanted</span> to see the famous sunrise <span class="p">from Hargo Dumilah</span>, the highest peak.</div>
+      <div class="part" data-part="e"><span class="lbl">Event 1</span><span class="n">We</span> <span class="v">left</span> <span class="p">Solo</span> <span class="t">on Friday afternoon</span> by motorbike and <span class="v">arrived</span> <span class="p">at the Cemoro Sewu basecamp</span> <span class="t">at around 5 p.m.</span> <span class="c">After</span> <span class="n">we</span> <span class="v">registered</span> and <span class="v">checked</span> our equipment, <span class="n">we</span> <span class="v">started</span> climbing <span class="t">at 7 p.m.</span></div>
+      <div class="part" data-part="e"><span class="lbl">Event 2</span>The trail <span class="v">was</span> steep and rocky, <span class="c">so</span> <span class="n">we</span> <span class="v">walked</span> slowly. <span class="c">While</span> <span class="n">we</span> <span class="v">were walking</span>, the wind <span class="v">blew</span> harder. <span class="t">At midnight</span>, <span class="n">we</span> <span class="v">stopped</span> <span class="p">at Post 3</span> and <span class="v">rested</span> <span class="p">in a small shelter</span>. It <span class="v">was</span> so cold that my fingers <span class="v">felt</span> stiff.</div>
+      <div class="part" data-part="e"><span class="lbl">Event 3</span><span class="t">At 3 a.m.</span>, <span class="n">we</span> <span class="v">continued</span> the climb. <span class="c">Finally</span>, <span class="n">we</span> <span class="v">reached</span> <span class="p">the peak</span> <span class="t"><span class="c">just before</span> the sun <span class="v">came</span> up</span>. The sky slowly <span class="v">turned</span> orange, <span class="c">and</span> a sea of clouds <span class="v">spread</span> <span class="p">below us</span>.</div>
+      <div class="part" data-part="r"><span class="lbl">Reorientation</span><span class="n">We</span> <span class="v">came</span> down the mountain <span class="t">later that morning</span>, tired but happy. It <span class="v">was</span> the most unforgettable holiday I have ever had, <span class="c">and</span> I <span class="v">learned</span> that patience is the key to reaching the top.</div>
+    </article>
+  </div>
+</section>
+
+<!-- SIX FEATURES -->
+<section class="slide" data-sec="4" data-title="Six language features">
+  <div class="head"><div class="krow"><span class="kicker">🧰 Toolkit</span></div><h2>Six <span class="u">language features</span></h2></div>
+  <div class="body center">
+    <div class="feats">
+      <div class="stk feat hov" style="--ft:var(--coral-t)"><div class="top"><span class="ico">⏪</span><h3>Simple past tense</h3></div><p>The events are finished. Regular verbs add <b>-ed</b>; irregular verbs change form.</p><span class="ex">arrive → arrived · go → went</span></div>
+      <div class="stk feat hov" style="--ft:var(--teal-t)"><div class="top"><span class="ico">🔗</span><h3>Connectives</h3></div><p>Link events in time order or show cause and result.</p><span class="ex">first, then, while, so, finally</span></div>
+      <div class="stk feat hov" style="--ft:var(--sky-t)"><div class="top"><span class="ico">🕒</span><h3>Time adverbials</h3></div><p>Tell <i>when</i> each event happened.</p><span class="ex">last June, at midnight, at 3 a.m.</span></div>
+      <div class="stk feat hov" style="--ft:var(--grape-t)"><div class="top"><span class="ico">📍</span><h3>Place adverbials</h3></div><p>Tell <i>where</i> the events happened.</p><span class="ex">at the basecamp, in a shelter</span></div>
+      <div class="stk feat hov" style="--ft:var(--orange-t)"><div class="top"><span class="ico">👫</span><h3>Specific participants</h3></div><p>Real, particular people, often <b>I / we</b>.</p><span class="ex">my cousin Raka and I, we</span></div>
+      <div class="stk feat hov" style="--ft:var(--pink-t)"><div class="top"><span class="ico">💖</span><h3>Action & feeling verbs</h3></div><p>Actions in the events; feelings mostly at the end.</p><span class="ex">climbed, reached · felt, learned</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SENTENCE ANALYZER -->
+<section class="slide" data-sec="4" data-title="Sentence analyzer">
+  <svg class="deco twinkle" style="right:90px;top:56px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔬 Sentence lab</span><span class="hint">👆 pilih satu kalimat</span></div><h2>Break the <span class="u">sentence</span> apart</h2></div>
+  <div class="body">
+    <div class="analyzer">
+      <div class="sent-list" id="sentList"></div>
+      <div class="stk out" id="sentOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPRESSIONS -->
+<section class="slide" data-sec="4" data-title="Expression bank">
+  <div class="head"><div class="krow"><span class="kicker">💬 Expression bank</span><span class="hint">📋 klik Copy untuk menyalin</span></div><h2>Useful <span class="u">expressions</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs" role="tablist" id="xTabs"></div>
+    <div class="xwrap"><table class="xtable" id="xTable"></table></div>
+  </div>
+</section>
+
+<!-- DIVIDER 5 -->
+<section class="slide divider" data-sec="5" id="s-prac" data-title="Part 5 · Practice">
+  <span class="num">05</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:820px;top:130px;width:52px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">PART 05</span>
+  <h2>Practice Time! 🏆</h2>
+  <p class="sub">Three mini games, then write your own recount.</p>
+  <div class="kwrap"><div class="bubble">Game on! Can you get a perfect score? 🎯</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- QUIZ A -->
+<section class="slide" data-sec="5" data-title="Game 1 · Put in order">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 1</span><span class="hint">👆 klik kalimat sesuai urutan · klik lagi untuk mengembalikan</span></div><h2>Put the story <span class="u">in order</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="qa" style="flex:1;min-height:0">
+      <div class="qcol"><h4>🧺 Sentences</h4><div class="pool" id="pool"></div></div>
+      <div class="qcol"><h4>📜 Your story</h4><div class="answer" id="answer"></div></div>
+    </div>
+    <div class="qbar"><button class="btn" id="checkOrder" type="button">✔ Check</button><button class="btn ghost" id="resetOrder" type="button">↺ Reset</button><p class="fb" id="orderFb" aria-live="polite"></p></div>
+  </div>
+</section>
+
+<!-- QUIZ B -->
+<section class="slide" data-sec="5" data-title="Game 2 · Which part?">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 2</span><span class="score" id="sqScore">⭐ 0 / 5</span></div><h2>Which <span class="u">part</span> is it?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="legend"><span><i style="background:var(--o)">O</i>Orientation</span><span><i style="background:var(--orange)">E</i>Event</span><span><i style="background:var(--r)">R</i>Reorientation</span></div>
+    <div class="sq" id="sq"></div>
+    <p class="fb" id="sqFb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- QUIZ C -->
+<section class="slide" data-sec="5" data-title="Game 3 · Past forms">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 3</span><span class="score" id="vqScore">⭐ 0 / 8</span></div><h2>Choose the <span class="u">past form</span> (V2)</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="vq" id="vq"></div>
+    <p class="fb" id="vqFb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- BUILDER -->
+<section class="slide" data-sec="5" data-title="Write your recount" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">✍️ Your turn</span><span class="hint">ganti contoh dengan ceritamu sendiri</span></div><h2>Build <span class="u">your own</span> recount</h2></div>
+  <div class="body">
+    <div class="builder">
+      <form class="form" id="bForm" onsubmit="return false">
+        <label class="flabel">TITLE<input id="bTitle" value="Our Class Bazaar Day"></label>
+        <fieldset class="fset" style="--k:var(--o);--kt:var(--sky-t)"><legend>① Orientation</legend>
+          <div class="two"><label class="flabel">When?<input id="bWhen" value="Last Saturday"></label><label class="flabel">Who?<input id="bWho" value="my classmates and I"></label></div>
+          <div class="two"><label class="flabel">What did you do? (past)<input id="bWhat" value="held a charity bazaar"></label><label class="flabel">Where?<input id="bWhere" value="at the school yard of SMA Negeri 5 Surakarta"></label></div>
+          <label class="flabel">Why? (optional)<input id="bWhy" value="We wanted to raise money for a local orphanage."></label>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--e);--kt:var(--orange-t)"><legend>② Events</legend>
+          <div id="evWrap" style="display:grid;gap:8px"></div>
+          <div><button class="btn ghost sm" type="button" id="addEv">+ Add event</button></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--r);--kt:var(--grape-t)"><legend>③ Reorientation</legend>
+          <label class="flabel">Closing expression<select id="bFeel"><option>It was a really tiring but fun day.</option><option>I will never forget that experience.</option><option>It was one of the best days of my life.</option><option>It was quite a disappointing day, actually.</option><option>Looking back, I feel very grateful for it.</option></select></label>
+          <label class="flabel">Comment / lesson learned<textarea id="bLesson">We collected more than enough money, and I learned that teamwork makes a big job feel light.</textarea></label>
+        </fieldset>
+      </form>
+      <div class="bout">
+        <article class="paper" id="bOut"></article>
+        <div class="stk" style="padding:16px 20px">
+          <ul class="checks" id="bChecks"></ul>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button class="btn sm" type="button" id="copyText">📋 Copy my text</button><button class="btn ghost sm" type="button" id="clearAll">🧹 Clear the example</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINALE -->
+<section class="slide" data-sec="1" data-title="We made it!" id="finale" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:200px;top:110px;width:46px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:40px;width:170px;color:var(--teal)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎉 We made it!</span></div><h2>You reached the <span class="u">top</span>! 🏔️</h2></div>
+  <div class="body">
+    <div class="finale">
+      <div style="display:flex;flex-direction:column;gap:22px;align-items:flex-start">
+        <p style="font:600 30px/1.3 var(--display)">How do you feel about recount texts now?</p>
+        <div class="feel" id="feel">
+          <button type="button" data-m="Awesome! You're ready to write lots of recounts! 🚀">🤩</button>
+          <button type="button" data-m="Nice! A bit more practice and you'll be a pro. 💪">🙂</button>
+          <button type="button" data-m="That's okay! Review the structure and the expression bank. 📚">😐</button>
+          <button type="button" data-m="No worries! Ask your teacher or a friend, and try the games again. 🤝">😵‍💫</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px">
+          <svg class="kiko bob" viewBox="0 0 120 132" style="width:180px"><use href="#kiko"/></svg>
+          <div class="bubble" id="feelMsg" style="max-width:420px;margin-bottom:150px;background:var(--sun-t)">Tap a face! 👆</div>
+        </div>
+      </div>
+      <div class="t321">
+        <p style="font:700 26px var(--display)">🎟️ Exit ticket: 3 · 2 · 1</p>
+        <div class="stk tl" style="--nc:var(--teal)"><span class="n">3</span><div><b>things I learned today</b><span>about recount texts</span></div></div>
+        <div class="stk tr" style="--nc:var(--sky)"><span class="n">2</span><div><b>connectives I will use</b><span>e.g. First, After that, Finally</span></div></div>
+        <div class="stk tl" style="--nc:var(--coral)"><span class="n">1</span><div><b>question I still have</b><span>ask it before class ends!</span></div></div>
+        <p class="school" style="margin-top:6px">By Mr. Fio 😎</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<nav class="bar" aria-label="Slide controls">
+  <div class="brand"><svg viewBox="0 0 120 132"><use href="#kiko"/></svg><span>Recount Trail</span></div>
+  <div class="track" id="track"><div class="fill" id="fill"></div><svg class="hiker" id="hiker" viewBox="0 0 120 132"><use href="#kiko"/></svg></div>
+  <span class="count" id="count">1 / 1</span>
+  <button class="ibtn hide-sm" id="menuBtn" type="button" title="All slides (M)" aria-label="All slides">☰</button>
+  <button class="ibtn hide-sm" id="fsBtn" type="button" title="Fullscreen (F)" aria-label="Fullscreen">⛶</button>
+  <button class="ibtn nav" id="prev" type="button" aria-label="Previous slide">←</button>
+  <button class="ibtn nav" id="next" type="button" aria-label="Next slide">→</button>
+</nav>
+
+<div class="menu" id="menu" role="dialog" aria-label="All slides"><div class="menu-box"><h3>🗺️ All slides <button class="btn ghost sm" type="button" id="menuClose">✕ Close</button></h3><div class="mgrid" id="mgrid"></div></div></div>
+<div class="rotate-tip" id="rotateTip">📱↻ Putar HP ke landscape, atau tekan ⛶ untuk layar penuh. <button class="btn sm ghost" type="button" id="rtClose" style="margin-left:auto">OK</button></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const PAGE_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
+const $=s=>document.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const slides=$$('#stage > .slide');
+const N=slides.length;
+const SEC={0:'var(--coral)',1:'var(--teal)',2:'var(--sky)',3:'var(--sun)',4:'var(--coral)',5:'var(--grape)'};
+let cur=0;
+
+/* ---------- scale stage ---------- */
+function fit(){
+  const w=$('#wrap').clientWidth, h=$('#wrap').clientHeight;
+  const pad=Math.min(w,h)<500?10:28;
+  const s=Math.min((w-pad*2)/1616,(h-pad*2)/916);
+  $('#stage').style.setProperty('--s',Math.max(s,.1));
+}
+addEventListener('resize',fit);fit();
+
+/* ---------- helpers ---------- */
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,1800);}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('📋 Copied!'),()=>toast('Copy blocked: select the text manually'));}
+  else toast('Copy blocked: select the text manually');
+}
+function confetti(n=90){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cols=['#FFC933','#FF6B5B','#1FB5A6','#3D8BFF','#8B5CF6','#FF8FB1'];
+  for(let i=0;i<n;i++){
+    const d=document.createElement('i');d.className='cf';
+    const w=8+Math.random()*8;
+    d.style.cssText=`left:${Math.random()*100}vw;width:${w}px;height:${w*1.4}px;background:${cols[i%cols.length]};--dx:${(Math.random()-.5)*240}px;--rot:${(Math.random()*4-2)*360}deg;animation-duration:${2.2+Math.random()*1.8}s;animation-delay:${Math.random()*.4}s`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),4800);
+  }
+}
+
+/* ---------- navigation ---------- */
+const track=$('#track');
+slides.forEach((s,i)=>{if(s.classList.contains('divider')){const f=document.createElement('span');f.className='flag';f.style.left=(i/(N-1)*100)+'%';f.style.background=SEC[s.dataset.sec];track.appendChild(f);}});
+function go(i,push=true){
+  i=Math.max(0,Math.min(N-1,i));
+  slides[cur].classList.remove('active');
+  cur=i;const s=slides[cur];s.classList.add('active');
+  const pct=(cur/(N-1)*100);
+  $('#fill').style.width=pct+'%';$('#fill').style.background=SEC[s.dataset.sec]||'var(--sun)';
+  $('#hiker').style.left=pct+'%';
+  $('#count').textContent=(cur+1)+' / '+N;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===N-1;
+  if(push) try{history.replaceState(null,'','#'+(cur+1));}catch(e){}
+  $$('.mitem').forEach((m,j)=>m.classList.toggle('cur',j===cur));
+  if(s.id==='finale') setTimeout(()=>confetti(120),250);
+}
+$('#prev').addEventListener('click',()=>go(cur-1));
+$('#next').addEventListener('click',()=>go(cur+1));
+$$('[data-next]').forEach(b=>b.addEventListener('click',()=>go(cur+1)));
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById(b.dataset.go);go(slides.indexOf(t));}));
+const typing=()=>{const a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);};
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){$('#menu').classList.remove('open');return;}
+  if(typing()||e.altKey||e.ctrlKey||e.metaKey) return;
+  if(['ArrowRight','PageDown'].includes(e.key)||(e.key===' '&&document.activeElement.tagName!=='BUTTON')){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(N-1);
+  else if(e.key==='f'||e.key==='F')fs();
+  else if(e.key==='m'||e.key==='M')openMenu();
+});
+let tx=null,ty=null;
+$('#wrap').addEventListener('touchstart',e=>{if(typing())return;tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+$('#wrap').addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)go(cur+(dx<0?1:-1));tx=null;},{passive:true});
+/* ---------- fullscreen: desktop, Android, iPad; iPhone -> open in new tab ---------- */
+const inFrame=(()=>{try{return window.self!==window.top;}catch(e){return true;}})();
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
+function fsIcon(){const on=!!fsEl(),b=$('#fsBtn');b.textContent=on?'✕':'⛶';b.title=on?'Keluar layar penuh (F)':'Layar penuh (F)';b.setAttribute('aria-label',on?'Exit fullscreen':'Fullscreen');}
+function lockLandscape(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}}
+function openStandalone(){
+  try{
+    const url=URL.createObjectURL(new Blob([PAGE_SRC],{type:'text/html'}))+'#'+(cur+1);
+    const w=window.open(url,'_blank');
+    if(w){toast('📱 Dibuka di tab baru, putar HP ke landscape ↻');return true;}
+  }catch(e){}
+  return false;
+}
+function fsFail(){
+  if(inFrame&&openStandalone())return;
+  $('#rotateTip').classList.add('show');
+  toast('↻ Putar HP ke landscape untuk tampilan penuh');
+}
+function fs(){
+  const d=document,el=d.documentElement;
+  if(fsEl()){try{(d.exitFullscreen||d.webkitExitFullscreen).call(d);}catch(e){}return;}
+  const enabled=d.fullscreenEnabled!==undefined?d.fullscreenEnabled:d.webkitFullscreenEnabled;
+  if(enabled===false||!(el.requestFullscreen||el.webkitRequestFullscreen)){fsFail();return;}
+  try{
+    const p=el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen();
+    if(p&&typeof p.then==='function')p.then(lockLandscape,fsFail);
+    else setTimeout(()=>{fsEl()?lockLandscape():fsFail();},350);
+  }catch(e){fsFail();}
+}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{fsIcon();fit();if(!fsEl()){try{screen.orientation.unlock();}catch(e){}}}));
+$('#fsBtn').addEventListener('click',fs);
+$('#mgrid').innerHTML=slides.map((s,i)=>`<button class="mitem" type="button" style="--c:${SEC[s.dataset.sec]}"><b>${i+1}</b><span>${s.dataset.title||''}</span></button>`).join('');
+$$('.mitem').forEach((m,i)=>m.addEventListener('click',()=>{go(i);$('#menu').classList.remove('open');}));
+function openMenu(){$('#menu').classList.add('open');}
+$('#menuBtn').addEventListener('click',openMenu);
+$('#menuClose').addEventListener('click',()=>$('#menu').classList.remove('open'));
+$('#menu').addEventListener('click',e=>{if(e.target.id==='menu')$('#menu').classList.remove('open');});
+$('#rotateTip').classList.add('show');$('#rtClose').addEventListener('click',()=>$('#rotateTip').classList.remove('show'));
+
+/* ---------- warm-up ---------- */
+let breathing=false;
+$('#breatheBtn').addEventListener('click',()=>{
+  if(breathing) return; breathing=true;
+  const orb=$('#orb'),txt=$('#breatheText'),btn=$('#breatheBtn');btn.disabled=true;
+  const cues=['Who was with you? 👫','Where were you, and when? 📍','What happened first… and last? 🎬'];
+  const steps=[];for(let i=0;i<3;i++){steps.push(['in','Breathe in… '+cues[i]]);steps.push(['out','Breathe out slowly… 🍃']);}
+  let k=0;
+  (function next(){
+    if(k>=steps.length){orb.classList.remove('in');orb.textContent='done! ✨';txt.textContent='Hold that memory! You will write it as a recount text at the end of this lesson. 📝';btn.disabled=false;btn.textContent='↻ Breathe again';breathing=false;return;}
+    const [m,s]=steps[k++];orb.classList.toggle('in',m==='in');orb.textContent=m==='in'?'in…':'out…';txt.textContent=s;setTimeout(next,4000);
+  })();
+});
+$$('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('on')));
+$('#apBtn').addEventListener('click',()=>{$('#apOut').hidden=false;$('#apBtn').hidden=true;confetti(70);});
+
+/* ---------- types ---------- */
+const types=[
+ ['🧑','Personal recount','Retells an experience the writer took part in. Uses <b>I / we</b> and often includes feelings.','<i>My First Day at SMA</i> · <i>A Trip to Tawangmangu</i> · a diary entry','var(--sky-t)'],
+ ['📰','Factual recount','Reports an event <b>accurately</b>, often in a formal, objective tone. Details are precise.','a news report · an accident report · a science experiment report · a school event report','var(--sun-t)'],
+ ['🦸','Imaginative recount','Retells <b>imaginary events</b> as if the writer experienced them, often from another point of view.','<i>A Day in the Life of a Majapahit Soldier</i> · <i>My Life as a Raindrop</i>','var(--pink-t)'],
+ ['👑','Biographical recount','Retells the life of a <b>real person</b> or a historical event, usually with <b>he / she / they</b>.','<i>The Life of R.A. Kartini</i> · <i>The Battle of Surabaya</i>','var(--grape-t)']
+];
+function showType(i){
+  $$('#typeTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t==i));
+  const d=types[i];const p=$('#typePanel');p.style.background=d[4];
+  p.innerHTML=`<span class="ico" style="background:#fff">${d[0]}</span><div><h3>${d[1]}</h3><p>${d[2]}</p><p class="ex">📚 Example: ${d[3]}</p></div>`;
+}
+$$('#typeTabs .tab').forEach(t=>t.addEventListener('click',()=>showType(+t.dataset.t)));showType(0);
+
+/* ---------- structure explorer ---------- */
+const seg={
+ o:{c:'var(--o)',t:'Orientation',d:'Opens the text and gives the reader the background they need.',rows:[['Who','my cousin Raka and I'],['When','Last June, during the school holiday'],['Where','Mount Lawu, on the border of Central Java and East Java'],['What','went hiking'],['Why','to see the famous sunrise from Hargo Dumilah']],tip:'Answer at least four of the 5W questions in 2–4 sentences.'},
+ e:{c:'var(--e)',t:'Series of Events',d:'The body of the text. Each paragraph tells one stage in time order.',rows:[['Stage 1','leaving Solo → arriving at basecamp → starting to climb'],['Stage 2','steep trail → resting at Post 3 → feeling cold'],['Stage 3','continuing at 3 a.m. → reaching the peak → sunrise'],['Markers','After, While, At midnight, At 3 a.m., Finally'],['Details','how (by motorbike, slowly), feelings (so cold)']],tip:'One paragraph = one stage. Start each with a time phrase or sequencer.'},
+ r:{c:'var(--r)',t:'Reorientation',d:'Closes the trail: the end of the experience plus the writer’s view.',rows:[['Ending','We came down the mountain later that morning'],['Feeling','tired but happy'],['Comment','the most unforgettable holiday I have ever had'],['Lesson','patience is the key to reaching the top']],tip:'Keep it short: an ending + a feeling or comment is enough.'}
+};
+function showSeg(s){
+  $('#text1').dataset.show=s;
+  $$('#stages .stage').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s));
+  const d=seg[s],c=$('#segCard');c.style.setProperty('--k',d.c);
+  c.innerHTML=`<h3>${d.t}</h3><p style="margin-top:6px;font-size:19px">${d.d}</p><ul class="seg-list">${d.rows.map(r=>`<li><b>${r[0]}</b><span>${r[1]}</span></li>`).join('')}</ul><p class="tipbox">💡 <b>Tip:</b> ${d.tip}</p>`;
+}
+$$('#stages .stage').forEach(b=>b.addEventListener('click',()=>showSeg(b.dataset.s)));
+$$('#text1 .part').forEach(p=>p.addEventListener('click',()=>showSeg(p.dataset.part)));
+showSeg('o');
+
+/* ---------- highlighter ---------- */
+$$('#featBar .chip').forEach(c=>c.addEventListener('click',()=>{const on=c.getAttribute('aria-pressed')!=='true';c.setAttribute('aria-pressed',on);$('#text2').classList.toggle('hl-'+c.dataset.f,on);}));
+
+/* ---------- sentence analyzer ---------- */
+const K={time:'var(--sky)',subj:'var(--orange)',verb:'var(--coral)',obj:'#6B6480',place:'var(--grape)',conn:'var(--teal)',comp:'#6B6480'};
+const sents=[
+ {s:'Last June, my cousin Raka and I went hiking to Mount Lawu.',ch:[['Last June','Time','time'],['my cousin Raka and I','Subject','subj'],['went','Verb (V2)','verb'],['hiking','Complement','comp'],['to Mount Lawu','Place','place']],p:'Time + S + V2 + Complement + Place',n:'<b>went</b> is the past form of <i>go</i> (irregular). The time phrase at the front sets the scene.'},
+ {s:'After we registered, we started climbing at 7 p.m.',ch:[['After we registered','Time clause','conn'],['we','Subject','subj'],['started','Verb (V2)','verb'],['climbing','Object','obj'],['at 7 p.m.','Time','time']],p:'Conj + S + V2, S + V2 + O + Time',n:'<b>registered</b> and <b>started</b> are regular verbs (+ed). <i>After</i> shows which action came first.'},
+ {s:'While we were walking, the wind blew harder.',ch:[['While','Connective','conn'],['we','Subject','subj'],['were walking','Past continuous','verb'],['the wind','Subject','subj'],['blew','Verb (V2)','verb'],['harder','Manner','comp']],p:'While + S + was/were + V-ing, S + V2',n:'<b>Past continuous</b> for the longer background action, <b>simple past</b> for the action that happened during it.'},
+ {s:'It was so cold that my fingers felt stiff.',ch:[['It','Subject','subj'],['was','to be (past)','verb'],['so cold','Complement','comp'],['that my fingers felt stiff','Result clause','conn']],p:'S + was + so + Adj + that + S + V2',n:'<b>so … that</b> shows cause and result. It adds feeling and detail to an event.'},
+ {s:'Finally, we reached the peak just before the sun came up.',ch:[['Finally','Sequencer','conn'],['we','Subject','subj'],['reached','Verb (V2)','verb'],['the peak','Object','obj'],['just before the sun came up','Time clause','time']],p:'Sequencer + S + V2 + O + Time clause',n:'<b>Finally</b> signals the last event. Both clauses use simple past: <i>reached</i>, <i>came</i>.'},
+ {s:'It was the most unforgettable holiday I have ever had.',ch:[['It','Subject','subj'],['was','to be (past)','verb'],['the most unforgettable holiday','Complement','comp'],['I have ever had','Comment (present perfect)','conn']],p:'S + was + superlative + (that) S + have ever + V3',n:'In the reorientation, the writer may comment from <b>today’s point of view</b>, so present perfect is fine here.'}
+];
+$('#sentList').innerHTML=sents.map((d,i)=>`<button class="sent" type="button"><span class="sn">${i+1}</span><span>${d.s}</span></button>`).join('');
+function showSent(i){
+  $$('#sentList .sent').forEach((b,j)=>b.setAttribute('aria-pressed',i===j));
+  const d=sents[i];
+  $('#sentOut').innerHTML=`<span class="kicker" style="--c:var(--coral)">Sentence ${i+1}</span><p class="s">${d.s}</p><div class="chunks">${d.ch.map((c,j)=>`<span class="chunk" style="--k:${K[c[2]]};animation-delay:${j*70}ms"><span class="w">${c[0]}</span><span class="r">${c[1]}</span></span>`).join('')}</div><span class="pattern">${d.p}</span><p class="note">💡 ${d.n}</p>`;
+}
+$$('#sentList .sent').forEach((b,i)=>b.addEventListener('click',()=>showSent(i)));showSent(0);
+
+/* ---------- expressions ---------- */
+const X={
+ '🚪 Opening':[['Last … / Two weeks ago, …','Last holiday, my family and I visited Yogyakarta.'],['On + day/date, …','On Sunday morning, I joined the Car Free Day.'],['It all started when …','It all started when my bike broke down on the way to school.'],['I would like to tell you about …','I would like to tell you about my first time performing on stage.'],['I will never forget the day when …','I will never forget the day when I met my favourite author.']],
+ '➡️ Sequencing':[['First, / At first, …','First, we packed our bags.'],['Then, / Next, / After that, …','After that, we took a bus to the terminal.'],['Before + V-ing, …','Before leaving, we checked the weather.'],['While / When + clause, …','While I was waiting, it started to rain.'],['A few minutes later, …','A few minutes later, the bus arrived.'],['Suddenly, …','Suddenly, the lights went out.'],['Finally, / In the end, …','Finally, we arrived at the hotel.']],
+ '💖 Feelings':[['I felt + adjective','I felt nervous before the competition.'],['It was so + adj + that …','It was so hot that we stopped every hour.'],['I was surprised / relieved …','I was relieved when I found my wallet.'],['To my surprise, …','To my surprise, my team won first place.'],['I couldn’t believe …','I couldn’t believe my eyes.']],
+ '🏁 Closing':[['It was a/an + adj + experience.','It was an amazing experience.'],['I will never forget …','I will never forget that trip.'],['I learned that …','I learned that honesty is important.'],['Looking back, …','Looking back, I am glad I tried.'],['I hope I can … again.','I hope I can go there again next year.']]
+};
+const xk=Object.keys(X);
+$('#xTabs').innerHTML=xk.map((k,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${k}</button>`).join('');
+function showX(i){
+  $$('#xTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  $('#xTable').innerHTML=X[xk[i]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><button class="copy" type="button" data-c="${r[1].replace(/"/g,'&quot;')}">Copy</button></td></tr>`).join('');
+  $$('#xTable .copy').forEach(b=>b.addEventListener('click',()=>copyText(b.dataset.c)));
+}
+$$('#xTabs .tab').forEach(t=>t.addEventListener('click',()=>showX(+t.dataset.i)));showX(0);
+
+/* ---------- game 1: order ---------- */
+const order=['Last Sunday, I went to Pasar Gede with my mother to buy vegetables.','First, we bought some carrots and cabbage near the entrance.','Then, I realized that my phone was not in my pocket.','We walked back to every stall we had visited, but we could not find it.','Finally, a kind seller called us and gave the phone back.','I felt so relieved, and since then I always keep my phone in my bag.'];
+const shuffled=[3,5,1,4,0,2];
+function buildOrder(){
+  $('#pool').innerHTML='';$('#answer').innerHTML='';$('#orderFb').textContent='';$('#orderFb').className='fb';
+  shuffled.forEach(i=>{const b=document.createElement('button');b.type='button';b.className='pill';b.textContent=order[i];b.dataset.i=i;b.addEventListener('click',()=>{b.classList.remove('ok','no');(b.parentElement.id==='pool'?$('#answer'):$('#pool')).appendChild(b);});$('#pool').appendChild(b);});
+}
+$('#checkOrder').addEventListener('click',()=>{
+  const a=$$('#answer .pill'),fb=$('#orderFb');
+  if(a.length<order.length){fb.textContent='👉 Pindahkan semua kalimat ke kotak jawaban dulu.';fb.className='fb bad';return;}
+  let right=0;a.forEach((b,i)=>{const ok=+b.dataset.i===i;b.classList.toggle('ok',ok);b.classList.toggle('no',!ok);if(ok)right++;});
+  if(right===order.length){fb.textContent='🎉 Perfect! Orientation → Events → Reorientation.';fb.className='fb good';confetti();}
+  else{fb.textContent=`${right}/${order.length} in the right place. Look at the sequencers: First, Then, Finally. 🔍`;fb.className='fb bad';}
+});
+$('#resetOrder').addEventListener('click',buildOrder);buildOrder();
+
+/* ---------- game 2: O/E/R ---------- */
+const sq=[['Yesterday, my friends and I visited Keraton Surakarta for a history project.','o'],['After buying the tickets, we walked into the museum area.','e'],['It was a meaningful trip, and now I understand our local history better.','r'],['Then, the guide explained the story of the royal carriages.','e'],['Two years ago, my family moved from Semarang to Solo.','o']];
+let sqS=0,sqD=0;
+$('#sq').innerHTML=sq.map((r,i)=>`<div class="sq-row"><span>${r[0]}</span><div class="sq-btns" data-i="${i}"><button class="opt" type="button" data-a="o">O</button><button class="opt" type="button" data-a="e">E</button><button class="opt" type="button" data-a="r">R</button></div></div>`).join('');
+$$('#sq .sq-btns').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+  const ans=sq[+g.dataset.i][1],ok=b.dataset.a===ans;b.classList.add(ok?'ok':'no');if(!ok)g.querySelector(`[data-a="${ans}"]`).classList.add('ok');
+  sqD++;if(ok)sqS++;$('#sqScore').textContent=`⭐ ${sqS} / ${sq.length}`;
+  const fb=$('#sqFb');
+  if(sqD===sq.length){if(sqS===sq.length){fb.textContent='🎉 Excellent! You know the trail by heart.';fb.className='fb good';confetti();}else{fb.textContent='👍 Good try! Check the segmentation slide again.';fb.className='fb bad';}}
+  else{fb.textContent=ok?'✅ Correct!':'❌ Oops, the green one is right.';fb.className='fb '+(ok?'good':'bad');}
+}));
+
+/* ---------- game 3: V2 ---------- */
+const vq=[['go',['goed','went','gone'],'went'],['buy',['bought','buyed','brought'],'bought'],['stop',['stoped','stopped','stops'],'stopped'],['feel',['feeled','fell','felt'],'felt'],['carry',['carryed','carried','carrying'],'carried'],['see',['saw','seen','seed'],'saw'],['arrive',['arrived','arriveed','arrove'],'arrived'],['take',['taked','took','taken'],'took']];
+let vs=0,vd=0;
+$('#vq').innerHTML=vq.map((r,i)=>`<div class="vitem"><span class="base">${r[0]} <small>→ ?</small></span><div class="opts" data-i="${i}">${r[1].map(o=>`<button class="opt" type="button">${o}</button>`).join('')}</div></div>`).join('');
+$$('#vq .opts').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+  const ans=vq[+g.dataset.i][2],ok=b.textContent===ans;b.classList.add(ok?'ok':'no');if(!ok)[...g.children].find(x=>x.textContent===ans).classList.add('ok');
+  vd++;if(ok)vs++;$('#vqScore').textContent=`⭐ ${vs} / ${vq.length}`;
+  const fb=$('#vqFb');
+  if(vd===vq.length){fb.textContent=(vs===vq.length?'🎉 Perfect! ':'💡 ')+'Remember: stop → stopped (double consonant), carry → carried (y → ied).';fb.className='fb '+(vs===vq.length?'good':'bad');if(vs===vq.length)confetti();}
+  else{fb.textContent=ok?'✅ Nice!':'❌ Not quite, look at the green answer.';fb.className='fb '+(ok?'good':'bad');}
+}));
+
+/* ---------- builder ---------- */
+const conns=['First,','Then,','After that,','Next,','Suddenly,','A few minutes later,','Finally,','In the end,'];
+const evDefault=[['First,','we set up our tables and decorated the booths early in the morning.'],['At 9 a.m.,','the first visitors came, and our fried snacks sold out quickly.'],['Suddenly,','it started to rain, so we moved everything into the school hall.'],['Finally,','we counted the money together in the afternoon.']];
+function evRow(c,t){
+  const d=document.createElement('div');d.className='ev-row';
+  const opts=conns.includes(c)?conns:[c,...conns];
+  d.innerHTML=`<select>${opts.map(o=>`<option${o===c?' selected':''}>${o}</option>`).join('')}<option value="">(none)</option></select><textarea rows="2" placeholder="What happened?"></textarea>`;
+  d.querySelector('textarea').value=t;
+  d.querySelectorAll('select,textarea').forEach(el=>el.addEventListener('input',render));
+  $('#evWrap').appendChild(d);
+}
+evDefault.forEach(e=>evRow(e[0],e[1]));
+$('#addEv').addEventListener('click',()=>{if($$('#evWrap .ev-row').length>=6){toast('Six events is plenty! 😄');return;}evRow('Then,','');render();});
+const esc=s=>s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const dot=s=>{s=s.trim();return s&&!/[.!?]$/.test(s)?s+'.':s;};
+function parts(){
+  const v=id=>$(id).value.trim();
+  let orient='';
+  if([v('#bWhen'),v('#bWho'),v('#bWhat'),v('#bWhere')].some(Boolean)){orient=(v('#bWhen')?v('#bWhen')+', ':'')+[v('#bWho'),v('#bWhat'),v('#bWhere')].filter(Boolean).join(' ');orient=dot(cap(orient));}
+  if(v('#bWhy'))orient+=(orient?' ':'')+dot(cap(v('#bWhy')));
+  const evs=$$('#evWrap .ev-row').map(r=>{const c=r.querySelector('select').value,t=r.querySelector('textarea').value.trim();if(!t)return '';return dot(c?c+' '+t:cap(t));}).filter(Boolean);
+  const re=[$('#bFeel').value,dot(cap(v('#bLesson')))].filter(Boolean).join(' ');
+  return {title:v('#bTitle'),orient,evs,re};
+}
+const irregular='went came saw felt took got made had was were did gave left bought brought thought found told said ate drank ran sat stood wrote spoke met sold knew began became heard kept lost paid put read rode sang slept spent swam taught understood woke won wore'.split(' ');
+function render(){
+  const p=parts();
+  $('#bOut').innerHTML=`<h4>${esc(p.title||'Untitled')}</h4>`+
+   (p.orient?`<div class="part" data-part="o"><span class="lbl">Orientation</span>${esc(p.orient)}</div>`:'')+
+   p.evs.map((e,i)=>`<div class="part" data-part="e"><span class="lbl">Event ${i+1}</span>${esc(e)}</div>`).join('')+
+   (p.re?`<div class="part" data-part="r"><span class="lbl">Reorientation</span>${esc(p.re)}</div>`:'');
+  const all=[p.orient,...p.evs,p.re].join(' ');
+  const words=all.toLowerCase().match(/[a-z']+/g)||[];
+  const past=new Set(words.filter(w=>(w.length>3&&/ed$/.test(w)&&!['need','shed','speed','seed','indeed'].includes(w))||irregular.includes(w)));
+  const connUsed=new Set($$('#evWrap .ev-row').filter(r=>r.querySelector('textarea').value.trim()).map(r=>r.querySelector('select').value).filter(Boolean));
+  const w5=['#bWhen','#bWho','#bWhat','#bWhere'].filter(id=>$(id).value.trim()).length;
+  const checks=[[w5>=4,`Who, when, what, where (${w5}/4)`],[p.evs.length>=3,`At least 3 events (${p.evs.length})`],[connUsed.size>=3,`3+ different connectives (${connUsed.size})`],[past.size>=5,`Past verbs found: ${past.size}`],[p.re.length>0,'Closing feeling / comment'],[words.length>=100,`${words.length} words (target ≥ 100)`]];
+  $('#bChecks').innerHTML=checks.map(c=>`<li class="${c[0]?'ok':''}">${c[1]}</li>`).join('');
+}
+$$('#bForm input,#bForm select,#bForm textarea').forEach(el=>el.addEventListener('input',render));
+$('#copyText').addEventListener('click',()=>{const p=parts();copyText([p.title,p.orient,...p.evs,p.re].filter(Boolean).join('\n\n'));});
+$('#clearAll').addEventListener('click',()=>{['#bTitle','#bWhen','#bWho','#bWhat','#bWhere','#bWhy','#bLesson'].forEach(id=>$(id).value='');$('#evWrap').innerHTML='';['First,','Then,','Finally,'].forEach(c=>evRow(c,''));render();toast('✨ Ready for your own story!');});
+render();
+
+/* ---------- finale ---------- */
+$$('#feel button').forEach(b=>b.addEventListener('click',()=>{$$('#feel button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#feelMsg').textContent=b.dataset.m;}));
+
+/* ---------- start ---------- */
+addEventListener('hashchange',()=>{const h=parseInt(location.hash.slice(1),10);if(h>=1&&h<=N&&h-1!==cur)go(h-1,false);});
+const h=parseInt((location.hash||'').slice(1),10);
+slides[0].classList.add('active');
+go(h>=1&&h<=N?h-1:0,false);
+})();
+</script>
+</body>
+</html>
+
+</body></html>
