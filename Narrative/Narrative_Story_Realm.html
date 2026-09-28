@@ -1,0 +1,1397 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Story Realm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,500;0,700;0,800;1,500&display=swap">
+<style>
+:root{
+  --ink:#2B2440; --soft:#6B6480; --paper:#FFFBF2; --white:#fff;
+  --sun:#FFC933; --coral:#FF6B5B; --teal:#1FB5A6; --sky:#3D8BFF; --grape:#8B5CF6; --pink:#FF8FB1; --orange:#FF9F1C; --mint:#7BE0B5;
+  --sun-t:#FFF1C2; --coral-t:#FFE1DC; --teal-t:#D3F5F0; --sky-t:#DDEAFF; --grape-t:#ECE3FF; --pink-t:#FFE3EC; --orange-t:#FFE9CC;
+  --o:var(--sky); --e:var(--orange); --r:var(--grape);
+  --good:#16A34A; --bad:#E5484D;
+  --display:"Fredoka","Baloo 2",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;
+  background:#FFE08A radial-gradient(rgba(255,255,255,.55) 2.5px,transparent 3px) 0 0/28px 28px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+
+/* ============ STAGE (fixed 1600x900, scaled to fit) ============ */
+.stagewrap{flex:1;min-height:0;position:relative;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center;transform:translate(-50%,-50%) scale(var(--s,.5));
+  background:var(--paper);border:5px solid var(--ink);border-radius:36px;box-shadow:12px 12px 0 var(--ink);overflow:hidden}
+
+/* ============ BOTTOM BAR ============ */
+.bar{flex:none;height:76px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:0 18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px var(--display);white-space:nowrap}
+.brand svg{width:40px;height:44px}
+.track{flex:1;position:relative;height:14px;background:rgba(255,255,255,.15);border-radius:99px;margin:0 14px;min-width:80px}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--sun);transition:width .45s,background .45s}
+.flag{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;border:3px solid var(--ink);transform:translate(-50%,-50%);outline:2px solid rgba(255,255,255,.5)}
+.hiker{position:absolute;top:50%;width:42px;height:46px;transform:translate(-50%,-72%);transition:left .45s cubic-bezier(.3,1.4,.5,1);pointer-events:none}
+.count{font:700 18px var(--display);min-width:78px;text-align:center;font-variant-numeric:tabular-nums}
+.ibtn{width:48px;height:48px;border-radius:50%;border:3px solid #fff;background:transparent;color:#fff;display:grid;place-items:center;font:700 20px var(--display);flex:none}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+.nav{background:var(--sun);color:var(--ink);border-color:var(--sun);font-size:24px}
+.nav:hover{background:#FFD95E}
+.nav:disabled{opacity:.35;cursor:default}
+@media (max-width:760px){.brand span,.hide-sm{display:none}.bar{gap:8px;padding:0 10px}.track{margin:0 8px}}
+
+/* ============ MENU OVERLAY ============ */
+.menu{position:fixed;inset:0;z-index:60;background:rgba(43,36,64,.72);display:none;place-items:center;padding:20px}
+.menu.open{display:grid}
+.menu-box{background:var(--paper);border:4px solid var(--ink);border-radius:28px;box-shadow:8px 8px 0 var(--ink);width:min(1000px,100%);max-height:88vh;overflow:auto;padding:24px}
+.menu-box h3{font:700 28px var(--display);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.mitem{text-align:left;border:3px solid var(--ink);border-radius:16px;background:#fff;padding:10px 12px;box-shadow:3px 3px 0 var(--ink);display:grid;gap:2px}
+.mitem b{font:700 13px var(--display);color:#fff;background:var(--c);border-radius:99px;padding:1px 9px;justify-self:start}
+.mitem span{font-weight:800;font-size:15px}
+.mitem.cur{outline:4px solid var(--sun)}
+.rotate-tip{position:fixed;left:12px;right:12px;top:12px;z-index:70;background:var(--ink);color:#fff;border-radius:16px;padding:10px 14px;font-weight:700;display:none;align-items:center;gap:10px}
+@media (max-width:700px) and (orientation:portrait){.rotate-tip.show{display:flex}}
+
+/* ============ SLIDE BASE ============ */
+.slide{position:absolute;inset:0;padding:54px 88px 56px;display:none;flex-direction:column;gap:22px;font-size:22px;line-height:1.5;
+  --c:var(--teal);--t:var(--teal-t);--on:#fff}
+.slide.active{display:flex;animation:pop .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.965) translateY(16px)}to{opacity:1;transform:none}}
+.slide[data-sec="1"]{--c:var(--teal);--t:var(--teal-t)}
+.slide[data-sec="2"]{--c:var(--sky);--t:var(--sky-t)}
+.slide[data-sec="3"]{--c:var(--sun);--t:var(--sun-t);--on:var(--ink)}
+.slide[data-sec="4"]{--c:var(--coral);--t:var(--coral-t)}
+.slide[data-sec="5"]{--c:var(--grape);--t:var(--grape-t)}
+.slide h1,.slide h2,.slide h3,.slide h4{font-family:var(--display);margin:0;line-height:1.08}
+.slide p{margin:0}
+.head{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2}
+.krow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:999px;padding:5px 16px;
+  font:700 16px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--ink)}
+.hint{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px dashed var(--ink);border-radius:999px;padding:4px 14px;font:600 16px var(--display);color:var(--soft)}
+.slide h2{font-size:58px;font-weight:700;letter-spacing:-.01em}
+.u{background:linear-gradient(transparent 58%,color-mix(in srgb,var(--c) 45%,transparent) 58%);padding:0 .08em;border-radius:6px}
+.body{flex:1;min-height:0;position:relative;z-index:2}
+.center{display:grid;align-content:center}
+.muted{color:var(--soft)}
+.id{font-style:italic;color:var(--soft)}
+
+/* doodles */
+.deco{position:absolute;z-index:1;pointer-events:none;overflow:visible}
+.spin{animation:spin 14s linear infinite}
+.bob{animation:bob 3.2s ease-in-out infinite}
+.twinkle{animation:tw 2.4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-12px)}}
+@keyframes tw{50%{transform:scale(.7) rotate(20deg);opacity:.6}}
+.kiko{overflow:visible}
+.kiko.bob{animation:bob 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.slide.active,.spin,.bob,.twinkle,.kiko.bob{animation:none!important}}
+
+/* stickers & buttons */
+.stk{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:22px 26px;position:relative}
+.stk.tint{background:var(--t)}
+.tl{transform:rotate(-1.6deg)} .tr{transform:rotate(1.6deg)}
+.hov{transition:transform .18s,box-shadow .18s}
+.hov:hover{transform:translate(-3px,-4px) rotate(0);box-shadow:9px 10px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 21px var(--display);background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:16px;
+  padding:11px 24px;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.sm{font-size:18px;padding:8px 18px}
+.btn:disabled{opacity:.55;cursor:default}
+.ico{width:88px;height:88px;border-radius:50%;background:var(--t);border:3px solid var(--ink);display:grid;place-items:center;font-size:46px;line-height:1;flex:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.bubble{position:relative;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;padding:12px 18px;font:600 20px/1.3 var(--display);box-shadow:4px 4px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;width:18px;height:18px;background:inherit;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);bottom:-11px;left:34px;transform:rotate(45deg)}
+.bubble.tr-tail::after{left:auto;right:34px}
+.bubble.side::after{bottom:auto;top:26px;left:-11px;transform:rotate(135deg)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:99px;font-weight:800;z-index:80;border:3px solid var(--sun)}
+.cf{position:fixed;top:-24px;z-index:90;pointer-events:none;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),112vh) rotate(var(--rot))}}
+
+/* ============ COVER ============ */
+.cover{display:none;flex-direction:row!important;align-items:center;gap:30px;padding:60px 70px 60px 96px;--c:var(--coral);--t:var(--coral-t)}
+.cover .left{flex:1;display:flex;flex-direction:column;gap:22px;position:relative;z-index:2}
+.cover h1{font-size:132px;font-weight:700;line-height:.92;letter-spacing:-.02em}
+.cover h1 .pop{color:var(--coral);text-shadow:6px 6px 0 var(--ink);display:inline-block;transform:rotate(-3deg)}
+.lead{font-size:27px;font-weight:700;max-width:640px}
+.tags{display:flex;flex-wrap:wrap;gap:12px}
+.tag{display:inline-flex;gap:8px;align-items:center;background:var(--tc);border:3px solid var(--ink);border-radius:999px;padding:6px 16px;font:600 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.school{font-size:19px;color:var(--soft)}
+.school b{color:var(--ink)}
+.cover .right{width:640px;height:640px;position:relative;flex:none;z-index:2}
+.cover .right>svg.scene{width:100%;height:100%}
+
+/* ============ DIVIDER ============ */
+.divider{background:var(--c);color:var(--on);justify-content:center;padding-left:120px}
+.divider .part-pill{align-self:flex-start;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;padding:6px 20px;font:700 22px var(--display);letter-spacing:.08em;box-shadow:4px 4px 0 var(--ink);transform:rotate(-3deg)}
+.divider h2{font-size:128px;color:#fff;text-shadow:7px 7px 0 var(--ink);max-width:980px;position:relative;z-index:2}
+.divider[data-sec="3"] h2{color:#fff}
+.divider p.sub{font:600 32px/1.3 var(--display);max-width:760px;position:relative;z-index:2}
+.divider .num{position:absolute;right:70px;top:10px;font:700 460px/1 var(--display);color:transparent;-webkit-text-stroke:7px rgba(255,255,255,.4);z-index:1}
+.divider[data-sec="3"] .num{-webkit-text-stroke-color:rgba(43,36,64,.18)}
+.divider .kwrap{position:absolute;right:120px;bottom:70px;display:flex;align-items:flex-end;gap:10px;z-index:2}
+.divider .kwrap .bubble{margin-bottom:190px;max-width:320px}
+
+/* ============ AGENDA ============ */
+.agenda{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;position:relative;z-index:2;align-items:start;padding-top:20px}
+.agenda .stop{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);padding:24px 16px 22px;transition:transform .18s,box-shadow .18s}
+.agenda .stop:nth-child(odd){transform:rotate(-2deg)}
+.agenda .stop:nth-child(even){transform:rotate(2deg) translateY(44px)}
+.agenda .stop:hover{transform:translateY(-8px) rotate(0);box-shadow:9px 12px 0 var(--ink)}
+.agenda .n{font:700 20px var(--display);background:var(--k);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 14px}
+.agenda .stop:nth-child(3) .n{color:var(--ink)}
+.agenda .ico{background:var(--kt)}
+.agenda b{font:700 28px var(--display)}
+.agenda .s{font-size:18px;color:var(--soft);line-height:1.35}
+
+/* ============ WARM-UP ============ */
+.breathe{display:grid;grid-template-columns:440px 1fr;gap:60px;align-items:center;height:100%}
+.orb-box{width:440px;height:440px;display:grid;place-items:center;position:relative}
+.orb-ring{position:absolute;inset:18px;border:4px dashed var(--teal);border-radius:50%}
+.orb{width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8FF0DF,var(--teal) 70%);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+  display:grid;place-items:center;color:#fff;font:700 30px var(--display);text-shadow:2px 2px 0 var(--ink);transition:transform 4s ease-in-out}
+.orb.in{transform:scale(1.75)}
+.cue{font:700 40px/1.2 var(--display);min-height:100px;margin:16px 0 26px}
+.flips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;height:100%;align-content:center}
+.flip{perspective:1000px;height:360px;border:none;background:none;padding:0;text-align:left}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.flip .f{background:var(--fc)}
+.flip .b{background:#fff;transform:rotateY(180deg)}
+.flip .emo{font-size:62px;line-height:1}
+.flip .q{font:700 28px/1.2 var(--display)}
+.flip .ans{font:600 25px/1.3 var(--display);color:var(--ink)}
+.flip small{font-size:17px;color:var(--soft);font-weight:700}
+.flip small.tap{display:inline-flex;align-self:flex-start;background:#fff;border:2px solid var(--ink);border-radius:99px;padding:2px 12px;color:var(--ink)}
+.flip .b b{background:var(--sun-t);padding:0 6px;border-radius:6px;color:var(--ink)}
+.chat{display:grid;gap:26px;max-width:1180px}
+.chat .row{display:flex;gap:18px;align-items:flex-start}
+.chat .row.me{justify-content:flex-end}
+.chat .av{width:80px;height:80px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;font-size:44px;flex:none;background:var(--sky-t)}
+.chat .me .av{background:var(--sun-t)}
+.chat .bubble{font:600 28px/1.35 var(--display);max-width:900px}
+.chat .bubble.q{background:var(--sky-t)}
+.chat .bubble.a{background:var(--sun-t)}
+.chat .bubble mark{background:#fff;border-radius:6px;padding:0 4px;color:inherit}
+.reveal{display:flex;align-items:center;gap:24px}
+.bigsticker{font:700 54px var(--display);background:var(--coral);color:#fff;text-shadow:3px 3px 0 var(--ink);border:4px solid var(--ink);border-radius:22px;padding:10px 30px;box-shadow:6px 6px 0 var(--ink);transform:rotate(-3deg);animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+
+/* ============ UNDERSTANDING ============ */
+.defn{font:600 50px/1.28 var(--display);max-width:1250px;background:#fff;border:4px solid var(--ink);border-radius:32px;box-shadow:8px 8px 0 var(--ink);padding:36px 44px;position:relative}
+.defn mark{background:var(--sun);border-radius:10px;padding:0 10px;color:var(--ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.08)}
+.defn .quote{position:absolute;top:-38px;left:34px;font:700 110px/1 var(--display);color:var(--sky)}
+.idline{display:flex;gap:14px;align-items:flex-start;font-size:24px;max-width:1150px}
+.idline .badge{flex:none;font:700 16px var(--display);background:var(--ink);color:#fff;border-radius:8px;padding:4px 10px;margin-top:4px}
+.fn .stk{display:flex;flex-direction:column;gap:18px;align-items:flex-start;min-height:380px;padding:32px}
+.fn h3{font-size:46px}
+.fn p{font-size:27px}
+.ben{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ben .stk{display:flex;gap:20px;align-items:center;padding:30px 26px;background:var(--bc);min-height:170px}
+.ben .ico{width:92px;height:92px;font-size:48px;background:#fff}
+.ben b{font:700 31px var(--display);display:block;margin-bottom:4px}
+.ben span{font-size:22px;color:#4A4460;line-height:1.35;display:block}
+.goals{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;align-items:stretch}
+.goal{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:36px 22px;min-height:400px}
+.medal{width:120px;height:120px;border-radius:50%;background:var(--gc);border:4px solid var(--ink);display:grid;place-items:center;font:700 56px var(--display);color:#fff;text-shadow:3px 3px 0 var(--ink);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),5px 5px 0 var(--ink);position:relative}
+.medal::before,.medal::after{content:"";position:absolute;top:100px;width:30px;height:46px;background:var(--gc);border:3px solid var(--ink);z-index:-1}
+.medal::before{left:26px;transform:rotate(18deg)} .medal::after{right:26px;transform:rotate(-18deg)}
+.goal b{font:700 34px var(--display);margin-top:26px}
+.goal span{font-size:24px;color:var(--soft)}
+.tabs{display:flex;flex-wrap:wrap;gap:14px}
+.tab{font:700 22px var(--display);padding:10px 22px;border:3px solid var(--ink);border-radius:999px;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform .12s}
+.tab:hover{transform:translateY(-2px)}
+.tab[aria-selected="true"]{background:var(--c);color:var(--on);transform:translateY(-3px) rotate(-1deg)}
+.typepanel{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:34px 38px;margin-top:10px}
+.typepanel .ico{width:150px;height:150px;font-size:84px}
+.typepanel h3{font-size:46px;margin-bottom:10px}
+.typepanel p{font-size:26px}
+.typepanel .ex{margin-top:16px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:12px 18px;font-size:22px}
+.vs{display:grid;grid-template-columns:1fr 110px 1fr;gap:0;align-items:stretch;height:100%}
+.vs .col{padding:26px 30px;display:flex;flex-direction:column;gap:14px}
+.vs .col h3{font-size:44px;text-align:center;padding:6px;border-radius:14px;border:3px solid var(--ink);color:#fff;text-shadow:3px 3px 0 var(--ink)}
+.vs .vsmid{display:grid;place-items:center}
+.vs .vsmid span{width:100px;height:100px;border-radius:50%;background:var(--sun);border:4px solid var(--ink);display:grid;place-items:center;font:700 38px var(--display);box-shadow:4px 4px 0 var(--ink);transform:rotate(-8deg)}
+.vs dl{margin:0;display:grid;gap:12px}
+.vs dt{font:700 15px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.vs dd{margin:0 0 4px;font-size:23px;font-weight:700;line-height:1.3}
+
+/* ============ STRUCTURE ============ */
+.explore{display:grid;grid-template-columns:1.3fr 1fr;gap:34px;height:100%;min-height:0}
+.paper{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:18px 24px;overflow:auto;font-size:18.5px;line-height:1.55;position:relative;
+  background-image:linear-gradient(90deg,transparent 0,transparent 100%)}
+.paper h4{font-size:26px;text-align:center;margin-bottom:12px}
+.part{padding:8px 14px 8px 16px;border-left:7px solid var(--line,#ddd);border-radius:0 14px 14px 0;margin-bottom:8px;transition:opacity .25s,background .25s;cursor:pointer}
+.part[data-part="o"]{--line:var(--o)} .part[data-part="e"]{--line:var(--e)} .part[data-part="r"]{--line:var(--r)}
+.lbl{display:inline-block;font:700 12.5px var(--display);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--line);padding:1px 10px;border-radius:99px;margin-right:6px;vertical-align:2px}
+[data-show="o"] .part:not([data-part="o"]),[data-show="e"] .part:not([data-part="e"]),[data-show="r"] .part:not([data-part="r"]){opacity:.28}
+[data-show="o"] .part[data-part="o"]{background:var(--sky-t)}
+[data-show="e"] .part[data-part="e"]{background:var(--orange-t)}
+[data-show="r"] .part[data-part="r"]{background:var(--grape-t)}
+.side{display:flex;flex-direction:column;gap:16px;min-height:0}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stage{border:3px solid var(--ink);border-radius:18px;background:#fff;box-shadow:3px 3px 0 var(--ink);padding:10px 8px;font:700 18px/1.15 var(--display);display:flex;flex-direction:column;align-items:center;gap:4px}
+.stage .dotn{width:40px;height:40px;border-radius:50%;background:var(--k);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font-size:20px}
+.stage[aria-pressed="true"]{background:var(--kt);transform:translateY(-3px);box-shadow:5px 6px 0 var(--ink)}
+.segcard{flex:1;min-height:0;overflow:auto;border-color:var(--ink);background:#fff}
+.segcard h3{font-size:34px;color:var(--k)}
+.seg-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.seg-list li{display:grid;grid-template-columns:92px 1fr;gap:10px;font-size:18.5px;line-height:1.35;padding-bottom:8px;border-bottom:2px dashed #E6E0EF}
+.seg-list li:last-child{border-bottom:none}
+.seg-list b{font-family:var(--display);color:var(--k)}
+.tipbox{margin-top:12px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:14px;padding:10px 14px;font-size:18px}
+.segsum{display:grid;gap:18px}
+.segrow{display:grid;grid-template-columns:260px 1fr 250px;gap:0;border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);background:#fff}
+.segrow>div{padding:22px 22px;font-size:23px;line-height:1.4}
+.segrow .nm{background:var(--k);color:#fff;font:700 30px var(--display);display:flex;flex-direction:column;justify-content:center;text-shadow:2px 2px 0 var(--ink);border-right:3px solid var(--ink)}
+.segrow .nm small{font:600 16px var(--display);text-shadow:none;opacity:.95}
+.segrow .len{background:var(--kt);border-left:3px dashed var(--ink);font-weight:700}
+.segrow .len i{display:block;font-weight:500;font-size:19px;color:#4A4460;margin-top:6px}
+
+/* ============ LANGUAGE ============ */
+.chips{display:flex;flex-wrap:wrap;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:10px;border:3px solid var(--ink);background:#fff;border-radius:999px;padding:6px 18px 6px 8px;font:700 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.chip i{width:26px;height:26px;border-radius:50%;background:var(--fc);border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:14px;color:#fff}
+.chip[aria-pressed="true"]{background:var(--ft)}
+.chip[aria-pressed="true"] i::after{content:"✓"}
+.chip[data-f="v"]{--fc:var(--coral);--ft:var(--coral-t)} .chip[data-f="c"]{--fc:var(--teal);--ft:var(--teal-t)} .chip[data-f="t"]{--fc:var(--sky);--ft:var(--sky-t)} .chip[data-f="p"]{--fc:var(--grape);--ft:var(--grape-t)} .chip[data-f="n"]{--fc:var(--orange);--ft:var(--orange-t)}
+.lf{font-size:22px;line-height:1.8}
+.lf .part{cursor:default;border-left-width:6px;margin-bottom:6px}
+.lf span.v,.lf span.c,.lf span.t,.lf span.p,.lf span.n{border-radius:5px;transition:background .2s,box-shadow .2s;padding:0 1px}
+.hl-v .v{background:var(--coral-t);box-shadow:inset 0 -3px 0 var(--coral)}
+.hl-c .c{background:var(--teal-t);box-shadow:inset 0 -3px 0 var(--teal)}
+.hl-t .t{background:var(--sky-t);box-shadow:inset 0 -3px 0 var(--sky)}
+.hl-p .p{background:var(--grape-t);box-shadow:inset 0 -3px 0 var(--grape)}
+.hl-n .n{background:var(--orange-t);box-shadow:inset 0 -3px 0 var(--orange)}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.feat{padding:24px 26px;display:flex;flex-direction:column;gap:12px;min-height:250px}
+.feat .top{display:flex;align-items:center;gap:12px}
+.feat .ico{width:70px;height:70px;font-size:36px;background:var(--ft)}
+.feat h3{font-size:29px;line-height:1.1}
+.feat p{font-size:21px;flex:1;line-height:1.4}
+.feat .ex{background:var(--ft);border-radius:12px;padding:8px 12px;font-weight:800;font-size:19px;border:2px solid var(--ink)}
+.analyzer{display:grid;grid-template-columns:1fr 1.3fr;gap:30px;height:100%;min-height:0}
+.sent-list{display:grid;gap:10px;align-content:start;overflow:auto;padding:4px 8px 8px 4px}
+.sent{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:19px;font-weight:700;box-shadow:3px 3px 0 var(--ink);display:flex;gap:10px;align-items:flex-start}
+.sent .sn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--coral-t);border:2px solid var(--ink);display:grid;place-items:center;font:700 15px var(--display)}
+.sent[aria-pressed="true"]{background:var(--coral-t)}
+.sent[aria-pressed="true"] .sn{background:var(--coral);color:#fff}
+.out{overflow:auto}
+.out .s{font:700 28px/1.3 var(--display);margin:6px 0 18px}
+.chunks{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.chunk{display:grid;border-radius:14px;overflow:hidden;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);animation:pop .4s both}
+.chunk .w{padding:8px 14px;font-weight:800;background:#fff;font-size:21px}
+.chunk .r{padding:3px 14px;font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k);border-top:3px solid var(--ink)}
+.pattern{display:inline-block;font:700 22px var(--display);background:var(--ink);color:var(--sun);border-radius:12px;padding:8px 16px}
+.note{margin-top:14px;font-size:20px}
+.xtable{width:100%;border-collapse:separate;border-spacing:0 10px}
+.xtable td{background:#fff;padding:12px 16px;font-size:20px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);vertical-align:middle}
+.xtable td:first-child{border-left:3px solid var(--ink);border-radius:16px 0 0 16px;font-weight:800;width:38%;background:var(--t)}
+.xtable td:last-child{border-right:3px solid var(--ink);border-radius:0 16px 16px 0;width:110px;text-align:right}
+.xtable td:nth-child(2){font-style:italic}
+.copy{border:2.5px solid var(--ink);background:var(--sun);border-radius:10px;font:700 16px var(--display);padding:4px 12px}
+.copy:hover{background:#FFD95E}
+.xwrap{overflow:auto;height:100%;padding-right:8px}
+
+/* ============ PRACTICE ============ */
+.pill{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:18.5px;font-weight:700;width:100%;box-shadow:3px 3px 0 var(--ink);line-height:1.3;transition:transform .12s}
+.pill:hover{transform:translateX(4px)}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.qcol{display:flex;flex-direction:column;gap:10px;min-height:0}
+.qcol h4{font-size:22px;display:flex;gap:8px;align-items:center}
+.pool,.answer{display:grid;gap:10px;align-content:start;flex:1;overflow:auto;padding:4px 8px 8px 4px}
+.answer{border:3px dashed var(--ink);border-radius:22px;padding:14px;counter-reset:a;background:var(--grape-t)}
+.answer:empty::before{content:"👈 Klik kalimat di kiri sesuai urutan kejadian…";color:var(--soft);font:600 20px var(--display)}
+.answer .pill{counter-increment:a;display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start}
+.answer .pill::before{content:counter(a);width:30px;height:30px;border-radius:50%;background:var(--grape);color:#fff;display:grid;place-items:center;font:700 16px var(--display);border:2px solid var(--ink)}
+.pill.ok{background:#DCFCE7;border-color:var(--good)}
+.pill.no{background:#FFE4E6;border-color:var(--bad)}
+.qbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.fb{font:700 22px var(--display);min-height:1.3em}
+.fb.good{color:var(--good)} .fb.bad{color:var(--bad)}
+.opt{border:3px solid var(--ink);background:#fff;border-radius:14px;padding:6px 16px;font:700 20px var(--display);box-shadow:3px 3px 0 var(--ink);min-width:58px}
+.opt:hover{transform:translateY(-2px)}
+.opt.ok{background:var(--good);color:#fff!important}
+.opt.no{background:var(--bad);color:#fff!important}
+.sq{display:grid;gap:14px}
+.sq-row{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 16px 12px 22px;box-shadow:4px 4px 0 var(--ink);font-size:21px;font-weight:700}
+.sq-btns{display:flex;gap:8px}
+.sq-btns .opt[data-a="o"]{color:var(--o)} .sq-btns .opt[data-a="e"]{color:var(--orange)} .sq-btns .opt[data-a="r"]{color:var(--r)}
+.legend{display:flex;gap:18px;font:600 19px var(--display);flex-wrap:wrap}
+.legend span{display:inline-flex;gap:8px;align-items:center}
+.legend i{width:30px;height:30px;border-radius:9px;border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;color:#fff;font-size:15px}
+.vq{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.vitem{border:3px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:12px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.vitem:nth-child(4n+1){background:var(--sky-t)} .vitem:nth-child(4n+2){background:var(--sun-t)} .vitem:nth-child(4n+3){background:var(--pink-t)} .vitem:nth-child(4n+4){background:var(--teal-t)}
+.vitem .base{font:700 32px var(--display)}
+.vitem .base small{font-size:20px;color:var(--soft)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--sun);border-radius:999px;padding:6px 16px;font:700 20px var(--display)}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.form{display:grid;gap:12px;overflow:auto;padding:4px 10px 10px 4px;align-content:start}
+.fset{border:3px solid var(--ink);border-radius:20px;padding:12px 14px 14px;background:var(--kt);display:grid;gap:10px;margin:0;box-shadow:4px 4px 0 var(--ink)}
+.fset legend{font:700 17px var(--display);color:#fff;background:var(--k);border:2.5px solid var(--ink);border-radius:99px;padding:2px 14px;text-shadow:1px 1px 0 var(--ink)}
+.flabel{font:600 14px var(--display);color:var(--soft);display:grid;gap:4px;letter-spacing:.03em}
+.form input,.form textarea,.form select{font:700 17px var(--body);color:var(--ink);background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:7px 11px;width:100%}
+.form textarea{resize:vertical;min-height:52px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ev-row{display:grid;grid-template-columns:190px 1fr;gap:8px;align-items:start}
+.bout{display:flex;flex-direction:column;gap:16px;min-height:0}
+.bout .paper{flex:1;font-size:18px}
+.checks{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:16px;font-weight:700}
+.checks li{display:flex;gap:8px;align-items:flex-start;line-height:1.3}
+.checks li::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;border:2.5px solid var(--soft);margin-top:1px}
+.checks li.ok::before{content:"✓";background:var(--good);border-color:var(--good);color:#fff;display:grid;place-items:center;font-size:13px}
+
+/* closing */
+.finale{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;align-items:center;height:100%}
+.feel{display:flex;gap:14px}
+.feel button{width:96px;height:96px;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:52px;box-shadow:4px 4px 0 var(--ink);transition:transform .15s}
+.feel button:hover{transform:translateY(-6px) rotate(-6deg)}
+.feel button[aria-pressed="true"]{background:var(--sun);transform:scale(1.1)}
+.t321{display:grid;gap:16px}
+.t321 .stk{display:grid;grid-template-columns:80px 1fr;gap:18px;align-items:center;padding:16px 20px}
+.t321 .n{width:74px;height:74px;border-radius:50%;background:var(--nc);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font:700 40px var(--display);text-shadow:2px 2px 0 var(--ink)}
+.t321 b{font:700 26px var(--display);display:block}
+.t321 span{font-size:19px;color:var(--soft)}
+
+
+/* ============ STORY REALM overrides ============ */
+:root{--o:var(--sky);--x:var(--coral);--r:var(--teal);--d:var(--grape)}
+body{background:#2E3A7A radial-gradient(rgba(255,201,51,.5) 1.6px,transparent 2.4px) 0 0/40px 40px}
+.bar{background:#1B2150}
+.cover h1 .pop{color:var(--sun)}
+/* 4-part structure */
+.part[data-part="o"]{--line:var(--o)} .part[data-part="x"]{--line:var(--x)} .part[data-part="r"]{--line:var(--r)} .part[data-part="d"]{--line:var(--d)}
+[data-show="o"] .part:not([data-part="o"]),[data-show="x"] .part:not([data-part="x"]),[data-show="r"] .part:not([data-part="r"]),[data-show="d"] .part:not([data-part="d"]){opacity:.28}
+[data-show="o"] .part[data-part="o"]{background:var(--sky-t)}
+[data-show="x"] .part[data-part="x"]{background:var(--coral-t)}
+[data-show="r"] .part[data-part="r"]{background:var(--teal-t)}
+[data-show="d"] .part[data-part="d"]{background:var(--grape-t)}
+.part p{margin:0} .part p+p{margin-top:6px}
+.explore{grid-template-columns:1.4fr 1fr}
+.explore .paper{font-size:18.5px;line-height:1.5}
+.explore .paper h4{font-size:26px}
+.stages{grid-template-columns:repeat(4,1fr)}
+.stages .stage{font-size:16px}
+.side .tabs{gap:10px}
+.side .tab{font-size:17px;padding:6px 14px}
+.ttag{display:inline-block;font:700 14px var(--display);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--k);border:2.5px solid var(--ink);border-radius:99px;padding:2px 12px;vertical-align:5px;margin-left:10px;text-shadow:1px 1px 0 var(--ink)}
+q{quotes:"“" "”" "‘" "’"}
+
+/* story dice */
+.dice{display:grid;grid-template-columns:260px 1fr;gap:40px;align-items:center;height:100%}
+.reels{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.reel{background:#fff;border:4px solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column;min-height:230px}
+.reel h4{font:700 18px var(--display);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--k);padding:8px 16px;border-bottom:3px solid var(--ink);text-shadow:1px 1px 0 var(--ink)}
+.reel .v{flex:1;display:grid;place-items:center;text-align:center;padding:18px;font:700 32px/1.2 var(--display);text-wrap:balance}
+.reel .v .e{display:block;font-size:48px;margin-bottom:6px}
+.reel.roll .v{animation:shake .5s}
+@keyframes shake{20%{transform:translateY(-10px) rotate(-3deg)}50%{transform:translateY(6px) rotate(2deg)}80%{transform:translateY(-3px)}}
+.opener{font:600 26px/1.4 var(--display);background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:18px;padding:12px 20px;margin-top:20px}
+
+/* mini stories */
+.mission{display:grid;grid-template-columns:1fr 1.35fr 1.1fr .95fr;gap:16px;margin-top:6px}
+.mblk{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:4px 4px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column}
+.mblk h4{font:700 18px var(--display);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--k);padding:8px 14px;border-bottom:3px solid var(--ink);text-shadow:1px 1px 0 var(--ink)}
+.mblk .mb{padding:14px 18px;font-size:20.5px;line-height:1.45}
+.mtitle{font:700 34px var(--display);margin-top:4px}
+.segrow{grid-template-columns:290px 1fr 300px}
+.segrow>div{padding:16px 22px;font-size:22px}
+.segrow .nm{font-size:27px}
+
+/* types */
+.typepanel{grid-template-columns:auto 1fr;align-items:start}
+.typepanel .ico{width:140px;height:140px;font-size:78px}
+.clues{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.clues span{font:600 19px var(--display);background:#fff;border:2.5px solid var(--ink);border-radius:99px;padding:4px 14px}
+.exs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.exs div{background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:10px 16px;font-size:21px}
+.exs b{font-family:var(--display)}
+.tipline{font:600 22px/1.35 var(--display);background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:10px 18px;text-align:center}
+.vs .col{gap:10px}
+
+/* highlighter */
+.chip[data-f="v"]{--fc:var(--coral);--ft:var(--coral-t)} .chip[data-f="c"]{--fc:var(--teal);--ft:var(--teal-t)} .chip[data-f="s"]{--fc:var(--sky);--ft:var(--sky-t)} .chip[data-f="a"]{--fc:var(--orange);--ft:var(--orange-t)} .chip[data-f="p"]{--fc:var(--grape);--ft:var(--grape-t)}
+.lf{font-size:20px;line-height:1.75}
+.lf span.s,.lf span.a{border-radius:5px;transition:background .2s,box-shadow .2s;padding:0 1px}
+.hl-s .s{background:var(--sky-t);box-shadow:inset 0 -3px 0 var(--sky)}
+.hl-a .a{background:var(--orange-t);box-shadow:inset 0 -3px 0 var(--orange)}
+
+/* games */
+.sq-btns .opt[data-a="o"]{color:var(--o)} .sq-btns .opt[data-a="x"]{color:var(--x)} .sq-btns .opt[data-a="r"]{color:var(--r)} .sq-btns .opt[data-a="d"]{color:var(--d)}
+.sq-btns .opt[data-a="l"]{color:var(--orange)} .sq-btns .opt[data-a="f"]{color:#E0508A} .sq-btns .opt[data-a="y"]{color:var(--grape)}
+.sq-row{font-size:19.5px;padding:9px 14px 9px 20px}
+.sq{gap:10px}
+.vq.fill .vitem .base{font:700 22px/1.3 var(--display)}
+.vq.fill .vitem .base u{text-decoration:none;display:inline-block;min-width:70px;border-bottom:3px dashed var(--ink)}
+.vq.fill .opt{font-size:17px;padding:6px 11px}
+.qa .pill{font-size:19px}
+.answer:empty::before{content:"👈 Klik kalimat di kiri sesuai urutan cerita…"}
+
+/* builder */
+.ev-row{grid-template-columns:195px 1fr}
+.tswitch{display:flex;gap:10px}
+.tswitch .tab{font-size:17px;padding:6px 14px}
+.tswitch .tab[aria-selected="true"]{background:var(--k);color:#fff}
+.bout .paper{font-size:17px;line-height:1.5}
+
+/* ---- polish pass ---- */
+.flip .emo{font-size:46px;letter-spacing:2px;white-space:nowrap}
+.flip .q{font-size:27px}
+.divider h2{font-size:112px;max-width:1150px}
+.typepanel{padding:36px 40px}
+.typepanel h3{font-size:54px}
+.typepanel p{font-size:28px;line-height:1.4}
+.clues span{font-size:21px;padding:5px 16px}
+.exs div{font-size:23px;padding:12px 18px}
+.mblk .mb{font-size:23px}
+.mtitle{font-size:38px}
+#text2{font-size:23.5px;line-height:1.8}
+.game .body{justify-content:flex-start!important;gap:10px!important}
+.game .sq-row{font-size:18px;padding:6px 12px 6px 18px;border-radius:16px;box-shadow:3px 3px 0 var(--ink)}
+.game .sq-btns .opt{font-size:17px;padding:4px 12px;min-width:48px}
+.game .sq{gap:8px}
+.game .legend{font-size:18px}
+.qa .pill{font-size:16.5px;padding:8px 12px}
+.pool,.answer{gap:8px}
+.form{gap:9px}
+.fset{padding:10px 12px 12px;gap:8px}
+.form input,.form textarea,.form select{font-size:15.5px;padding:6px 10px}
+.form textarea{min-height:46px}
+.checks{font-size:15px}
+
+/* ===== MOBILE FULLSCREEN FIX (28/09/2026) ===== */
+@media (max-width:760px){
+  .bar{height:62px;gap:6px;padding:0 8px}
+  .brand{display:none}
+  .track{min-width:40px;margin:0 6px}
+  .count{min-width:50px;font-size:15px}
+  .ibtn{width:42px;height:42px;font-size:18px;border-width:2.5px}
+  .nav{font-size:20px}
+  #fsBtn.hide-sm,#menuBtn.hide-sm{display:grid}
+  #fsBtn{background:#fff;color:#2B2440;border-color:#fff}
+}
+@media (max-width:420px){
+  #menuBtn.hide-sm{display:none}
+  .ibtn{width:38px;height:38px}
+  .hiker{width:32px;height:35px}
+}
+.toast{max-width:calc(100vw - 24px);text-align:center}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="folio" viewBox="0 0 120 132">
+      <ellipse cx="60" cy="127" rx="34" ry="5" fill="#2B2440" opacity=".15"/>
+      <!-- legs + boots -->
+      <path d="M48 100 V114 M72 100 V114" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <path d="M35 122 Q35 111 48 112 Q56 113 56 122 Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M64 122 Q64 113 72 112 Q85 111 85 122 Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="4" stroke-linejoin="round"/>
+      <!-- bookmark ribbon -->
+      <path d="M56 98 V120 L60 115 L64 120 V98 Z" fill="#FF6B5B" stroke="#2B2440" stroke-width="3" stroke-linejoin="round"/>
+      <!-- book cover (behind pages) -->
+      <path d="M60 40 Q36 29 10 35 L10 101 Q36 95 60 106 Q84 95 110 101 L110 35 Q84 29 60 40 Z" fill="#FF6B5B" stroke="#2B2440" stroke-width="4.5" stroke-linejoin="round"/>
+      <!-- pages -->
+      <path d="M60 44 Q38 34 16 39 L16 96 Q38 91 60 101 Z" fill="#FFFBF2" stroke="#2B2440" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M60 44 Q82 34 104 39 L104 96 Q82 91 60 101 Z" fill="#FFFBF2" stroke="#2B2440" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M60 44 V54 M60 92 V101" stroke="#2B2440" stroke-width="3" stroke-linecap="round"/>
+      <!-- tiny text lines on pages -->
+      <path d="M22 86 Q31 84 40 86 M22 91 Q30 89 36 91 M80 86 Q89 84 98 86 M84 91 Q91 89 98 91" fill="none" stroke="#C9C2DA" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- face -->
+      <path d="M36 54 Q42 50 49 53" fill="none" stroke="#2B2440" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M71 53 Q78 50 84 54" fill="none" stroke="#2B2440" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="43" cy="64" r="6.5" fill="#2B2440"/><circle cx="45.3" cy="61.6" r="2.2" fill="#fff"/><circle cx="41" cy="66.5" r="1" fill="#fff"/>
+      <circle cx="77" cy="64" r="6.5" fill="#2B2440"/><circle cx="79.3" cy="61.6" r="2.2" fill="#fff"/><circle cx="75" cy="66.5" r="1" fill="#fff"/>
+      <ellipse cx="31" cy="74" rx="5" ry="3.2" fill="#FF8FB1"/><ellipse cx="89" cy="74" rx="5" ry="3.2" fill="#FF8FB1"/>
+      <path d="M51 72 Q60 86 69 72 Z" fill="#2B2440" stroke="#2B2440" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M55 78 Q60 75 65 78 Q60 82 55 78 Z" fill="#FF8FB1"/>
+      <!-- wizard hat -->
+      <path d="M40 38 Q52 30 62 4 Q66 -2 71 4 Q74 8 70 10 Q76 22 82 36 Q61 44 40 38 Z" fill="#8B5CF6" stroke="#2B2440" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M42 34 Q61 40 81 32" fill="none" stroke="#FFC933" stroke-width="5" stroke-linecap="round"/>
+      <path d="M62 14 L64.2 19 L69.5 19.3 L65.4 22.6 L66.8 27.8 L62 24.8 L57.2 27.8 L58.6 22.6 L54.5 19.3 L59.8 19 Z" fill="#FFC933" stroke="#2B2440" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="72" cy="5" r="4" fill="#FFC933" stroke="#2B2440" stroke-width="3"/>
+      <!-- waving arm (left) -->
+      <path d="M15 70 Q5 67 6.5 55" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="6.5" cy="50" r="5.5" fill="#FFFBF2" stroke="#2B2440" stroke-width="4"/>
+      <!-- right arm holding quill -->
+      <path d="M106 70 Q116 70 114 58" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <path d="M113 64 Q102 44 114 24 Q124 42 116 62 Z" fill="#FFC933" stroke="#2B2440" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M114 70 L114.5 34" stroke="#2B2440" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="114" cy="60" r="6" fill="#FFFBF2" stroke="#2B2440" stroke-width="4"/>
+    </symbol>
+    <symbol id="star" viewBox="0 0 100 100"><path d="M50 6 L62 37 L95 39 L69 60 L78 93 L50 75 L22 93 L31 60 L5 39 L38 37Z" fill="currentColor" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/></symbol>
+    <symbol id="spark" viewBox="0 0 100 100"><path d="M50 4 C54 36 64 46 96 50 C64 54 54 64 50 96 C46 64 36 54 4 50 C36 46 46 36 50 4Z" fill="currentColor" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/></symbol>
+    <symbol id="squig" viewBox="0 0 130 30"><path d="M6 15 Q20 2 34 15 T62 15 T90 15 T118 15" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></symbol>
+    <symbol id="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="11"/></symbol>
+    <symbol id="dots" viewBox="0 0 100 60"><g fill="currentColor"><circle cx="10" cy="10" r="7"/><circle cx="40" cy="10" r="7"/><circle cx="70" cy="10" r="7"/><circle cx="25" cy="40" r="7"/><circle cx="55" cy="40" r="7"/><circle cx="85" cy="40" r="7"/></g></symbol>
+    <symbol id="moon" viewBox="0 0 100 100"><path d="M62 8 A44 44 0 1 0 92 70 A36 36 0 1 1 62 8 Z" fill="currentColor" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+<div class="stagewrap" id="wrap">
+<main id="stage" aria-roledescription="slide deck">
+
+<!-- 1 COVER -->
+<section class="slide cover" data-sec="0" data-title="Once upon a time…" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco spin" style="left:40px;top:40px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:660px;top:70px;width:44px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="left:90px;bottom:36px;width:150px;color:var(--grape)"><use href="#squig"/></svg>
+  <svg class="deco" style="left:560px;bottom:60px;width:90px;color:var(--teal)"><use href="#dots"/></svg>
+  <div class="left">
+    <span class="kicker" style="align-self:flex-start">📖 English · Grade X–XI</span>
+    <h1>Story<br><span class="pop">Realm!</span></h1>
+    <p class="lead">Every story is a journey: meet the characters, face the problem, and find the ending. “Once upon a time…” starts now! ✨</p>
+    <div class="tags">
+      <span class="tag" style="--tc:var(--sky-t)">🌅 Orientation</span>
+      <span class="tag" style="--tc:var(--coral-t)">⚡ Complication</span>
+      <span class="tag" style="--tc:var(--teal-t)">🌈 Resolution</span>
+      <span class="tag" style="--tc:var(--grape-t)">🌟 Coda</span>
+    </div>
+    <div style="display:flex;gap:22px;align-items:center;margin-top:6px">
+      <button class="btn" type="button" data-next style="font-size:24px;padding:14px 30px">Open the book →</button>
+      <p class="school">By Mr. Fio 😎</p>
+    </div>
+  </div>
+  <div class="right">
+    <svg class="scene" viewBox="0 0 600 600" role="img" aria-label="Buku dongeng terbuka di malam hari; dari halamannya muncul gunung, danau, dan istana, dengan bulan sabit dan bintang">
+      <defs><clipPath id="blob"><path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z"/></clipPath></defs>
+      <g clip-path="url(#blob)">
+        <rect width="600" height="600" fill="#2E3A7A"/>
+        <g fill="#FFC933"><circle cx="110" cy="130" r="4"/><circle cx="200" cy="80" r="3"/><circle cx="420" cy="90" r="4"/><circle cx="520" cy="210" r="3"/><circle cx="80" cy="260" r="3"/><circle cx="330" cy="150" r="3"/><circle cx="250" cy="200" r="2.5"/></g>
+        <path d="M470 70 A70 70 0 1 0 540 170 A56 56 0 1 1 470 70 Z" fill="#FFE08A" stroke="#2B2440" stroke-width="6"/>
+        <!-- mountain + lake -->
+        <path d="M60 420 L190 230 Q205 212 220 230 L300 330 L240 420 Z" fill="#1FB5A6" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M168 262 L190 230 Q205 212 220 230 L240 256 Q222 270 205 256 Q188 272 168 262 Z" fill="#fff" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/>
+        <!-- castle -->
+        <g stroke="#2B2440" stroke-width="6" stroke-linejoin="round">
+          <rect x="300" y="250" width="170" height="170" fill="#FF8FB1"/>
+          <rect x="280" y="200" width="54" height="220" fill="#FF6B5B"/>
+          <rect x="436" y="200" width="54" height="220" fill="#FF6B5B"/>
+          <path d="M272 204 L307 150 L342 204 Z" fill="#8B5CF6"/>
+          <path d="M428 204 L463 150 L498 204 Z" fill="#8B5CF6"/>
+          <path d="M360 250 V226 H378 V250 M392 250 V226 H410 V250" fill="#FF8FB1"/>
+          <path d="M360 420 V360 Q385 330 410 360 V420 Z" fill="#2B2440"/>
+        </g>
+        <circle cx="307" cy="238" r="9" fill="#FFE08A" stroke="#2B2440" stroke-width="4"/>
+        <circle cx="463" cy="238" r="9" fill="#FFE08A" stroke="#2B2440" stroke-width="4"/>
+        <!-- open book -->
+        <path d="M300 440 Q190 400 40 420 L40 600 L560 600 L560 420 Q410 400 300 440 Z" fill="#FF6B5B" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M300 452 Q190 414 60 432 L60 600 H300 Z" fill="#FFFBF2" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M300 452 Q410 414 540 432 L540 600 H300 Z" fill="#FFFBF2" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/>
+        <text x="180" y="500" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="30" fill="#2B2440">Once upon</text>
+        <text x="420" y="500" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="30" fill="#2B2440">a time…</text>
+        <path d="M110 530 H250 M110 556 H220 M350 530 H490 M350 556 H460" stroke="#C9C2DA" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z" fill="none" stroke="#2B2440" stroke-width="7"/>
+    </svg>
+    <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;left:-175px;bottom:-24px;width:190px"><use href="#folio"/></svg>
+    <div class="bubble" style="position:absolute;left:-120px;bottom:196px;background:var(--sun-t)">Hi, I'm Folio! 📖<br>Shall I tell you a story?</div>
+  </div>
+</section>
+
+<!-- 2 QUEST MAP -->
+<section class="slide" data-sec="1" data-title="Story map" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco" style="left:0;right:0;top:360px;width:1600px;height:320px" viewBox="0 0 1600 320" preserveAspectRatio="none"><path d="M40 170 C240 20 360 300 560 170 S900 20 1060 170 S1400 300 1580 150" fill="none" stroke="#2B2440" stroke-width="5" stroke-dasharray="4 18" stroke-linecap="round" opacity=".45"/></svg>
+  <svg class="deco spin" style="right:80px;top:40px;width:64px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:190px;top:110px;width:34px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🗺️ Story map</span><span class="hint">👆 klik bab untuk lompat</span></div><h2>Five chapters to <span class="u">read</span> today</h2></div>
+  <div class="body">
+    <div class="agenda">
+      <button class="stop" type="button" data-go="s-warm" style="--k:var(--teal);--kt:var(--teal-t)"><span class="n">CHAPTER 1</span><span class="ico">🎲</span><b>Warm-up</b><span class="s">Story dice, guess the story</span></button>
+      <button class="stop" type="button" data-go="s-under" style="--k:var(--sky);--kt:var(--sky-t)"><span class="n">CHAPTER 2</span><span class="ico">💡</span><b>Understand</b><span class="s">Definition, function, three types</span></button>
+      <button class="stop" type="button" data-go="s-struct" style="--k:var(--sun);--kt:var(--sun-t)"><span class="n">CHAPTER 3</span><span class="ico">⛰️</span><b>Structure</b><span class="s">Orientation → Coda</span></button>
+      <button class="stop" type="button" data-go="s-lang" style="--k:var(--coral);--kt:var(--coral-t)"><span class="n">CHAPTER 4</span><span class="ico">🪄</span><b>Language</b><span class="s">Past tense, dialogue, expressions</span></button>
+      <button class="stop" type="button" data-go="s-prac" style="--k:var(--grape);--kt:var(--grape-t)"><span class="n">FINAL CHAPTER</span><span class="ico">🏆</span><b>Practice</b><span class="s">Games and your own story</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 1 -->
+<section class="slide divider" data-sec="1" id="s-warm" data-title="Chapter 1 · Warm-up">
+  <span class="num">01</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:#fff;opacity:.6"><use href="#squig"/></svg>
+  <span class="part-pill">CHAPTER 01</span>
+  <h2>Warm-up 🎲</h2>
+  <p class="sub">Roll a character, a place and a problem, then tell the story!</p>
+  <div class="kwrap"><div class="bubble">Every great storyteller starts with a wild idea! 🎲</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#folio"/></svg></div>
+</section>
+
+<!-- STORY DICE -->
+<section class="slide" data-sec="1" data-title="Story dice">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎲 Game</span><span class="hint">guru klik tombol, murid bergiliran melanjutkan cerita</span></div><h2>Roll the <span class="u">story dice!</span></h2></div>
+  <div class="body">
+    <div class="dice">
+      <svg class="kiko bob" viewBox="0 0 120 132" style="width:260px"><use href="#folio"/></svg>
+      <div>
+        <div class="reels">
+          <div class="reel" style="--k:var(--sky)"><h4>🧑 Who?</h4><div class="v" id="rWho"><span><span class="e">❓</span>a character</span></div></div>
+          <div class="reel" style="--k:var(--teal)"><h4>🏞️ Where?</h4><div class="v" id="rWhere"><span><span class="e">❓</span>a place</span></div></div>
+          <div class="reel" style="--k:var(--coral)"><h4>⚡ Problem?</h4><div class="v" id="rProb"><span><span class="e">❓</span>a problem</span></div></div>
+        </div>
+        <div class="says-meta" style="display:flex;gap:14px;align-items:center;margin-top:22px"><button class="btn" id="diceBtn" type="button" style="font-size:24px">🎲 Roll the dice</button><span class="score" id="diceCount">Round 0</span></div>
+        <p class="opener" id="diceOpen">🗣️ Student 1: “Once upon a time, there lived …” · Student 2: “One day, …” · Student 3: “Suddenly, …” · Student 4: “Finally, …”</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GUESS THE STORY -->
+<section class="slide" data-sec="1" data-title="Guess the story">
+  <svg class="deco spin" style="right:80px;top:48px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎴 Emoji stories</span><span class="hint">👆 tebak judulnya, lalu balik kartu</span></div><h2>Guess the <span class="u">story</span>!</h2></div>
+  <div class="body">
+    <div class="flips">
+      <button class="flip" type="button" style="--fc:var(--sky-t)"><div class="in"><div class="f"><span class="emo">⛵👩‍🦳🌩️🪨</span><span class="q">A rich son, a poor mother, a storm… and a stone.</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans"><b>Malin Kundang</b><br>West Sumatra</span><small>🏷️ Legend · Moral: respect your parents.</small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--pink-t)"><div class="in"><div class="f"><span class="emo">👠🎃🕛👑</span><span class="q">A lost shoe at midnight and a prince searching for its owner.</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans"><b>Cinderella</b><br>Europe</span><small>🏷️ Fairy tale · Moral: kindness is rewarded.</small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--sun-t)"><div class="in"><div class="f"><span class="emo">🥒👧👹🧂</span><span class="q">A girl born from a golden cucumber runs from a giant.</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans"><b>Timun Mas</b><br>Central Java</span><small>🏷️ Fairy tale · Moral: be brave and clever.</small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--teal-t)"><div class="in"><div class="f"><span class="emo">🐟💍😡🌊</span><span class="q">A fish becomes a wife, a promise is broken, and a huge lake appears.</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans"><b>The Legend of Lake Toba</b><br>North Sumatra</span><small>🏷️ Legend · Moral: keep your promises.</small></div></div></button>
+    </div>
+  </div>
+</section>
+
+<!-- APERSEPSI -->
+<section class="slide" data-sec="1" data-title="What kind of text?">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:50px;color:var(--sun)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:60px;width:170px;color:var(--coral)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🤔 Think about it</span></div><h2>A bedtime request…</h2></div>
+  <div class="body center">
+    <div class="chat">
+      <div class="row"><span class="av">👧</span><div class="bubble side q">"Kak, my little brother can't sleep 😩 Tell him a story, please!"</div></div>
+      <div class="row me"><div class="bubble tr-tail a">"<mark>Once upon a time</mark>, a greedy giant <mark>lived</mark> on a mountain. <mark>One day</mark>, he <mark>stole</mark> all the rice from the village. The villagers <mark>were</mark> hungry and sad. <mark>Suddenly</mark>, a clever little mouse deer <mark>had</mark> an idea… <mark>In the end</mark>, the giant <mark>ran</mark> away and the villagers <mark>got</mark> their rice back!"</div><span class="av">😄</span></div>
+      <div class="reveal"><button class="btn" type="button" id="apBtn" style="font-size:24px">So… what kind of text is that? 🤔</button><span id="apOut" hidden class="bigsticker" style="background:var(--coral)">It's a NARRATIVE! 🎉</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 2 -->
+<section class="slide divider" data-sec="2" id="s-under" data-title="Chapter 2 · Understanding">
+  <span class="num">02</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:760px;top:120px;width:50px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">CHAPTER 02</span>
+  <h2>Understanding 💡</h2>
+  <p class="sub">What a narrative is, why we tell it, and its types.</p>
+  <div class="kwrap"><div class="bubble">Legend, fairy tale or fantasy? Let's find out! ✨</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#folio"/></svg></div>
+</section>
+
+<!-- DEFINITION -->
+<section class="slide" data-sec="2" data-title="What is it?">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="right:40px;bottom:40px;width:120px;color:var(--sky)"><use href="#ring"/></svg>
+  <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;right:100px;bottom:60px;width:180px;z-index:3"><use href="#folio"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">📖 Definition</span></div><h2>What is a <span class="u">narrative text</span>?</h2></div>
+  <div class="body center" style="gap:34px">
+    <p class="defn" style="max-width:1200px"><span class="quote">“</span>A narrative text is an <mark>imaginative story</mark> that tells a series of events with <mark>a problem (conflict) and its solution</mark>, to <mark>entertain</mark> the reader and often to teach a <mark>moral value</mark>.</p>
+    <p class="idline"><span class="badge">ID</span><span class="id">Teks naratif adalah cerita imajinatif berisi rangkaian peristiwa dengan konflik dan penyelesaiannya, untuk menghibur pembaca dan sering menyampaikan pesan moral.</span></p>
+  </div>
+</section>
+
+<!-- FUNCTION -->
+<section class="slide" data-sec="2" data-title="Why tell it?">
+  <svg class="deco twinkle" style="right:90px;top:60px;width:48px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎯 Social function</span></div><h2>Why do people <span class="u">tell stories</span>?</h2></div>
+  <div class="body center">
+    <div class="g3 fn">
+      <div class="stk tl hov" style="--t:var(--sun-t)"><span class="ico">🎭</span><h3>To entertain</h3><p>Amuse the reader with <b>exciting events</b>, surprises and emotions.</p></div>
+      <div class="stk tr hov" style="--t:var(--teal-t)"><span class="ico">🌱</span><h3>To teach a lesson</h3><p>Share a <b>moral value</b>: honesty, kindness, courage, respect…</p></div>
+      <div class="stk tl hov" style="--t:var(--grape-t)"><span class="ico">🏮</span><h3>To keep culture alive</h3><p>Pass on <b>folklore</b>, beliefs and imagination to the next generation.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- GOALS -->
+<section class="slide" data-sec="2" data-title="Learning goals">
+  <svg class="deco twinkle" style="right:100px;top:60px;width:48px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🚀 Story goals</span></div><h2>By the end of today, <span class="u">I can…</span></h2></div>
+  <div class="body center">
+    <div class="goals">
+      <div class="stk goal tl" style="--gc:var(--teal)"><span class="medal">1</span><b>Explain</b><span>the social function of a narrative text</span></div>
+      <div class="stk goal tr" style="--gc:var(--sky)"><span class="medal">2</span><b>Distinguish</b><span>legend, fairy tale and fantasy</span></div>
+      <div class="stk goal tl" style="--gc:var(--orange)"><span class="medal">3</span><b>Analyze</b><span>its structure and language features</span></div>
+      <div class="stk goal tr" style="--gc:var(--coral)"><span class="medal">4</span><b>Write</b><span>my own short narrative with a moral value</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section class="slide" data-sec="2" data-title="Where you'll use it">
+  <svg class="deco spin" style="right:70px;top:46px;width:60px;color:var(--sun)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🌍 Benefits</span></div><h2>Why is it <span class="u">useful</span> for you?</h2></div>
+  <div class="body center">
+    <div class="ben">
+      <div class="stk hov" style="--bc:var(--sky-t)"><span class="ico">📝</span><div><b>Reading tests</b><span>Stories appear often in reading sections of exams.</span></div></div>
+      <div class="stk hov" style="--bc:var(--coral-t)"><span class="ico">🎤</span><div><b>Storytelling contests</b><span>Tell a legend on stage with voice and expression.</span></div></div>
+      <div class="stk hov" style="--bc:var(--sun-t)"><span class="ico">✍️</span><div><b>Creative writing</b><span>Write short stories, fan fiction or comic scripts.</span></div></div>
+      <div class="stk hov" style="--bc:var(--teal-t)"><span class="ico">🏮</span><div><b>Know our culture</b><span>Retell Nusantara folklore to the world in English.</span></div></div>
+      <div class="stk hov" style="--bc:var(--grape-t)"><span class="ico">🎬</span><div><b>Films, games & novels</b><span>Understand plot, conflict and characters better.</span></div></div>
+      <div class="stk hov" style="--bc:var(--pink-t)"><span class="ico">💖</span><div><b>Character building</b><span>Learn values like honesty, courage and respect.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPES -->
+<section class="slide" data-sec="2" data-title="Three types of story">
+  <svg class="deco spin" style="right:70px;top:46px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🏷️ Types</span><span class="hint">👆 klik jenis cerita</span></div><h2>Legend, fairy tale or <span class="u">fantasy</span>?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs" role="tablist" id="tyTabs"></div>
+    <div class="stk typepanel" id="tyPanel"></div>
+  </div>
+</section>
+
+<!-- NARRATIVE VS RECOUNT -->
+<section class="slide" data-sec="2" data-title="Narrative vs Recount">
+  <div class="head"><div class="krow"><span class="kicker">⚔️ Don't mix them up!</span></div><h2>Narrative <span class="u">vs</span> Recount</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px">
+    <div class="vs" style="height:auto;flex:1">
+      <div class="stk col tl" style="background:var(--coral-t)"><h3 style="background:var(--coral)">📖 NARRATIVE</h3>
+        <dl><dt>Purpose</dt><dd>To <b>entertain</b> and teach a moral value</dd><dt>Story</dt><dd><b>Imaginative</b>: legend, fairy tale, fantasy</dd><dt>Structure</dt><dd>Orientation → <b>Complication</b> → Resolution → (Coda)</dd><dt>Key sign</dt><dd>There is a <b>conflict</b> that must be solved</dd></dl></div>
+      <div class="vsmid"><span>VS</span></div>
+      <div class="stk col tr" style="background:var(--sky-t)"><h3 style="background:var(--sky)">🗓️ RECOUNT</h3>
+        <dl><dt>Purpose</dt><dd>To <b>retell</b> past events and inform</dd><dt>Story</dt><dd><b>Real experience</b>: holiday, trip, event</dd><dt>Structure</dt><dd>Orientation → <b>Events</b> → Reorientation</dd><dt>Key sign</dt><dd>A series of events, <b>no main conflict</b> needed</dd></dl></div>
+    </div>
+    <p class="tipline">🔑 Quick test: Is there a <b>problem that must be solved</b>? <b>Yes</b> → narrative · <b>No</b>, just real events in order → recount</p>
+  </div>
+</section>
+
+<!-- DIVIDER 3 -->
+<section class="slide divider" data-sec="3" id="s-struct" data-title="Chapter 3 · Structure">
+  <span class="num">03</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:#fff"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:var(--coral)"><use href="#squig"/></svg>
+  <span class="part-pill">CHAPTER 03</span>
+  <h2>Generic Structure ⛰️</h2>
+  <p class="sub">Meet the characters, climb to the problem, find the ending, learn the lesson.</p>
+  <div class="kwrap"><div class="bubble">Every story climbs a mountain, then comes back down! ⛰️</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#folio"/></svg></div>
+</section>
+
+<!-- STRUCTURE EXPLORER -->
+<section class="slide" data-sec="3" data-title="Structure explorer" style="padding-top:40px">
+  <div class="head"><div class="krow"><span class="kicker">🧭 Explore</span><span class="hint">👆 pilih cerita, lalu klik bagian teks atau tombol</span></div><h2>Four parts of a <span class="u">narrative</span></h2></div>
+  <div class="body">
+    <div class="explore">
+      <article class="paper" id="text1" data-show="o"></article>
+      <div class="side">
+        <div class="tabs" role="tablist" id="exTabs">
+          <button class="tab" role="tab" type="button" aria-selected="true" data-x="l">🪨 Legend</button>
+          <button class="tab" role="tab" type="button" aria-selected="false" data-x="f">🥒 Fairy tale</button>
+          <button class="tab" role="tab" type="button" aria-selected="false" data-x="y">🌙 Fantasy</button>
+        </div>
+        <div class="stages" id="stages">
+          <button class="stage" type="button" data-s="o" aria-pressed="true" style="--k:var(--o);--kt:var(--sky-t)"><span class="dotn">1</span>Orientation</button>
+          <button class="stage" type="button" data-s="x" aria-pressed="false" style="--k:var(--x);--kt:var(--coral-t)"><span class="dotn">2</span>Complication</button>
+          <button class="stage" type="button" data-s="r" aria-pressed="false" style="--k:var(--r);--kt:var(--teal-t)"><span class="dotn">3</span>Resolution</button>
+          <button class="stage" type="button" data-s="d" aria-pressed="false" style="--k:var(--d);--kt:var(--grape-t)"><span class="dotn">4</span>Coda</button>
+        </div>
+        <div class="stk segcard" id="segCard"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OTHER STORIES -->
+<section class="slide" data-sec="3" data-title="Same structure, other stories">
+  <svg class="deco spin" style="right:80px;top:50px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔁 Same map</span><span class="hint">👆 ganti cerita, strukturnya tetap sama</span></div><h2>Same structure, <span class="u">different</span> stories</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px;justify-content:center">
+    <div class="tabs" role="tablist" id="mTabs"></div>
+    <p class="mtitle" id="mTitle"></p>
+    <div class="mission" id="mBody"></div>
+  </div>
+</section>
+
+<!-- SEGMENTATION SUMMARY -->
+<section class="slide" data-sec="3" data-title="What each part contains">
+  <div class="head"><div class="krow"><span class="kicker">📦 Segmentation</span></div><h2>What goes <span class="u">inside</span> each part?</h2></div>
+  <div class="body center">
+    <div class="segsum" style="gap:14px">
+      <div class="segrow" style="--k:var(--o);--kt:var(--sky-t)"><div class="nm">① Orientation<small>the beginning</small></div><div>Introduces the <b>characters</b> (who), the <b>setting</b> (where &amp; when) and the situation</div><div class="len">1 paragraph<i>“Once upon a time, there lived…”</i></div></div>
+      <div class="segrow" style="--k:var(--x);--kt:var(--coral-t)"><div class="nm">② Complication<small>the problem</small></div><div>A <b>problem or conflict</b> starts; tension rises until the <b>climax</b>, the most exciting moment</div><div class="len">1–3 paragraphs<i>“One day… Suddenly… However…”</i></div></div>
+      <div class="segrow" style="--k:var(--r);--kt:var(--teal-t)"><div class="nm">③ Resolution<small>the ending</small></div><div>The problem is <b>solved</b>, for better or worse: the ending can be <b>happy or sad</b></div><div class="len">1 paragraph<i>“Finally… In the end…”</i></div></div>
+      <div class="segrow" style="--k:var(--d);--kt:var(--grape-t)"><div class="nm">④ Coda<small>optional</small></div><div>The <b>moral value</b>, or what happens <b>after</b> the story / how the characters change</div><div class="len">1–2 sentences<i>“The moral of the story is that…”</i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 4 -->
+<section class="slide divider" data-sec="4" id="s-lang" data-title="Chapter 4 · Language">
+  <span class="num">04</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:130px;bottom:80px;width:120px;color:#fff;opacity:.5"><use href="#dots"/></svg>
+  <span class="part-pill">CHAPTER 04</span>
+  <h2>Language Features 🪄</h2>
+  <p class="sub">The magic words that bring a story to life.</p>
+  <div class="kwrap"><div class="bubble">Past tense is my magic spell! 🪄</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#folio"/></svg></div>
+</section>
+
+<!-- SIX FEATURES -->
+<section class="slide" data-sec="4" data-title="Six language features">
+  <div class="head"><div class="krow"><span class="kicker">⚡ Magic words</span></div><h2>Six <span class="u">language features</span></h2></div>
+  <div class="body center">
+    <div class="feats">
+      <div class="stk feat hov" style="--ft:var(--coral-t)"><div class="top"><span class="ico">⏪</span><h3>Simple past tense</h3></div><p>The story happened in the past: V2 (regular -ed &amp; irregular).</p><span class="ex">lived · turned · ran · became</span></div>
+      <div class="stk feat hov" style="--ft:var(--sky-t)"><div class="top"><span class="ico">🔄</span><h3>Past continuous tense</h3></div><p>An action in progress, often interrupted by another event.</p><span class="ex">While he was sleeping, the giant came.</span></div>
+      <div class="stk feat hov" style="--ft:var(--teal-t)"><div class="top"><span class="ico">🔗</span><h3>Time connectives</h3></div><p>Order the events and signal a change.</p><span class="ex">Once upon a time · One day · Suddenly · Finally</span></div>
+      <div class="stk feat hov" style="--ft:var(--orange-t)"><div class="top"><span class="ico">🏃</span><h3>Action &amp; saying verbs</h3></div><p>Show what characters do and how they speak.</p><span class="ex">threw · chased · shouted · whispered</span></div>
+      <div class="stk feat hov" style="--ft:var(--grape-t)"><div class="top"><span class="ico">💬</span><h3>Direct &amp; indirect speech</h3></div><p>Bring the characters' voices into the story.</p><span class="ex">“Help me!” she cried. / She cried for help.</span></div>
+      <div class="stk feat hov" style="--ft:var(--pink-t)"><div class="top"><span class="ico">🎨</span><h3>Descriptive words</h3></div><p>Adjectives and adverbs that paint the characters and scenes.</p><span class="ex">a greedy giant · ran quickly</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HIGHLIGHTER -->
+<section class="slide" data-sec="4" data-title="Colour highlighter" style="padding-top:40px">
+  <div class="head"><div class="krow"><span class="kicker">🖍️ Highlighter</span><span class="hint">👆 nyalakan warna, bisa lebih dari satu</span></div><h2>Spot the <span class="u">features</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px">
+    <div class="chips" id="featBar">
+      <button class="chip" type="button" data-f="v" aria-pressed="true"><i></i>Past tense verbs</button>
+      <button class="chip" type="button" data-f="c" aria-pressed="true"><i></i>Time connectives</button>
+      <button class="chip" type="button" data-f="s" aria-pressed="false"><i></i>Direct speech</button>
+      <button class="chip" type="button" data-f="a" aria-pressed="false"><i></i>Adjectives &amp; adverbs</button>
+      <button class="chip" type="button" data-f="p" aria-pressed="false"><i></i>Characters</button>
+    </div>
+    <article class="paper lf hl-v hl-c" id="text2" style="flex:1">
+      <div class="part" data-part="o"><span class="lbl">Orientation</span><b>Malin Kundang</b> · <span class="c">Once upon a time</span>, in a <span class="a">small</span> fishing village in West Sumatra, there <span class="v">lived</span> <span class="p">a poor widow</span> and <span class="p">her only son, Malin Kundang</span>. <span class="p">Malin</span> <span class="v">was</span> a <span class="a">clever</span> and <span class="a">hard-working</span> boy.</div>
+      <div class="part" data-part="x"><span class="lbl">Complication</span><span class="c">One day</span>, <span class="p">Malin</span> <span class="v">sailed</span> away on a merchant ship. <span class="c">Years later</span>, he <span class="v">became</span> a <span class="a">rich</span> merchant. <span class="c">When</span> his ship <span class="v">landed</span> at the village, <span class="p">his mother</span> <span class="v">ran</span> to the harbour and <span class="v">hugged</span> him <span class="a">happily</span>. <span class="c">However</span>, <span class="p">Malin</span> <span class="v">was</span> <span class="a">ashamed</span> of her. <span class="s">“I don’t know this old woman!”</span> he <span class="v s">shouted</span>, and he <span class="v">pushed</span> her away.</div>
+      <div class="part" data-part="r"><span class="lbl">Resolution</span><span class="a">Heartbroken</span>, <span class="p">the mother</span> <span class="v s">prayed</span>, <span class="s">“If he is really my son, turn him into stone!”</span> <span class="c">Suddenly</span>, a <span class="a">terrible</span> storm <span class="v">hit</span> the ship. <span class="c">Finally</span>, <span class="p">Malin</span> <span class="v">knelt</span> on the beach and <span class="a">slowly</span> <span class="v">turned</span> into stone.</div>
+      <div class="part" data-part="d"><span class="lbl">Coda</span><span class="c">Until today</span>, people can see a stone shaped like a kneeling man at Air Manis Beach. The moral of the story is that we must never disrespect our parents.</div>
+    </article>
+  </div>
+</section>
+
+<!-- SENTENCE ANALYZER -->
+<section class="slide" data-sec="4" data-title="Sentence lab">
+  <svg class="deco twinkle" style="right:90px;top:56px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔬 Sentence lab</span><span class="hint">👆 pilih satu kalimat</span></div><h2>Break the <span class="u">sentence</span> apart</h2></div>
+  <div class="body">
+    <div class="analyzer">
+      <div class="sent-list" id="sentList"></div>
+      <div class="stk out" id="sentOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPRESSIONS -->
+<section class="slide" data-sec="4" data-title="Expression bank">
+  <div class="head"><div class="krow"><span class="kicker">💬 Expression bank</span><span class="hint">📋 klik Copy untuk menyalin</span></div><h2>Build-up <span class="u">expressions</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs" role="tablist" id="xTabs"></div>
+    <div class="xwrap"><table class="xtable" id="xTable"></table></div>
+  </div>
+</section>
+
+<!-- DIVIDER 5 -->
+<section class="slide divider" data-sec="5" id="s-prac" data-title="Final chapter · Practice">
+  <span class="num">05</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:820px;top:130px;width:52px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">FINAL CHAPTER</span>
+  <h2>Practice Time! 🏆</h2>
+  <p class="sub">Four mini games, then write your own story.</p>
+  <div class="kwrap"><div class="bubble">The final chapter! Ready to write your own tale? ✍️</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#folio"/></svg></div>
+</section>
+
+<!-- GAME 1 -->
+<section class="slide game" data-sec="5" data-title="Game 1 · Which part?" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 1</span><span class="score" id="g1Score">⭐ 0 / 8</span></div><h2>🌸 Which <span class="u">part</span> is it?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px;justify-content:center">
+    <div class="legend"><span>Story: <b>The Legend of Banyuwangi</b> (East Java)</span><span><i style="background:var(--o)">O</i>Orientation</span><span><i style="background:var(--x)">C</i>Complication</span><span><i style="background:var(--r)">R</i>Resolution</span><span><i style="background:var(--d)">Co</i>Coda</span></div>
+    <div class="sq" id="g1"></div>
+    <p class="fb" id="g1Fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- GAME 2 -->
+<section class="slide game" data-sec="5" data-title="Game 2 · Which type?" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 2</span><span class="score" id="g2Score">⭐ 0 / 8</span></div><h2>🏷️ Which <span class="u">type</span> of story?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px;justify-content:center">
+    <div class="legend"><span>Read the clue and choose:</span><span><i style="background:var(--orange)">L</i>Legend</span><span><i style="background:#E0508A">FT</i>Fairy tale</span><span><i style="background:var(--grape)">FY</i>Fantasy</span></div>
+    <div class="sq" id="g2"></div>
+    <p class="fb" id="g2Fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- GAME 3 ORDER -->
+<section class="slide" data-sec="5" data-title="Game 3 · Story shuffle">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 3</span><span class="hint">klik kalimat sesuai urutan; klik lagi di kanan untuk membatalkan</span></div><h2>🌋 Put <span class="u">Sangkuriang</span> in order</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px;min-height:0">
+    <div class="qa" style="flex:1">
+      <div class="qcol"><h4>📜 Shuffled sentences</h4><div class="pool" id="ordPool"></div></div>
+      <div class="qcol"><h4>📖 Your story</h4><div class="answer" id="ordAns"></div></div>
+    </div>
+    <div class="qbar"><button class="btn" type="button" id="ordCheck">✅ Check</button><button class="btn ghost" type="button" id="ordReset">🔀 Shuffle again</button><p class="fb" id="ordFb" aria-live="polite"></p></div>
+  </div>
+</section>
+
+<!-- GAME 4 -->
+<section class="slide" data-sec="5" data-title="Game 4 · Complete the story">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 4</span><span class="score" id="vqScore">⭐ 0 / 8</span></div><h2>Complete the <span class="u">story</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="vq fill" id="vq"></div>
+    <p class="fb" id="vqFb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- BUILDER -->
+<section class="slide" data-sec="5" data-title="Write your story" style="padding-top:40px">
+  <div class="head"><div class="krow"><span class="kicker">✍️ Your tale</span><span class="hint">ganti contoh dengan ceritamu sendiri</span></div><h2>Write <span class="u">your own</span> story</h2></div>
+  <div class="body">
+    <div class="builder">
+      <form class="form" id="bForm" onsubmit="return false">
+        <div class="tswitch" role="tablist" id="bType">
+          <button class="tab" role="tab" type="button" aria-selected="false" data-t="Legend" style="--k:var(--orange)">🪨 Legend</button>
+          <button class="tab" role="tab" type="button" aria-selected="true" data-t="Fairy tale" style="--k:#E0508A">🧚 Fairy tale</button>
+          <button class="tab" role="tab" type="button" aria-selected="false" data-t="Fantasy" style="--k:var(--grape)">🌙 Fantasy</button>
+        </div>
+        <fieldset class="fset" style="--k:var(--o);--kt:var(--sky-t)"><legend>① Orientation</legend>
+          <label class="flabel">TITLE<input id="bTitle" value="Laras and the Water Dragon"></label>
+          <div class="ev-row"><select id="bOp"><option>Once upon a time,</option><option>Long ago,</option><option>A long time ago,</option><option>In a faraway land,</option><option>One dark night,</option></select><textarea id="bOri" rows="2">in a small village near Mount Merapi, there lived a brave girl named Laras. She lived with her grandmother and a clever white cat.</textarea></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--x);--kt:var(--coral-t)"><legend>② Complication</legend>
+          <div id="evWrap" style="display:grid;gap:8px"></div>
+          <div><button class="btn ghost sm" type="button" id="addEv">+ Add event</button></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--r);--kt:var(--teal-t)"><legend>③ Resolution</legend>
+          <div class="ev-row"><select id="bResC"><option>Finally,</option><option>At last,</option><option>In the end,</option><option>Luckily,</option><option>Sadly,</option></select><textarea id="bRes" rows="2">Laras reached the top and sang an old lullaby. The dragon woke up, and fresh water flowed down to the village again.</textarea></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--d);--kt:var(--grape-t)"><legend>④ Coda (optional)</legend>
+          <div class="ev-row"><select id="bCodaC"><option>The moral of the story is that</option><option>This story teaches us that</option><option>Since then,</option><option>From then on,</option></select><textarea id="bCoda" rows="2">courage and kindness can solve big problems.</textarea></div>
+        </fieldset>
+      </form>
+      <div class="bout">
+        <article class="paper" id="bOut"></article>
+        <div class="stk" style="padding:14px 20px">
+          <ul class="checks" id="bChecks"></ul>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button class="btn sm" type="button" id="copyText">📋 Copy my story</button><button class="btn ghost sm" type="button" id="clearAll">🧹 Clear the example</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINALE -->
+<section class="slide" data-sec="1" data-title="The End!" id="finale" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:200px;top:110px;width:46px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:40px;width:170px;color:var(--grape)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🏆 The End</span></div><h2>You reached <span class="u">the happy ending</span>! 🎉</h2></div>
+  <div class="body">
+    <div class="finale">
+      <div style="display:flex;flex-direction:column;gap:22px;align-items:flex-start">
+        <p style="font:600 30px/1.3 var(--display)">How do you feel about narrative texts now?</p>
+        <div class="feel" id="feel">
+          <button type="button" data-m="Legendary! You're ready for a storytelling contest! 🎤">🤩</button>
+          <button type="button" data-m="Nice! Add some dialogue and your story will shine. ✨">🙂</button>
+          <button type="button" data-m="That's okay! Review the four parts and the expression bank. 📚">😐</button>
+          <button type="button" data-m="No worries! Ask your teacher or a friend, and replay the games. 🤝">😵‍💫</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px">
+          <svg class="kiko bob" viewBox="0 0 120 132" style="width:180px"><use href="#folio"/></svg>
+          <div class="bubble" id="feelMsg" style="max-width:420px;margin-bottom:150px;background:var(--sun-t)">Tap a face! 👆</div>
+        </div>
+      </div>
+      <div class="t321">
+        <p style="font:700 26px var(--display)">🎟️ Exit ticket: 4 · 3 · 1</p>
+        <div class="stk tl" style="--nc:var(--sky)"><span class="n">4</span><div><b>parts of a narrative</b><span>that I can name and explain</span></div></div>
+        <div class="stk tr" style="--nc:var(--coral)"><span class="n">3</span><div><b>types of story</b><span>legend, fairy tale, fantasy, with one example each</span></div></div>
+        <div class="stk tl" style="--nc:var(--grape)"><span class="n">1</span><div><b>moral value</b><span>from a story I love, and why</span></div></div>
+        <p class="school" style="margin-top:6px">By Mr. Fio 😎</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<nav class="bar" aria-label="Slide controls">
+  <div class="brand"><svg viewBox="0 0 120 132"><use href="#folio"/></svg><span>Story Realm</span></div>
+  <div class="track" id="track"><div class="fill" id="fill"></div><svg class="hiker" id="hiker" viewBox="0 0 120 132"><use href="#folio"/></svg></div>
+  <span class="count" id="count">1 / 1</span>
+  <button class="ibtn hide-sm" id="menuBtn" type="button" title="All slides (M)" aria-label="All slides">☰</button>
+  <button class="ibtn hide-sm" id="fsBtn" type="button" title="Fullscreen (F)" aria-label="Fullscreen">⛶</button>
+  <button class="ibtn nav" id="prev" type="button" aria-label="Previous slide">←</button>
+  <button class="ibtn nav" id="next" type="button" aria-label="Next slide">→</button>
+</nav>
+
+<div class="menu" id="menu" role="dialog" aria-label="All slides"><div class="menu-box"><h3>🗺️ All slides <button class="btn ghost sm" type="button" id="menuClose">✕ Close</button></h3><div class="mgrid" id="mgrid"></div></div></div>
+<div class="rotate-tip" id="rotateTip">📱↻ Putar HP ke landscape, atau tekan ⛶ untuk layar penuh. <button class="btn sm ghost" type="button" id="rtClose" style="margin-left:auto">OK</button></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+(function(){
+const PAGE_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
+const $=s=>document.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const slides=$$('#stage > .slide');
+const N=slides.length;
+const SEC={0:'var(--coral)',1:'var(--teal)',2:'var(--sky)',3:'var(--sun)',4:'var(--coral)',5:'var(--grape)'};
+let cur=0;
+
+/* ---------- scale stage ---------- */
+function fit(){
+  const w=$('#wrap').clientWidth, h=$('#wrap').clientHeight;
+  const pad=Math.min(w,h)<500?10:28;
+  const s=Math.min((w-pad*2)/1616,(h-pad*2)/916);
+  $('#stage').style.setProperty('--s',Math.max(s,.1));
+}
+addEventListener('resize',fit);fit();
+
+/* ---------- helpers ---------- */
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,1800);}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('📋 Copied!'),()=>toast('Copy blocked: select the text manually'));}
+  else toast('Copy blocked: select the text manually');
+}
+function confetti(n=90){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cols=['#FFC933','#FF6B5B','#1FB5A6','#3D8BFF','#8B5CF6','#FF8FB1'];
+  for(let i=0;i<n;i++){
+    const d=document.createElement('i');d.className='cf';
+    const w=8+Math.random()*8;
+    d.style.cssText=`left:${Math.random()*100}vw;width:${w}px;height:${w*1.4}px;background:${cols[i%cols.length]};--dx:${(Math.random()-.5)*240}px;--rot:${(Math.random()*4-2)*360}deg;animation-duration:${2.2+Math.random()*1.8}s;animation-delay:${Math.random()*.4}s`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),4800);
+  }
+}
+
+/* ---------- navigation ---------- */
+const track=$('#track');
+slides.forEach((s,i)=>{if(s.classList.contains('divider')){const f=document.createElement('span');f.className='flag';f.style.left=(i/(N-1)*100)+'%';f.style.background=SEC[s.dataset.sec];track.appendChild(f);}});
+function go(i,push=true){
+  i=Math.max(0,Math.min(N-1,i));
+  slides[cur].classList.remove('active');
+  cur=i;const s=slides[cur];s.classList.add('active');
+  const pct=(cur/(N-1)*100);
+  $('#fill').style.width=pct+'%';$('#fill').style.background=SEC[s.dataset.sec]||'var(--sun)';
+  $('#hiker').style.left=pct+'%';
+  $('#count').textContent=(cur+1)+' / '+N;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===N-1;
+  if(push) try{history.replaceState(null,'','#'+(cur+1));}catch(e){}
+  $$('.mitem').forEach((m,j)=>m.classList.toggle('cur',j===cur));
+  if(s.id==='finale') setTimeout(()=>confetti(120),250);
+}
+$('#prev').addEventListener('click',()=>go(cur-1));
+$('#next').addEventListener('click',()=>go(cur+1));
+$$('[data-next]').forEach(b=>b.addEventListener('click',()=>go(cur+1)));
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById(b.dataset.go);go(slides.indexOf(t));}));
+const typing=()=>{const a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);};
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){$('#menu').classList.remove('open');return;}
+  if(typing()||e.altKey||e.ctrlKey||e.metaKey) return;
+  if(['ArrowRight','PageDown'].includes(e.key)||(e.key===' '&&document.activeElement.tagName!=='BUTTON')){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(N-1);
+  else if(e.key==='f'||e.key==='F')fs();
+  else if(e.key==='m'||e.key==='M')openMenu();
+});
+let tx=null,ty=null;
+$('#wrap').addEventListener('touchstart',e=>{if(typing())return;tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+$('#wrap').addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)go(cur+(dx<0?1:-1));tx=null;},{passive:true});
+/* ---------- fullscreen: desktop, Android, iPad; iPhone -> open in new tab ---------- */
+const inFrame=(()=>{try{return window.self!==window.top;}catch(e){return true;}})();
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
+function fsIcon(){const on=!!fsEl(),b=$('#fsBtn');b.textContent=on?'✕':'⛶';b.title=on?'Keluar layar penuh (F)':'Layar penuh (F)';b.setAttribute('aria-label',on?'Exit fullscreen':'Fullscreen');}
+function lockLandscape(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}}
+function openStandalone(){
+  try{
+    const url=URL.createObjectURL(new Blob([PAGE_SRC],{type:'text/html'}))+'#'+(cur+1);
+    const w=window.open(url,'_blank');
+    if(w){toast('📱 Dibuka di tab baru, putar HP ke landscape ↻');return true;}
+  }catch(e){}
+  return false;
+}
+function fsFail(){
+  if(inFrame&&openStandalone())return;
+  $('#rotateTip').classList.add('show');
+  toast('↻ Putar HP ke landscape untuk tampilan penuh');
+}
+function fs(){
+  const d=document,el=d.documentElement;
+  if(fsEl()){try{(d.exitFullscreen||d.webkitExitFullscreen).call(d);}catch(e){}return;}
+  const enabled=d.fullscreenEnabled!==undefined?d.fullscreenEnabled:d.webkitFullscreenEnabled;
+  if(enabled===false||!(el.requestFullscreen||el.webkitRequestFullscreen)){fsFail();return;}
+  try{
+    const p=el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen();
+    if(p&&typeof p.then==='function')p.then(lockLandscape,fsFail);
+    else setTimeout(()=>{fsEl()?lockLandscape():fsFail();},350);
+  }catch(e){fsFail();}
+}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{fsIcon();fit();if(!fsEl()){try{screen.orientation.unlock();}catch(e){}}}));
+$('#fsBtn').addEventListener('click',fs);
+$('#mgrid').innerHTML=slides.map((s,i)=>`<button class="mitem" type="button" style="--c:${SEC[s.dataset.sec]}"><b>${i+1}</b><span>${s.dataset.title||''}</span></button>`).join('');
+$$('.mitem').forEach((m,i)=>m.addEventListener('click',()=>{go(i);$('#menu').classList.remove('open');}));
+function openMenu(){$('#menu').classList.add('open');}
+$('#menuBtn').addEventListener('click',openMenu);
+$('#menuClose').addEventListener('click',()=>$('#menu').classList.remove('open'));
+$('#menu').addEventListener('click',e=>{if(e.target.id==='menu')$('#menu').classList.remove('open');});
+$('#rotateTip').classList.add('show');$('#rtClose').addEventListener('click',()=>$('#rotateTip').classList.remove('show'));
+
+
+/* ---------- warm-up: story dice ---------- */
+const WHO=[['🤴','a lazy prince'],['👩‍🌾','a brave farmer girl'],['🐈','a talking cat'],['💰','a greedy merchant'],['🧙‍♀️','a young witch'],['🗿','a lonely giant'],['🦌','a clever mouse deer'],['🎣','an old fisherman'],['🐉','a shy little dragon'],['👸','a princess who hated dresses']];
+const WHERE=[['🏰','in a kingdom by the sea'],['🌋','on the slope of Mount Merapi'],['🎋','in a bamboo forest'],['☁️','in a city above the clouds'],['🏯','in an old palace in Solo'],['📚','inside a magic book'],['🏝️','on a tiny island'],['🌾','in a village near a river']];
+const PROB=[['💍','lost a magic ring'],['🪄','was cursed by a witch'],['🤞','broke a promise'],['🐲','met a hungry dragon'],['🏃','was chased by a giant'],['🚪','found a door to another world'],['🌊','saw a flood coming to the village'],['🌑','woke up and the sun was gone']];
+let dRound=0;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+$('#diceBtn').addEventListener('click',()=>{
+  const set=(id,v)=>{const el=$(id);el.parentElement.classList.remove('roll');void el.offsetWidth;el.parentElement.classList.add('roll');el.innerHTML=`<span><span class="e">${v[0]}</span>${v[1]}</span>`;};
+  set('#rWho',pick(WHO));set('#rWhere',pick(WHERE));set('#rProb',pick(PROB));
+  dRound++;$('#diceCount').textContent='Round '+dRound;
+});
+$$('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('on')));
+$('#apBtn').addEventListener('click',()=>{$('#apOut').hidden=false;$('#apBtn').hidden=true;confetti(70);});
+
+/* ---------- types ---------- */
+const TY=[
+ {tab:'🪨 Legend',ico:'🪨',c:'var(--orange-t)',h:'Legend',d:'A traditional story from the past that is connected to a <b>real place, person or event</b>. People once believed it was (partly) true. Many legends explain <b>the origin</b> of a place or a name.',cl:['📍 real place or name','⏳ passed down orally','❓ explains “how it began”','👥 no known author'],id:'Malin Kundang · Lake Toba · Sangkuriang · Banyuwangi',en:'King Arthur · Robin Hood · William Tell'},
+ {tab:'🧚 Fairy tale',ico:'🧚',c:'var(--pink-t)',h:'Fairy tale',d:'A traditional story, often for children, full of <b>magic</b>: fairies, witches, giants, talking animals and magic objects. Good and evil are clear, and it usually ends <b>“happily ever after”</b>.',cl:['🪄 magic & magical creatures','⚖️ clear good vs evil','👑 kings, princes, poor heroes','😊 usually a happy ending'],id:'Timun Mas · Bawang Merah Bawang Putih · Keong Mas · Ande-Ande Lumut',en:'Cinderella · Snow White · Rapunzel · Hansel and Gretel'},
+ {tab:'🌙 Fantasy',ico:'🌙',c:'var(--grape-t)',h:'Fantasy',d:'A <b>modern</b> story written by a <b>known author</b>, set in an <b>imaginary world</b> with its own rules, magic and creatures. It is often long: novels, film series and games.',cl:['🌍 an invented world','✍️ a known modern author','🐉 new creatures & magic rules','📚 novels, films, games'],id:'Bumi series (Tere Liye)',en:'Harry Potter (J.K. Rowling) · The Chronicles of Narnia (C.S. Lewis) · The Hobbit (J.R.R. Tolkien)'}
+];
+$('#tyTabs').innerHTML=TY.map((t,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${t.tab}</button>`).join('');
+function showTy(i){
+  $$('#tyTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  const t=TY[i],p=$('#tyPanel');p.style.background=t.c;
+  p.innerHTML=`<span class="ico" style="background:#fff">${t.ico}</span><div><h3>${t.h}</h3><p>${t.d}</p><div class="clues">${t.cl.map(c=>`<span>${c}</span>`).join('')}</div><div class="exs"><div><b>🇮🇩 Nusantara:</b> ${t.id}</div><div><b>🌍 Manca:</b> ${t.en}</div></div></div>`;
+}
+$$('#tyTabs .tab').forEach(t=>t.addEventListener('click',()=>showTy(+t.dataset.i)));showTy(0);
+
+/* ---------- structure explorer ---------- */
+const TX={
+ l:{title:'🪨 Malin Kundang',tag:'Legend · West Sumatra',k:'var(--orange)',
+  o:'Once upon a time, in a small fishing village in West Sumatra, there lived a poor widow and her only son, Malin Kundang. Malin was a clever and hard-working boy, and his mother loved him very much.',
+  x:['One day, Malin asked for permission to sail with a merchant ship. “I want to change our life, Mother,” he said. With tears in her eyes, she let him go.','Years later, Malin became a rich merchant and married a beautiful woman. When his big ship landed at his old village, his mother ran to the harbour and hugged him happily.','However, Malin was ashamed of his poor, old mother. “I don’t know this woman!” he shouted, and he pushed her away.'],
+  r:'Heartbroken, the mother prayed, “O God, if he is really my son, turn him into stone!” Suddenly, a terrible storm hit the ship. Malin knelt on the beach and slowly turned into stone.',
+  d:'Until today, people can see a stone shaped like a kneeling man at Air Manis Beach, near Padang. The moral of the story is that we must never forget or disrespect our parents.'},
+ f:{title:'🥒 Timun Mas',tag:'Fairy tale · Central Java',k:'#E0508A',
+  o:'Long ago, in a village in Central Java, there lived a kind old widow named Mbok Srini. She lived alone, and every day she wished for a child.',
+  x:['One night, a giant gave her a magic cucumber seed. “You may have a child,” he said, “but when she is seventeen, you must give her to me.” Soon, a golden cucumber grew, and inside it was a baby girl. Mbok Srini named her Timun Mas.','When Timun Mas turned seventeen, the giant came for her. Mbok Srini gave her a small bag with four magic things, and Timun Mas ran away as fast as she could.','The giant chased her. First, she threw cucumber seeds, and they became a cucumber field. Then, she threw needles, and they became a bamboo forest. Next, she threw salt, and it became a wide sea. But the giant still followed her!'],
+  r:'Finally, Timun Mas threw the shrimp paste (terasi). It turned into a hot, muddy swamp. The giant sank into it and never came back. Timun Mas ran home, and she lived happily with her mother.',
+  d:'The moral of the story is that courage and cleverness can defeat even a very strong enemy.'},
+ y:{title:'🌙 The Moon Key',tag:'Fantasy · Original story',k:'var(--grape)',
+  o:'Long ago, in Aerisa, a city of islands floating above the clouds, there lived a young map-maker named Rio. Every night, he climbed his tower and drew maps of the stars.',
+  x:['One night, while Rio was drawing, the moon suddenly disappeared. Without its light, the floating islands began to fall slowly towards the sea.','An old silver owl landed on his window. “The Shadow King has locked the moon in his castle,” she whispered. “Only the Moon Key can open it.”','Rio flew to the castle on a paper boat. At the gate, the Shadow King laughed, “No map can find the key, boy!”'],
+  r:'However, Rio looked at his star map and noticed a tiny star that never moved. It was the Moon Key! He pulled it from the sky, opened the castle, and the moon shone again. One by one, the islands rose back into the clouds.',
+  d:'Since then, the people of Aerisa have called Rio “the Keeper of the Moon”. The moral of the story is that knowledge and patience are stronger than fear.'}
+};
+const NM={o:'Orientation',x:'Complication',r:'Resolution',d:'Coda'};
+const SEG={
+ l:{o:{d:'Introduces the characters, the setting and the situation.',rows:[['Who','a poor widow and her son, Malin'],['Where','a fishing village in West Sumatra'],['When','once upon a time (long ago)'],['Signal','Once upon a time, there lived …']],tip:'The orientation answers <b>who, where, when</b>. There is no problem yet!'},
+    x:{d:'The problem grows, step by step, until the climax.',rows:[['Start','Malin leaves home to sail'],['Rising','he becomes rich and comes back'],['Climax','he denies his own mother'],['Signals','One day, Years later, However']],tip:'The <b>climax</b> is the most tense moment: “I don’t know this woman!”'},
+    r:{d:'The conflict ends.',rows:[['Solution','the mother’s prayer is answered'],['Ending','Malin turns into stone'],['Type','sad ending (punishment)'],['Signals','Suddenly, … slowly turned into …']],tip:'A resolution does not have to be happy. In many legends, the bad character is <b>punished</b>.'},
+    d:{d:'What happens after the story, and its lesson.',rows:[['After','a stone at Air Manis Beach'],['Moral','never disrespect our parents'],['Signals','Until today, The moral of the story is that …']],tip:'Legends often end with a <b>real place</b> that we can still visit today.'}},
+ f:{o:{d:'Introduces the characters, the setting and the situation.',rows:[['Who','Mbok Srini, a kind old widow'],['Where','a village in Central Java'],['When','long ago'],['Situation','she lived alone and wished for a child']],tip:'The wish in the orientation prepares the reader for the problem.'},
+    x:{d:'The problem grows, step by step, until the climax.',rows:[['Start','the giant’s deal: give her back at 17'],['Rising','the giant comes and Timun Mas runs'],['Climax','three magic things fail to stop him'],['Signals','One night, When …, First, Then, Next']],tip:'Fairy tales love <b>magic objects</b> and events in <b>threes</b>.'},
+    r:{d:'The conflict ends.',rows:[['Solution','the shrimp paste becomes a muddy swamp'],['Ending','the giant sinks; Timun Mas is safe'],['Type','happy ending'],['Signals','Finally, … lived happily']],tip:'“Lived happily (ever after)” is the classic fairy-tale ending.'},
+    d:{d:'The lesson of the story.',rows:[['Moral','courage and cleverness beat strength'],['Signal','The moral of the story is that …']],tip:'The moral is a general truth, so it uses <b>simple present</b>: <i>can defeat</i>.'}},
+ y:{o:{d:'Introduces the characters, the setting and the situation.',rows:[['Who','Rio, a young map-maker'],['Where','Aerisa, floating islands above the clouds'],['When','long ago, at night'],['Signal','Long ago, … there lived …']],tip:'Fantasy builds a <b>new world</b> with its own rules: floating islands!'},
+    x:{d:'The problem grows, step by step, until the climax.',rows:[['Start','the moon disappears; islands fall'],['Rising','the owl’s message; the journey'],['Climax','the Shadow King laughs at Rio'],['Signals','One night, while … was drawing, suddenly']],tip:'<i>was drawing</i> (past continuous) is interrupted by <i>disappeared</i> (simple past).'},
+    r:{d:'The conflict ends.',rows:[['Solution','Rio finds the key in his star map'],['Ending','the moon shines; the islands rise'],['Type','happy ending'],['Signals','However, … One by one, …']],tip:'The hero solves the problem with his own <b>skill</b>, not by luck.'},
+    d:{d:'What happens after the story, and its lesson.',rows:[['After','Rio becomes “the Keeper of the Moon”'],['Moral','knowledge and patience beat fear'],['Signals','Since then, The moral of the story is that …']],tip:'A coda can show how a character <b>changes</b> after the adventure.'}}
+};
+let ex='l',exSeg='o';
+function renderText(){
+  const d=TX[ex];
+  $('#text1').innerHTML=`<h4>${d.title}<span class="ttag" style="--k:${d.k}">${d.tag}</span></h4><div class="part" data-part="o"><span class="lbl">Orientation</span>${d.o}</div><div class="part" data-part="x"><span class="lbl">Complication</span>${d.x.map(p=>`<p>${p}</p>`).join('')}</div><div class="part" data-part="r"><span class="lbl">Resolution</span>${d.r}</div><div class="part" data-part="d"><span class="lbl">Coda</span>${d.d}</div>`;
+  $$('#text1 .part').forEach(p=>p.addEventListener('click',()=>showSeg(p.dataset.part)));
+  $$('#exTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.x===ex));
+}
+function showSeg(s){
+  exSeg=s;$('#text1').dataset.show=s;
+  $$('#stages .stage').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s));
+  const d=SEG[ex][s],c=$('#segCard');c.style.setProperty('--k',`var(--${s})`);
+  c.innerHTML=`<h3>${NM[s]}</h3><p style="margin-top:6px;font-size:19px">${d.d}</p><ul class="seg-list">${d.rows.map(r=>`<li><b>${r[0]}</b><span>${r[1]}</span></li>`).join('')}</ul><p class="tipbox">💡 <b>Tip:</b> ${d.tip}</p>`;
+  const part=$(`#text1 .part[data-part="${s}"]`),pp=$('#text1');if(part)pp.scrollTo({top:Math.max(0,part.offsetTop-12),behavior:'smooth'});
+}
+$$('#exTabs .tab').forEach(t=>t.addEventListener('click',()=>{ex=t.dataset.x;renderText();showSeg(exSeg);}));
+$$('#stages .stage').forEach(b=>b.addEventListener('click',()=>showSeg(b.dataset.s)));
+renderText();showSeg('o');
+
+/* ---------- other stories ---------- */
+const M=[
+ {tab:'🌊 Lake Toba',tag:'Legend · North Sumatra',k:'var(--orange)',title:'The Legend of Lake Toba',o:'A young farmer named Toba lived alone in North Sumatra. One day, he caught a golden fish, and it turned into a beautiful woman.',x:'They married, but Toba promised never to tell anyone that she came from a fish. Years later, their son Samosir ate his father’s lunch. Angry, Toba shouted, “You son of a fish!”',r:'The mother and son disappeared. Heavy rain fell for days, and the land became a huge lake.',d:'People call it Lake Toba. Keep your promises and control your anger.'},
+ {tab:'👠 Cinderella',tag:'Fairy tale · Europe',k:'#E0508A',title:'Cinderella',o:'A kind girl named Cinderella lived with her cruel stepmother and two stepsisters.',x:'The prince held a royal ball, but she could not go. A fairy godmother gave her a dress and glass slippers, but the magic would end at midnight. At twelve, she ran away and lost a slipper.',r:'The prince searched the whole kingdom. The slipper fitted only Cinderella, and they married.',d:'They lived happily ever after. Kindness is always rewarded.'},
+ {tab:'🧅 Bawang Putih',tag:'Fairy tale · Nusantara',k:'#E0508A',title:'Bawang Merah and Bawang Putih',o:'Bawang Putih, a kind girl, lived with her lazy stepmother and her stepsister, Bawang Merah.',x:'One day, while she was washing clothes, her stepmother’s cloth floated away down the river. She followed it to an old woman’s house and helped her with the housework.',r:'The old woman returned the cloth and gave her a small pumpkin full of gold. Greedy Bawang Merah went too, chose a big pumpkin, and found it full of snakes.',d:'Kindness brings rewards; greed brings trouble.'},
+ {tab:'🗡️ King Arthur',tag:'Legend · Britain',k:'var(--orange)',title:'King Arthur and the Sword in the Stone',o:'Long ago, Britain had no king. In a churchyard stood a stone with a sword stuck in it.',x:'The words on it said, “Whoever pulls out this sword is the true king.” Many strong knights tried, but nobody could move it.',r:'One day, a young boy named Arthur pulled it out easily. He became the King of Britain.',d:'People in Britain still tell this legend today. True greatness can come from humble beginnings.'},
+ {tab:'🦁 Narnia',tag:'Fantasy · C.S. Lewis',k:'var(--grape)',title:'The Lion, the Witch and the Wardrobe',o:'During the Second World War, four siblings, Peter, Susan, Edmund and Lucy, stayed in a big old house in the countryside.',x:'Lucy found a wardrobe that led to Narnia, a magical land where the White Witch made it always winter. Edmund betrayed his siblings to the Witch.',r:'With the help of Aslan, a great lion, the children defeated the Witch, and winter ended. They became kings and queens of Narnia.',d:'Courage and forgiveness can save others.'}
+];
+$('#mTabs').innerHTML=M.map((m,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${m.tab}</button>`).join('');
+function showM(i){
+  $$('#mTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  const m=M[i];
+  $('#mTitle').innerHTML=`📜 ${m.title}<span class="ttag" style="--k:${m.k}">${m.tag}</span>`;
+  $('#mBody').innerHTML=['o','x','r','d'].map((p,j)=>`<div class="mblk" style="--k:var(--${p})"><h4>${['①','②','③','④'][j]} ${NM[p]}</h4><div class="mb">${m[p]}</div></div>`).join('');
+}
+$$('#mTabs .tab').forEach(t=>t.addEventListener('click',()=>showM(+t.dataset.i)));showM(0);
+
+/* ---------- highlighter ---------- */
+$$('#featBar .chip').forEach(c=>c.addEventListener('click',()=>{const on=c.getAttribute('aria-pressed')!=='true';c.setAttribute('aria-pressed',on);$('#text2').classList.toggle('hl-'+c.dataset.f,on);}));
+
+/* ---------- sentence lab ---------- */
+const K={con:'var(--teal)',subj:'#6B6480',obj:'#6B6480',past:'var(--coral)',pc:'var(--sky)',verb:'var(--sky)',speech:'var(--grape)',adj:'var(--orange)',place:'var(--pink)',chr:'var(--grape)',mod:'var(--coral)'};
+const sents=[
+ {s:'Once upon a time, there lived a poor widow and her only son.',ch:[['Once upon a time,','Time connective (opening)','con'],['there','Introductory “there”','subj'],['lived','Simple past (V2)','past'],['a poor widow and her only son','Characters (subject)','chr']],p:'Once upon a time, there + V2 + characters',n:'A classic <b>orientation</b> opener. <i>there lived a poor widow</i> = <i>a poor widow lived there</i>: the subject comes after the verb, so it sounds like a story.'},
+ {s:'One day, Malin sailed away on a merchant ship.',ch:[['One day,','Time connective (problem starts)','con'],['Malin','Subject (character)','chr'],['sailed away','Simple past (regular: -ed)','past'],['on a merchant ship','Place','place']],p:'Time connective + S + V2 + place',n:'<b>One day</b> often starts the <b>complication</b>. Regular verbs take <b>-ed</b>: sail → sailed.'},
+ {s:'While Rio was drawing, the moon suddenly disappeared.',ch:[['While','Conjunction (time)','con'],['Rio','Subject','subj'],['was drawing','Past continuous (was + V-ing)','pc'],['the moon','Subject','subj'],['suddenly','Adverb','adj'],['disappeared','Simple past (V2)','past']],p:'While + S + was/were + V-ing, S + V2',n:'The longer action (<i>was drawing</i>) is <b>interrupted</b> by a short, sudden action (<i>disappeared</i>).'},
+ {s:'“I don’t know this woman!” he shouted.',ch:[['“I don’t know this woman!”','Direct speech (exact words)','speech'],['he','Subject','subj'],['shouted','Saying verb (V2)','past']],p:'“ … !” + S + saying verb (V2)',n:'Inside quotation marks we write the <b>exact words</b>, so they can be in present tense. Indirect speech: <i>He shouted that he didn’t know that woman.</i>'},
+ {s:'First, she threw the cucumber seeds, and they became a cucumber field.',ch:[['First,','Sequence connective','con'],['she','Subject','subj'],['threw','Irregular V2 (throw)','past'],['the cucumber seeds','Object','obj'],['and','Conjunction','con'],['they','Subject','subj'],['became','Irregular V2 (become)','past'],['a cucumber field','Complement','obj']],p:'Connective + S + V2 + O, and S + V2 + …',n:'Irregular verbs change form: <b>throw → threw</b>, <b>become → became</b>. Learn them by heart!'},
+ {s:'The moral of the story is that we must respect our parents.',ch:[['The moral of the story','Coda signal','con'],['is that','Simple present','verb'],['we','Subject','subj'],['must respect','Modal + V1','mod'],['our parents','Object','obj']],p:'The moral of the story is that + S + modal + V1',n:'The <b>moral</b> is a general truth for today, so it uses <b>simple present</b>, not past tense.'}
+];
+$('#sentList').innerHTML=sents.map((d,i)=>`<button class="sent" type="button"><span class="sn">${i+1}</span><span>${d.s}</span></button>`).join('');
+function showSent(i){
+  $$('#sentList .sent').forEach((b,j)=>b.setAttribute('aria-pressed',i===j));
+  const d=sents[i];
+  $('#sentOut').innerHTML=`<span class="kicker" style="--c:var(--coral)">Sentence ${i+1}</span><p class="s">${d.s}</p><div class="chunks">${d.ch.map((c,j)=>`<span class="chunk" style="--k:${K[c[2]]};animation-delay:${j*70}ms"><span class="w">${c[0]}</span><span class="r">${c[1]}</span></span>`).join('')}</div><span class="pattern">${d.p}</span><p class="note">💡 ${d.n}</p>`;
+}
+$$('#sentList .sent').forEach((b,i)=>b.addEventListener('click',()=>showSent(i)));showSent(0);
+
+/* ---------- expressions ---------- */
+const X={
+ '🌅 Opening':[['Once upon a time, there lived …','Once upon a time, there lived a poor fisherman.'],['Long ago, in …, there was …','Long ago, in a kingdom by the sea, there was a wise queen.'],['A long time ago, …','A long time ago, a giant lived on Mount Merapi.'],['In a faraway land, …','In a faraway land, the sun never set.'],['… who was very (adjective)','She had a stepsister who was very lazy.']],
+ '⚡ Problem':[['One day, …','One day, a stranger came to the village.'],['Suddenly, … / All of a sudden, …','Suddenly, the sky turned dark.'],['Unfortunately, …','Unfortunately, the prince lost his way.'],['However, …','However, the witch did not keep her promise.'],['To (his/her) surprise, …','To her surprise, the frog began to speak.'],['Without warning, …','Without warning, the bridge broke.']],
+ '⏩ Sequence':[['Then, / After that, …','After that, they walked into the forest.'],['Next, …','Next, she threw the salt.'],['While + S + was/were + V-ing, …','While he was sleeping, a mouse stole the key.'],['When …, …','When the giant saw her, he ran after her.'],['Soon, / A few days later, …','A few days later, the king called him.'],['Meanwhile, …','Meanwhile, the villagers waited at the gate.']],
+ '🌈 Resolution':[['Finally, / At last, …','At last, the dragon fell asleep.'],['In the end, …','In the end, the greedy man lost everything.'],['Luckily, …','Luckily, the old woman helped her.'],['… and they lived happily ever after.','They married and lived happily ever after.'],['From then on, …','From then on, the two kingdoms were friends.']],
+ '💬 Dialogue':[['“…,” (s)he said.','“I will come back,” he said.'],['“…?” (s)he asked.','“Who are you?” the girl asked.'],['“…!” (s)he shouted / cried.','“Help me!” she cried.'],['(s)he whispered, “…”','The owl whispered, “Follow the stars.”'],['(s)he replied / answered, “…”','The king replied, “You may go.”'],['(s)he begged, “…”','The mouse deer begged, “Please don’t eat me!”']],
+ '🌟 Coda':[['The moral of the story is that …','The moral of the story is that honesty is important.'],['This story teaches us to …','This story teaches us to respect our parents.'],['We can learn from this story that …','We can learn from this story that greed brings trouble.'],['Since then, …','Since then, the lake has been called Lake Toba.'],['Until today, people believe that …','Until today, people believe that the stone is Malin Kundang.']]
+};
+const xk=Object.keys(X);
+$('#xTabs').innerHTML=xk.map((k,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${k}</button>`).join('');
+function showX(i){
+  $$('#xTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  $('#xTable').innerHTML=X[xk[i]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><button class="copy" type="button" data-c="${r[1].replace(/"/g,'&quot;')}">Copy</button></td></tr>`).join('');
+  $$('#xTable .copy').forEach(b=>b.addEventListener('click',()=>copyText(b.dataset.c)));
+}
+$$('#xTabs .tab').forEach(t=>t.addEventListener('click',()=>showX(+t.dataset.i)));showX(0);
+
+/* ---------- generic choice game ---------- */
+function choiceGame(box,data,opts,scoreEl,fbEl,doneMsg){
+  let s=0,d=0;
+  $(box).innerHTML=data.map((r,i)=>`<div class="sq-row"><span>${r[0]}</span><div class="sq-btns" data-i="${i}">${opts.map(o=>`<button class="opt" type="button" data-a="${o[0]}">${o[1]}</button>`).join('')}</div></div>`).join('');
+  $$(box+' .sq-btns').forEach(g=>g.addEventListener('click',e=>{
+    const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+    const ans=data[+g.dataset.i][1],ok=b.dataset.a===ans;b.classList.add(ok?'ok':'no');if(!ok)g.querySelector(`[data-a="${ans}"]`).classList.add('ok');
+    d++;if(ok)s++;$(scoreEl).textContent=`⭐ ${s} / ${data.length}`;
+    const fb=$(fbEl);
+    if(d===data.length){if(s===data.length){fb.textContent='🎉 Perfect! '+doneMsg;fb.className='fb good';confetti();}else{fb.textContent='👍 Good try! '+doneMsg;fb.className='fb bad';}}
+    else{fb.textContent=ok?'✅ Correct!':'❌ Oops, the green one is right.';fb.className='fb '+(ok?'good':'bad');}
+  }));
+}
+choiceGame('#g1',[
+ ['Long ago, in the kingdom of Blambangan, there lived a loyal minister named Patih Sidopekso and his kind, beautiful wife, Sri Tanjung.','o'],
+ ['One day, the king sent Sidopekso on a long journey, because he secretly wanted Sri Tanjung for himself.','x'],
+ ['Since then, the place has been called Banyuwangi, which means “fragrant water”.','d'],
+ ['While Sidopekso was away, the king tried to win Sri Tanjung’s heart, but she refused him.','x'],
+ ['Sri Tanjung fell into the river, and suddenly the water smelled fragrant. Sidopekso realised she was innocent and cried with regret.','r'],
+ ['Sidopekso and Sri Tanjung loved each other very much.','o'],
+ ['When Sidopekso came home, the angry king lied that Sri Tanjung had betrayed him, and Sidopekso believed the lie.','x'],
+ ['The moral of the story is that we should check the truth before we believe a story.','d']
+],[['o','O'],['x','C'],['r','R'],['d','Co']],'#g1Score','#g1Fb','Who/where → O · problem → C · the problem ends → R · after/moral → Coda.');
+choiceGame('#g2',[
+ ['Sangkuriang kicks over the boat he is building, and it becomes Mount Tangkuban Perahu.','l'],
+ ['A kind girl, Rapunzel, with very long hair, is locked in a tall tower by a witch.','f'],
+ ['In a series of novels by Tere Liye, a teenage girl finds out she can become invisible and travels to parallel worlds.','y'],
+ ['King Arthur proves that he is the true king of Britain by pulling a sword out of a stone.','l'],
+ ['Bawang Putih gets a small magic pumpkin full of gold from an old woman; her greedy stepsister gets one full of snakes.','f'],
+ ['Four children walk through a wardrobe into Narnia, a land invented by the author C.S. Lewis.','y'],
+ ['The story explains how the town of Banyuwangi in East Java got its name.','l'],
+ ['A young wizard studies at a school of magic and fights a dark wizard, in a novel series by J.K. Rowling.','y']
+],[['l','L'],['f','FT'],['y','FY']],'#g2Score','#g2Fb','Real place/origin → legend · traditional magic → fairy tale · modern author’s world → fantasy.');
+
+/* ---------- game 3: story order ---------- */
+const ORD=['Long ago, in West Java, a beautiful woman named Dayang Sumbi lived in a forest with her son, Sangkuriang.','After a big quarrel, young Sangkuriang left home, and he did not come back for many years.','One day, a handsome young man came to the forest and fell in love with Dayang Sumbi.','She saw a scar on his head and realised that the young man was her own son, Sangkuriang.','To stop the wedding, she asked him to build a lake and a big boat in only one night.','Just before he finished, Dayang Sumbi made the sky look like sunrise, so Sangkuriang failed.','Angry, he kicked the boat. It turned upside down and became Mount Tangkuban Perahu.'];
+function ordInit(){
+  let idx=ORD.map((_,i)=>i);
+  do{idx.sort(()=>Math.random()-.5);}while(idx.every((v,i)=>v===i));
+  $('#ordAns').innerHTML='';$('#ordFb').textContent='';$('#ordFb').className='fb';
+  $('#ordPool').innerHTML=idx.map(i=>`<button class="pill" type="button" data-i="${i}">${ORD[i]}</button>`).join('');
+}
+$('#ordPool').addEventListener('click',e=>{const b=e.target.closest('.pill');if(!b)return;b.classList.remove('ok','no');$('#ordAns').appendChild(b);});
+$('#ordAns').addEventListener('click',e=>{const b=e.target.closest('.pill');if(!b)return;b.classList.remove('ok','no');$('#ordPool').appendChild(b);});
+$('#ordCheck').addEventListener('click',()=>{
+  const got=$$('#ordAns .pill');const fb=$('#ordFb');
+  if(got.length<ORD.length){fb.textContent=`Move all ${ORD.length} sentences first 🙂`;fb.className='fb bad';return;}
+  let s=0;got.forEach((b,i)=>{const ok=+b.dataset.i===i;b.classList.toggle('ok',ok);b.classList.toggle('no',!ok);if(ok)s++;});
+  if(s===ORD.length){fb.textContent='🎉 Perfect order! Orientation → Complication → Resolution.';fb.className='fb good';confetti();}
+  else{fb.textContent=`${s} / ${ORD.length} in the right place. Look for the clues: One day, To stop…, Just before…`;fb.className='fb bad';}
+});
+$('#ordReset').addEventListener('click',ordInit);ordInit();
+
+/* ---------- game 4: complete the story ---------- */
+const vq=[['Once upon a time, there ___ a poor fisherman.',['live','lived','lives'],'lived'],['One day, he ___ a golden fish.',['catch','catched','caught'],'caught'],['While the prince ___ in the forest, he heard a song.',['was walking','walks','is walking'],'was walking'],['___, a huge dragon appeared in the sky!',['Suddenly','Tomorrow','Firstly'],'Suddenly'],['“Help me!” the girl ___.',['shouted','shout','shouting'],'shouted'],['The giant was so ___ that everyone was afraid of him.',['frightening','frightened','fright'],'frightening'],['___, the princess and the prince lived happily ever after.',['Finally','Suddenly','Once upon a time'],'Finally'],['The moral of the story ___ that we must be honest.',['is','are','were'],'is']];
+let vs=0,vd=0;
+$('#vq').innerHTML=vq.map((r,i)=>`<div class="vitem"><span class="base">${r[0].replace('___','<u>&nbsp;</u>')}</span><div class="opts" data-i="${i}">${r[1].map(o=>`<button class="opt" type="button">${o}</button>`).join('')}</div></div>`).join('');
+$$('#vq .opts').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+  const ans=vq[+g.dataset.i][2],ok=b.textContent===ans;b.classList.add(ok?'ok':'no');if(!ok)[...g.children].find(x=>x.textContent===ans).classList.add('ok');
+  const u=g.parentElement.querySelector('u');if(u)u.textContent=ans;
+  vd++;if(ok)vs++;$('#vqScore').textContent=`⭐ ${vs} / ${vq.length}`;
+  const fb=$('#vqFb');
+  if(vd===vq.length){fb.textContent=(vs===vq.length?'🎉 Perfect! ':'💡 ')+'Remember: V2 for the story (lived, caught), was + V-ing for an action in progress, and simple present for the moral.';fb.className='fb '+(vs===vq.length?'good':'bad');if(vs===vq.length)confetti();}
+  else{fb.textContent=ok?'✅ Nice!':'❌ Not quite, look at the green answer.';fb.className='fb '+(ok?'good':'bad');}
+}));
+
+/* ---------- builder ---------- */
+let bType='Fairy tale';
+const TYK={'Legend':'var(--orange)','Fairy tale':'#E0508A','Fantasy':'var(--grape)'};
+const conns=['One day,','Suddenly,','Then,','After that,','Next,','However,','Unfortunately,','Meanwhile,','Soon,'];
+const evDefault=[['One day,','the village well dried up, and the people had no water.'],['Then,','the cat whispered, “A water dragon is sleeping on the mountain. Only a brave heart can wake him.”'],['However,','the path to the mountain was full of thorns and hungry wolves.']];
+function evRow(c,t){
+  const d=document.createElement('div');d.className='ev-row';
+  d.innerHTML=`<select>${conns.map(o=>`<option${o===c?' selected':''}>${o}</option>`).join('')}<option value="">(none)</option></select><textarea rows="2" placeholder="What happened? Use past tense…"></textarea>`;
+  d.querySelector('textarea').value=t;
+  d.querySelectorAll('select,textarea').forEach(el=>el.addEventListener('input',render));
+  $('#evWrap').appendChild(d);
+}
+evDefault.forEach(e=>evRow(e[0],e[1]));
+$('#addEv').addEventListener('click',()=>{if($$('#evWrap .ev-row').length>=6){toast('Six events is plenty! 😄');return;}evRow('After that,','');render();});
+const esc=s=>s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const dot=s=>{s=s.trim();return s&&!/[.!?”"]$/.test(s)?s+'.':s;};
+const join=(a,b)=>{b=b.trim();if(!b)return '';if(!a)return dot(cap(b));return dot(a+' '+b);};
+function parts(){
+  const v=id=>$(id).value.trim();
+  const rows=$$('#evWrap .ev-row').map(r=>({c:r.querySelector('select').value,t:r.querySelector('textarea').value.trim()})).filter(r=>r.t);
+  return {title:v('#bTitle'),ori:join($('#bOp').value,v('#bOri')),oriRaw:v('#bOri'),rows,evs:rows.map(r=>join(r.c,r.t)),res:join($('#bResC').value,v('#bRes')),resRaw:v('#bRes'),coda:join($('#bCodaC').value,v('#bCoda')),codaRaw:v('#bCoda')};
+}
+const IRR=new Set('was were had went came saw said took gave made found ran threw became began knew thought told left got flew fell felt met sat stood brought caught fought sang woke grew drew heard kept lay lost put won wore wrote spoke rose shone swam broke chose drank ate forgot hid led meant paid sent slept struck taught understood sank stole knelt hit held did bought built cried tried carried hurried'.split(' '));
+const NOTPAST=new Set('red bed need seed feed speed hundred shed sled wed naked wicked sacred bled'.split(' '));
+function pastCount(t){const w=(t.toLowerCase().match(/[a-z]+/g)||[]);return new Set(w.filter(x=>IRR.has(x)||(x.length>3&&/ed$/.test(x)&&!NOTPAST.has(x)))).size;}
+function render(){
+  const p=parts();
+  $('#bOut').innerHTML=`<h4>${esc(p.title||'Your title')}<span class="ttag" style="--k:${TYK[bType]}">${bType}</span></h4>`+
+   (p.ori?`<div class="part" data-part="o"><span class="lbl">Orientation</span>${esc(p.ori)}</div>`:'')+
+   (p.evs.length?`<div class="part" data-part="x"><span class="lbl">Complication</span>${p.evs.map(a=>`<p>${esc(a)}</p>`).join('')}</div>`:'')+
+   (p.res?`<div class="part" data-part="r"><span class="lbl">Resolution</span>${esc(p.res)}</div>`:'')+
+   (p.coda?`<div class="part" data-part="d"><span class="lbl">Coda</span>${esc(p.coda)}</div>`:'');
+  const all=[p.ori,...p.evs,p.res].join(' ');
+  const used=new Set([$('#bOp').value,...p.rows.map(r=>r.c),p.resRaw?$('#bResC').value:''].filter(Boolean));
+  const pc=pastCount([p.oriRaw,...p.rows.map(r=>r.t),p.resRaw].join(' '));
+  const wc=s=>s.split(/\s+/).filter(Boolean).length;
+  const checks=[[wc(p.title)>=2,'Title (2+ words)'],[wc(p.oriRaw)>=8,'Orientation: who + where'],[p.evs.length>=2,`2+ events in the complication (${p.evs.length})`],[used.size>=3,`3+ different connectives (${used.size})`],[pc>=5,`5+ past tense verbs (${pc})`],[wc(p.resRaw)>=5,'Resolution ends the problem'],[wc(p.codaRaw)>=3,'Coda / moral value ⭐'],[/[“"][^”"]{2,}[”"]/.test(all),'Direct speech “…” ⭐']];
+  $('#bChecks').innerHTML=checks.map(c=>`<li class="${c[0]?'ok':''}">${c[1]}</li>`).join('');
+}
+function setType(t){bType=t;$$('#bType .tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));render();}
+$$('#bType .tab').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.t)));
+$$('#bForm input,#bForm select,#bForm textarea').forEach(el=>el.addEventListener('input',render));
+$('#copyText').addEventListener('click',()=>{const p=parts();copyText([p.title,p.ori,...p.evs,p.res,p.coda].filter(Boolean).join('\n\n'));});
+$('#clearAll').addEventListener('click',()=>{['#bTitle','#bOri','#bRes','#bCoda'].forEach(id=>$(id).value='');$('#evWrap').innerHTML='';['One day,','Suddenly,','However,'].forEach(c=>evRow(c,''));render();toast('✨ Ready for your own story!');});
+render();
+
+/* ---------- finale ---------- */
+$$('#feel button').forEach(b=>b.addEventListener('click',()=>{$$('#feel button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#feelMsg').textContent=b.dataset.m;}));
+/* ---------- start ---------- */
+addEventListener('hashchange',()=>{const h=parseInt(location.hash.slice(1),10);if(h>=1&&h<=N&&h-1!==cur)go(h-1,false);});
+const h=parseInt((location.hash||'').slice(1),10);
+slides[0].classList.add('active');
+go(h>=1&&h<=N?h-1:0,false);
+})();
+</script>
+
+</body></html>
