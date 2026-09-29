@@ -1,0 +1,1265 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>How-To Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,500;0,700;0,800;1,500&display=swap">
+<style>
+:root{
+  --ink:#2B2440; --soft:#6B6480; --paper:#FFFBF2; --white:#fff;
+  --sun:#FFC933; --coral:#FF6B5B; --teal:#1FB5A6; --sky:#3D8BFF; --grape:#8B5CF6; --pink:#FF8FB1; --orange:#FF9F1C; --mint:#7BE0B5;
+  --sun-t:#FFF1C2; --coral-t:#FFE1DC; --teal-t:#D3F5F0; --sky-t:#DDEAFF; --grape-t:#ECE3FF; --pink-t:#FFE3EC; --orange-t:#FFE9CC;
+  --o:var(--sky); --e:var(--orange); --r:var(--grape);
+  --good:#16A34A; --bad:#E5484D;
+  --display:"Fredoka","Baloo 2",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;
+  background:#FFE08A radial-gradient(rgba(255,255,255,.55) 2.5px,transparent 3px) 0 0/28px 28px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+
+/* ============ STAGE (fixed 1600x900, scaled to fit) ============ */
+.stagewrap{flex:1;min-height:0;position:relative;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center;transform:translate(-50%,-50%) scale(var(--s,.5));
+  background:var(--paper);border:5px solid var(--ink);border-radius:36px;box-shadow:12px 12px 0 var(--ink);overflow:hidden}
+
+/* ============ BOTTOM BAR ============ */
+.bar{flex:none;height:76px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:0 18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px var(--display);white-space:nowrap}
+.brand svg{width:40px;height:44px}
+.track{flex:1;position:relative;height:14px;background:rgba(255,255,255,.15);border-radius:99px;margin:0 14px;min-width:80px}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--sun);transition:width .45s,background .45s}
+.flag{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;border:3px solid var(--ink);transform:translate(-50%,-50%);outline:2px solid rgba(255,255,255,.5)}
+.hiker{position:absolute;top:50%;width:42px;height:46px;transform:translate(-50%,-72%);transition:left .45s cubic-bezier(.3,1.4,.5,1);pointer-events:none}
+.count{font:700 18px var(--display);min-width:78px;text-align:center;font-variant-numeric:tabular-nums}
+.ibtn{width:48px;height:48px;border-radius:50%;border:3px solid #fff;background:transparent;color:#fff;display:grid;place-items:center;font:700 20px var(--display);flex:none}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+.nav{background:var(--sun);color:var(--ink);border-color:var(--sun);font-size:24px}
+.nav:hover{background:#FFD95E}
+.nav:disabled{opacity:.35;cursor:default}
+@media (max-width:760px){.brand span,.hide-sm{display:none}.bar{gap:8px;padding:0 10px}.track{margin:0 8px}}
+
+/* ============ MENU OVERLAY ============ */
+.menu{position:fixed;inset:0;z-index:60;background:rgba(43,36,64,.72);display:none;place-items:center;padding:20px}
+.menu.open{display:grid}
+.menu-box{background:var(--paper);border:4px solid var(--ink);border-radius:28px;box-shadow:8px 8px 0 var(--ink);width:min(1000px,100%);max-height:88vh;overflow:auto;padding:24px}
+.menu-box h3{font:700 28px var(--display);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.mitem{text-align:left;border:3px solid var(--ink);border-radius:16px;background:#fff;padding:10px 12px;box-shadow:3px 3px 0 var(--ink);display:grid;gap:2px}
+.mitem b{font:700 13px var(--display);color:#fff;background:var(--c);border-radius:99px;padding:1px 9px;justify-self:start}
+.mitem span{font-weight:800;font-size:15px}
+.mitem.cur{outline:4px solid var(--sun)}
+.rotate-tip{position:fixed;left:12px;right:12px;top:12px;z-index:70;background:var(--ink);color:#fff;border-radius:16px;padding:10px 14px;font-weight:700;display:none;align-items:center;gap:10px}
+@media (max-width:700px) and (orientation:portrait){.rotate-tip.show{display:flex}}
+
+/* ============ SLIDE BASE ============ */
+.slide{position:absolute;inset:0;padding:54px 88px 56px;display:none;flex-direction:column;gap:22px;font-size:22px;line-height:1.5;
+  --c:var(--teal);--t:var(--teal-t);--on:#fff}
+.slide.active{display:flex;animation:pop .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.965) translateY(16px)}to{opacity:1;transform:none}}
+.slide[data-sec="1"]{--c:var(--teal);--t:var(--teal-t)}
+.slide[data-sec="2"]{--c:var(--sky);--t:var(--sky-t)}
+.slide[data-sec="3"]{--c:var(--sun);--t:var(--sun-t);--on:var(--ink)}
+.slide[data-sec="4"]{--c:var(--coral);--t:var(--coral-t)}
+.slide[data-sec="5"]{--c:var(--grape);--t:var(--grape-t)}
+.slide h1,.slide h2,.slide h3,.slide h4{font-family:var(--display);margin:0;line-height:1.08}
+.slide p{margin:0}
+.head{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2}
+.krow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:999px;padding:5px 16px;
+  font:700 16px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--ink)}
+.hint{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2.5px dashed var(--ink);border-radius:999px;padding:4px 14px;font:600 16px var(--display);color:var(--soft)}
+.slide h2{font-size:58px;font-weight:700;letter-spacing:-.01em}
+.u{background:linear-gradient(transparent 58%,color-mix(in srgb,var(--c) 45%,transparent) 58%);padding:0 .08em;border-radius:6px}
+.body{flex:1;min-height:0;position:relative;z-index:2}
+.center{display:grid;align-content:center}
+.muted{color:var(--soft)}
+.id{font-style:italic;color:var(--soft)}
+
+/* doodles */
+.deco{position:absolute;z-index:1;pointer-events:none;overflow:visible}
+.spin{animation:spin 14s linear infinite}
+.bob{animation:bob 3.2s ease-in-out infinite}
+.twinkle{animation:tw 2.4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-12px)}}
+@keyframes tw{50%{transform:scale(.7) rotate(20deg);opacity:.6}}
+.kiko{overflow:visible}
+.kiko.bob{animation:bob 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.slide.active,.spin,.bob,.twinkle,.kiko.bob{animation:none!important}}
+
+/* stickers & buttons */
+.stk{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:22px 26px;position:relative}
+.stk.tint{background:var(--t)}
+.tl{transform:rotate(-1.6deg)} .tr{transform:rotate(1.6deg)}
+.hov{transition:transform .18s,box-shadow .18s}
+.hov:hover{transform:translate(-3px,-4px) rotate(0);box-shadow:9px 10px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 21px var(--display);background:var(--c);color:var(--on);border:3px solid var(--ink);border-radius:16px;
+  padding:11px 24px;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.sm{font-size:18px;padding:8px 18px}
+.btn:disabled{opacity:.55;cursor:default}
+.ico{width:88px;height:88px;border-radius:50%;background:var(--t);border:3px solid var(--ink);display:grid;place-items:center;font-size:46px;line-height:1;flex:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.bubble{position:relative;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;padding:12px 18px;font:600 20px/1.3 var(--display);box-shadow:4px 4px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;width:18px;height:18px;background:inherit;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);bottom:-11px;left:34px;transform:rotate(45deg)}
+.bubble.tr-tail::after{left:auto;right:34px}
+.bubble.side::after{bottom:auto;top:26px;left:-11px;transform:rotate(135deg)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:99px;font-weight:800;z-index:80;border:3px solid var(--sun)}
+.cf{position:fixed;top:-24px;z-index:90;pointer-events:none;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),112vh) rotate(var(--rot))}}
+
+/* ============ COVER ============ */
+.cover{display:none;flex-direction:row!important;align-items:center;gap:30px;padding:60px 70px 60px 96px;--c:var(--coral);--t:var(--coral-t)}
+.cover .left{flex:1;display:flex;flex-direction:column;gap:22px;position:relative;z-index:2}
+.cover h1{font-size:132px;font-weight:700;line-height:.92;letter-spacing:-.02em}
+.cover h1 .pop{color:var(--coral);text-shadow:6px 6px 0 var(--ink);display:inline-block;transform:rotate(-3deg)}
+.lead{font-size:27px;font-weight:700;max-width:640px}
+.tags{display:flex;flex-wrap:wrap;gap:12px}
+.tag{display:inline-flex;gap:8px;align-items:center;background:var(--tc);border:3px solid var(--ink);border-radius:999px;padding:6px 16px;font:600 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.school{font-size:19px;color:var(--soft)}
+.school b{color:var(--ink)}
+.cover .right{width:640px;height:640px;position:relative;flex:none;z-index:2}
+.cover .right>svg.scene{width:100%;height:100%}
+
+/* ============ DIVIDER ============ */
+.divider{background:var(--c);color:var(--on);justify-content:center;padding-left:120px}
+.divider .part-pill{align-self:flex-start;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;padding:6px 20px;font:700 22px var(--display);letter-spacing:.08em;box-shadow:4px 4px 0 var(--ink);transform:rotate(-3deg)}
+.divider h2{font-size:128px;color:#fff;text-shadow:7px 7px 0 var(--ink);max-width:980px;position:relative;z-index:2}
+.divider[data-sec="3"] h2{color:#fff}
+.divider p.sub{font:600 32px/1.3 var(--display);max-width:760px;position:relative;z-index:2}
+.divider .num{position:absolute;right:70px;top:10px;font:700 460px/1 var(--display);color:transparent;-webkit-text-stroke:7px rgba(255,255,255,.4);z-index:1}
+.divider[data-sec="3"] .num{-webkit-text-stroke-color:rgba(43,36,64,.18)}
+.divider .kwrap{position:absolute;right:120px;bottom:70px;display:flex;align-items:flex-end;gap:10px;z-index:2}
+.divider .kwrap .bubble{margin-bottom:190px;max-width:320px}
+
+/* ============ AGENDA ============ */
+.agenda{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;position:relative;z-index:2;align-items:start;padding-top:20px}
+.agenda .stop{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);padding:24px 16px 22px;transition:transform .18s,box-shadow .18s}
+.agenda .stop:nth-child(odd){transform:rotate(-2deg)}
+.agenda .stop:nth-child(even){transform:rotate(2deg) translateY(44px)}
+.agenda .stop:hover{transform:translateY(-8px) rotate(0);box-shadow:9px 12px 0 var(--ink)}
+.agenda .n{font:700 20px var(--display);background:var(--k);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 14px}
+.agenda .stop:nth-child(3) .n{color:var(--ink)}
+.agenda .ico{background:var(--kt)}
+.agenda b{font:700 28px var(--display)}
+.agenda .s{font-size:18px;color:var(--soft);line-height:1.35}
+
+/* ============ WARM-UP ============ */
+.breathe{display:grid;grid-template-columns:440px 1fr;gap:60px;align-items:center;height:100%}
+.orb-box{width:440px;height:440px;display:grid;place-items:center;position:relative}
+.orb-ring{position:absolute;inset:18px;border:4px dashed var(--teal);border-radius:50%}
+.orb{width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8FF0DF,var(--teal) 70%);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+  display:grid;place-items:center;color:#fff;font:700 30px var(--display);text-shadow:2px 2px 0 var(--ink);transition:transform 4s ease-in-out}
+.orb.in{transform:scale(1.75)}
+.cue{font:700 40px/1.2 var(--display);min-height:100px;margin:16px 0 26px}
+.flips{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;height:100%;align-content:center}
+.flip{perspective:1000px;height:360px;border:none;background:none;padding:0;text-align:left}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.flip .f{background:var(--fc)}
+.flip .b{background:#fff;transform:rotateY(180deg)}
+.flip .emo{font-size:62px;line-height:1}
+.flip .q{font:700 28px/1.2 var(--display)}
+.flip .ans{font:600 25px/1.3 var(--display);color:var(--ink)}
+.flip small{font-size:17px;color:var(--soft);font-weight:700}
+.flip small.tap{display:inline-flex;align-self:flex-start;background:#fff;border:2px solid var(--ink);border-radius:99px;padding:2px 12px;color:var(--ink)}
+.flip .b b{background:var(--sun-t);padding:0 6px;border-radius:6px;color:var(--ink)}
+.chat{display:grid;gap:26px;max-width:1180px}
+.chat .row{display:flex;gap:18px;align-items:flex-start}
+.chat .row.me{justify-content:flex-end}
+.chat .av{width:80px;height:80px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;font-size:44px;flex:none;background:var(--sky-t)}
+.chat .me .av{background:var(--sun-t)}
+.chat .bubble{font:600 28px/1.35 var(--display);max-width:900px}
+.chat .bubble.q{background:var(--sky-t)}
+.chat .bubble.a{background:var(--sun-t)}
+.chat .bubble mark{background:#fff;border-radius:6px;padding:0 4px;color:inherit}
+.reveal{display:flex;align-items:center;gap:24px}
+.bigsticker{font:700 54px var(--display);background:var(--coral);color:#fff;text-shadow:3px 3px 0 var(--ink);border:4px solid var(--ink);border-radius:22px;padding:10px 30px;box-shadow:6px 6px 0 var(--ink);transform:rotate(-3deg);animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+
+/* ============ UNDERSTANDING ============ */
+.defn{font:600 50px/1.28 var(--display);max-width:1250px;background:#fff;border:4px solid var(--ink);border-radius:32px;box-shadow:8px 8px 0 var(--ink);padding:36px 44px;position:relative}
+.defn mark{background:var(--sun);border-radius:10px;padding:0 10px;color:var(--ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.08)}
+.defn .quote{position:absolute;top:-38px;left:34px;font:700 110px/1 var(--display);color:var(--sky)}
+.idline{display:flex;gap:14px;align-items:flex-start;font-size:24px;max-width:1150px}
+.idline .badge{flex:none;font:700 16px var(--display);background:var(--ink);color:#fff;border-radius:8px;padding:4px 10px;margin-top:4px}
+.fn .stk{display:flex;flex-direction:column;gap:18px;align-items:flex-start;min-height:380px;padding:32px}
+.fn h3{font-size:46px}
+.fn p{font-size:27px}
+.ben{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ben .stk{display:flex;gap:20px;align-items:center;padding:30px 26px;background:var(--bc);min-height:170px}
+.ben .ico{width:92px;height:92px;font-size:48px;background:#fff}
+.ben b{font:700 31px var(--display);display:block;margin-bottom:4px}
+.ben span{font-size:22px;color:#4A4460;line-height:1.35;display:block}
+.goals{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;align-items:stretch}
+.goal{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:36px 22px;min-height:400px}
+.medal{width:120px;height:120px;border-radius:50%;background:var(--gc);border:4px solid var(--ink);display:grid;place-items:center;font:700 56px var(--display);color:#fff;text-shadow:3px 3px 0 var(--ink);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),5px 5px 0 var(--ink);position:relative}
+.medal::before,.medal::after{content:"";position:absolute;top:100px;width:30px;height:46px;background:var(--gc);border:3px solid var(--ink);z-index:-1}
+.medal::before{left:26px;transform:rotate(18deg)} .medal::after{right:26px;transform:rotate(-18deg)}
+.goal b{font:700 34px var(--display);margin-top:26px}
+.goal span{font-size:24px;color:var(--soft)}
+.tabs{display:flex;flex-wrap:wrap;gap:14px}
+.tab{font:700 22px var(--display);padding:10px 22px;border:3px solid var(--ink);border-radius:999px;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform .12s}
+.tab:hover{transform:translateY(-2px)}
+.tab[aria-selected="true"]{background:var(--c);color:var(--on);transform:translateY(-3px) rotate(-1deg)}
+.typepanel{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:34px 38px;margin-top:10px}
+.typepanel .ico{width:150px;height:150px;font-size:84px}
+.typepanel h3{font-size:46px;margin-bottom:10px}
+.typepanel p{font-size:26px}
+.typepanel .ex{margin-top:16px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:12px 18px;font-size:22px}
+.vs{display:grid;grid-template-columns:1fr 110px 1fr;gap:0;align-items:stretch;height:100%}
+.vs .col{padding:26px 30px;display:flex;flex-direction:column;gap:14px}
+.vs .col h3{font-size:44px;text-align:center;padding:6px;border-radius:14px;border:3px solid var(--ink);color:#fff;text-shadow:3px 3px 0 var(--ink)}
+.vs .vsmid{display:grid;place-items:center}
+.vs .vsmid span{width:100px;height:100px;border-radius:50%;background:var(--sun);border:4px solid var(--ink);display:grid;place-items:center;font:700 38px var(--display);box-shadow:4px 4px 0 var(--ink);transform:rotate(-8deg)}
+.vs dl{margin:0;display:grid;gap:12px}
+.vs dt{font:700 15px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.vs dd{margin:0 0 4px;font-size:23px;font-weight:700;line-height:1.3}
+
+/* ============ STRUCTURE ============ */
+.explore{display:grid;grid-template-columns:1.3fr 1fr;gap:34px;height:100%;min-height:0}
+.paper{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--ink);padding:18px 24px;overflow:auto;font-size:18.5px;line-height:1.55;position:relative;
+  background-image:linear-gradient(90deg,transparent 0,transparent 100%)}
+.paper h4{font-size:26px;text-align:center;margin-bottom:12px}
+.part{padding:8px 14px 8px 16px;border-left:7px solid var(--line,#ddd);border-radius:0 14px 14px 0;margin-bottom:8px;transition:opacity .25s,background .25s;cursor:pointer}
+.part[data-part="o"]{--line:var(--o)} .part[data-part="e"]{--line:var(--e)} .part[data-part="r"]{--line:var(--r)}
+.lbl{display:inline-block;font:700 12.5px var(--display);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--line);padding:1px 10px;border-radius:99px;margin-right:6px;vertical-align:2px}
+[data-show="o"] .part:not([data-part="o"]),[data-show="e"] .part:not([data-part="e"]),[data-show="r"] .part:not([data-part="r"]){opacity:.28}
+[data-show="o"] .part[data-part="o"]{background:var(--sky-t)}
+[data-show="e"] .part[data-part="e"]{background:var(--orange-t)}
+[data-show="r"] .part[data-part="r"]{background:var(--grape-t)}
+.side{display:flex;flex-direction:column;gap:16px;min-height:0}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stage{border:3px solid var(--ink);border-radius:18px;background:#fff;box-shadow:3px 3px 0 var(--ink);padding:10px 8px;font:700 18px/1.15 var(--display);display:flex;flex-direction:column;align-items:center;gap:4px}
+.stage .dotn{width:40px;height:40px;border-radius:50%;background:var(--k);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font-size:20px}
+.stage[aria-pressed="true"]{background:var(--kt);transform:translateY(-3px);box-shadow:5px 6px 0 var(--ink)}
+.segcard{flex:1;min-height:0;overflow:auto;border-color:var(--ink);background:#fff}
+.segcard h3{font-size:34px;color:var(--k)}
+.seg-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.seg-list li{display:grid;grid-template-columns:92px 1fr;gap:10px;font-size:18.5px;line-height:1.35;padding-bottom:8px;border-bottom:2px dashed #E6E0EF}
+.seg-list li:last-child{border-bottom:none}
+.seg-list b{font-family:var(--display);color:var(--k)}
+.tipbox{margin-top:12px;background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:14px;padding:10px 14px;font-size:18px}
+.segsum{display:grid;gap:18px}
+.segrow{display:grid;grid-template-columns:260px 1fr 250px;gap:0;border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);background:#fff}
+.segrow>div{padding:22px 22px;font-size:23px;line-height:1.4}
+.segrow .nm{background:var(--k);color:#fff;font:700 30px var(--display);display:flex;flex-direction:column;justify-content:center;text-shadow:2px 2px 0 var(--ink);border-right:3px solid var(--ink)}
+.segrow .nm small{font:600 16px var(--display);text-shadow:none;opacity:.95}
+.segrow .len{background:var(--kt);border-left:3px dashed var(--ink);font-weight:700}
+.segrow .len i{display:block;font-weight:500;font-size:19px;color:#4A4460;margin-top:6px}
+
+/* ============ LANGUAGE ============ */
+.chips{display:flex;flex-wrap:wrap;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:10px;border:3px solid var(--ink);background:#fff;border-radius:999px;padding:6px 18px 6px 8px;font:700 19px var(--display);box-shadow:3px 3px 0 var(--ink)}
+.chip i{width:26px;height:26px;border-radius:50%;background:var(--fc);border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:14px;color:#fff}
+.chip[aria-pressed="true"]{background:var(--ft)}
+.chip[aria-pressed="true"] i::after{content:"✓"}
+.chip[data-f="v"]{--fc:var(--coral);--ft:var(--coral-t)} .chip[data-f="c"]{--fc:var(--teal);--ft:var(--teal-t)} .chip[data-f="t"]{--fc:var(--sky);--ft:var(--sky-t)} .chip[data-f="p"]{--fc:var(--grape);--ft:var(--grape-t)} .chip[data-f="n"]{--fc:var(--orange);--ft:var(--orange-t)}
+.lf{font-size:22px;line-height:1.8}
+.lf .part{cursor:default;border-left-width:6px;margin-bottom:6px}
+.lf span.v,.lf span.c,.lf span.t,.lf span.p,.lf span.n{border-radius:5px;transition:background .2s,box-shadow .2s;padding:0 1px}
+.hl-v .v{background:var(--coral-t);box-shadow:inset 0 -3px 0 var(--coral)}
+.hl-c .c{background:var(--teal-t);box-shadow:inset 0 -3px 0 var(--teal)}
+.hl-t .t{background:var(--sky-t);box-shadow:inset 0 -3px 0 var(--sky)}
+.hl-p .p{background:var(--grape-t);box-shadow:inset 0 -3px 0 var(--grape)}
+.hl-n .n{background:var(--orange-t);box-shadow:inset 0 -3px 0 var(--orange)}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.feat{padding:24px 26px;display:flex;flex-direction:column;gap:12px;min-height:250px}
+.feat .top{display:flex;align-items:center;gap:12px}
+.feat .ico{width:70px;height:70px;font-size:36px;background:var(--ft)}
+.feat h3{font-size:29px;line-height:1.1}
+.feat p{font-size:21px;flex:1;line-height:1.4}
+.feat .ex{background:var(--ft);border-radius:12px;padding:8px 12px;font-weight:800;font-size:19px;border:2px solid var(--ink)}
+.analyzer{display:grid;grid-template-columns:1fr 1.3fr;gap:30px;height:100%;min-height:0}
+.sent-list{display:grid;gap:10px;align-content:start;overflow:auto;padding:4px 8px 8px 4px}
+.sent{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:19px;font-weight:700;box-shadow:3px 3px 0 var(--ink);display:flex;gap:10px;align-items:flex-start}
+.sent .sn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--coral-t);border:2px solid var(--ink);display:grid;place-items:center;font:700 15px var(--display)}
+.sent[aria-pressed="true"]{background:var(--coral-t)}
+.sent[aria-pressed="true"] .sn{background:var(--coral);color:#fff}
+.out{overflow:auto}
+.out .s{font:700 28px/1.3 var(--display);margin:6px 0 18px}
+.chunks{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.chunk{display:grid;border-radius:14px;overflow:hidden;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);animation:pop .4s both}
+.chunk .w{padding:8px 14px;font-weight:800;background:#fff;font-size:21px}
+.chunk .r{padding:3px 14px;font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k);border-top:3px solid var(--ink)}
+.pattern{display:inline-block;font:700 22px var(--display);background:var(--ink);color:var(--sun);border-radius:12px;padding:8px 16px}
+.note{margin-top:14px;font-size:20px}
+.xtable{width:100%;border-collapse:separate;border-spacing:0 10px}
+.xtable td{background:#fff;padding:12px 16px;font-size:20px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);vertical-align:middle}
+.xtable td:first-child{border-left:3px solid var(--ink);border-radius:16px 0 0 16px;font-weight:800;width:38%;background:var(--t)}
+.xtable td:last-child{border-right:3px solid var(--ink);border-radius:0 16px 16px 0;width:110px;text-align:right}
+.xtable td:nth-child(2){font-style:italic}
+.copy{border:2.5px solid var(--ink);background:var(--sun);border-radius:10px;font:700 16px var(--display);padding:4px 12px}
+.copy:hover{background:#FFD95E}
+.xwrap{overflow:auto;height:100%;padding-right:8px}
+
+/* ============ PRACTICE ============ */
+.pill{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;font-size:18.5px;font-weight:700;width:100%;box-shadow:3px 3px 0 var(--ink);line-height:1.3;transition:transform .12s}
+.pill:hover{transform:translateX(4px)}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.qcol{display:flex;flex-direction:column;gap:10px;min-height:0}
+.qcol h4{font-size:22px;display:flex;gap:8px;align-items:center}
+.pool,.answer{display:grid;gap:10px;align-content:start;flex:1;overflow:auto;padding:4px 8px 8px 4px}
+.answer{border:3px dashed var(--ink);border-radius:22px;padding:14px;counter-reset:a;background:var(--grape-t)}
+.answer:empty::before{content:"👈 Klik kalimat di kiri sesuai urutan kejadian…";color:var(--soft);font:600 20px var(--display)}
+.answer .pill{counter-increment:a;display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start}
+.answer .pill::before{content:counter(a);width:30px;height:30px;border-radius:50%;background:var(--grape);color:#fff;display:grid;place-items:center;font:700 16px var(--display);border:2px solid var(--ink)}
+.pill.ok{background:#DCFCE7;border-color:var(--good)}
+.pill.no{background:#FFE4E6;border-color:var(--bad)}
+.qbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.fb{font:700 22px var(--display);min-height:1.3em}
+.fb.good{color:var(--good)} .fb.bad{color:var(--bad)}
+.opt{border:3px solid var(--ink);background:#fff;border-radius:14px;padding:6px 16px;font:700 20px var(--display);box-shadow:3px 3px 0 var(--ink);min-width:58px}
+.opt:hover{transform:translateY(-2px)}
+.opt.ok{background:var(--good);color:#fff!important}
+.opt.no{background:var(--bad);color:#fff!important}
+.sq{display:grid;gap:14px}
+.sq-row{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 16px 12px 22px;box-shadow:4px 4px 0 var(--ink);font-size:21px;font-weight:700}
+.sq-btns{display:flex;gap:8px}
+.sq-btns .opt[data-a="o"]{color:var(--o)} .sq-btns .opt[data-a="e"]{color:var(--orange)} .sq-btns .opt[data-a="r"]{color:var(--r)}
+.legend{display:flex;gap:18px;font:600 19px var(--display);flex-wrap:wrap}
+.legend span{display:inline-flex;gap:8px;align-items:center}
+.legend i{width:30px;height:30px;border-radius:9px;border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;color:#fff;font-size:15px}
+.vq{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.vitem{border:3px solid var(--ink);border-radius:22px;padding:16px;display:grid;gap:12px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.vitem:nth-child(4n+1){background:var(--sky-t)} .vitem:nth-child(4n+2){background:var(--sun-t)} .vitem:nth-child(4n+3){background:var(--pink-t)} .vitem:nth-child(4n+4){background:var(--teal-t)}
+.vitem .base{font:700 32px var(--display)}
+.vitem .base small{font-size:20px;color:var(--soft)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--sun);border-radius:999px;padding:6px 16px;font:700 20px var(--display)}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%;min-height:0}
+.form{display:grid;gap:12px;overflow:auto;padding:4px 10px 10px 4px;align-content:start}
+.fset{border:3px solid var(--ink);border-radius:20px;padding:12px 14px 14px;background:var(--kt);display:grid;gap:10px;margin:0;box-shadow:4px 4px 0 var(--ink)}
+.fset legend{font:700 17px var(--display);color:#fff;background:var(--k);border:2.5px solid var(--ink);border-radius:99px;padding:2px 14px;text-shadow:1px 1px 0 var(--ink)}
+.flabel{font:600 14px var(--display);color:var(--soft);display:grid;gap:4px;letter-spacing:.03em}
+.form input,.form textarea,.form select{font:700 17px var(--body);color:var(--ink);background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:7px 11px;width:100%}
+.form textarea{resize:vertical;min-height:52px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ev-row{display:grid;grid-template-columns:190px 1fr;gap:8px;align-items:start}
+.bout{display:flex;flex-direction:column;gap:16px;min-height:0}
+.bout .paper{flex:1;font-size:18px}
+.checks{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:16px;font-weight:700}
+.checks li{display:flex;gap:8px;align-items:flex-start;line-height:1.3}
+.checks li::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;border:2.5px solid var(--soft);margin-top:1px}
+.checks li.ok::before{content:"✓";background:var(--good);border-color:var(--good);color:#fff;display:grid;place-items:center;font-size:13px}
+
+/* closing */
+.finale{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;align-items:center;height:100%}
+.feel{display:flex;gap:14px}
+.feel button{width:96px;height:96px;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:52px;box-shadow:4px 4px 0 var(--ink);transition:transform .15s}
+.feel button:hover{transform:translateY(-6px) rotate(-6deg)}
+.feel button[aria-pressed="true"]{background:var(--sun);transform:scale(1.1)}
+.t321{display:grid;gap:16px}
+.t321 .stk{display:grid;grid-template-columns:80px 1fr;gap:18px;align-items:center;padding:16px 20px}
+.t321 .n{width:74px;height:74px;border-radius:50%;background:var(--nc);color:#fff;border:3px solid var(--ink);display:grid;place-items:center;font:700 40px var(--display);text-shadow:2px 2px 0 var(--ink)}
+.t321 b{font:700 26px var(--display);display:block}
+.t321 span{font-size:19px;color:var(--soft)}
+
+/* ============ HOW-TO QUEST overrides ============ */
+:root{--g:var(--sky);--m:var(--orange);--st:var(--grape);--cl:var(--teal)}
+body{background:linear-gradient(rgba(255,255,255,.55) 2px,transparent 2px) 0 0/34px 34px,linear-gradient(90deg,rgba(255,255,255,.55) 2px,transparent 2px) 0 0/34px 34px,#BDEBDD}
+.part[data-part="g"]{--line:var(--g)} .part[data-part="m"]{--line:var(--m)} .part[data-part="s"]{--line:var(--st)} .part[data-part="c"]{--line:var(--cl)}
+[data-show="g"] .part:not([data-part="g"]),[data-show="m"] .part:not([data-part="m"]),[data-show="s"] .part:not([data-part="s"]),[data-show="c"] .part:not([data-part="c"]){opacity:.28}
+[data-show="g"] .part[data-part="g"]{background:var(--sky-t)}
+[data-show="m"] .part[data-part="m"]{background:var(--orange-t)}
+[data-show="s"] .part[data-part="s"]{background:var(--grape-t)}
+[data-show="c"] .part[data-part="c"]{background:var(--teal-t)}
+.part ul,.part ol{margin:4px 0 0;padding-left:24px}
+.part li{margin:0}
+.mats{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:4px}
+.mats b{font-family:var(--display);font-size:.95em}
+.stages.four{grid-template-columns:repeat(4,1fr)}
+.stages.four .stage{font-size:16px}
+.explore .paper{font-size:16.5px;line-height:1.45}
+.lf{font-size:18.5px;line-height:1.75}
+.lf ol{padding-left:26px}
+
+/* Manu says */
+.says{display:grid;grid-template-columns:300px 1fr;gap:50px;align-items:center;height:100%}
+.cmd{font:700 64px/1.12 var(--display);min-height:220px;display:flex;align-items:center;padding:30px 40px;background:#fff;border:4px solid var(--ink);border-radius:32px;box-shadow:8px 8px 0 var(--ink);text-wrap:balance}
+.cmd .ks{color:var(--teal)}
+.cmd.trap .ks{color:var(--coral)}
+.says-meta{display:flex;gap:14px;align-items:center;margin-top:24px;flex-wrap:wrap}
+.rule{font:600 21px/1.35 var(--display);background:var(--sun-t);border:2.5px dashed var(--ink);border-radius:16px;padding:10px 16px;margin-top:18px}
+
+/* missions (same structure, different texts) */
+.mission{display:grid;grid-template-columns:1fr 1fr 1.7fr 1fr;gap:16px;margin-top:6px}
+.mblk{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:4px 4px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column}
+.mblk h4{font:700 20px var(--display);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--k);padding:8px 14px;border-bottom:3px solid var(--ink);text-shadow:1px 1px 0 var(--ink)}
+.mblk .mb{padding:16px 20px;font-size:23px;line-height:1.5}
+.mblk ul,.mblk ol{margin:0;padding-left:22px}
+.mtitle{font:700 38px var(--display);margin-top:10px}
+
+/* game colours */
+.sq-btns .opt[data-a="g"]{color:var(--g)} .sq-btns .opt[data-a="m"]{color:var(--orange)} .sq-btns .opt[data-a="s"]{color:var(--st)} .sq-btns .opt[data-a="c"]{color:var(--cl)}
+.vq.fill .vitem .base{font:700 23px/1.3 var(--display)}
+.vq.fill .vitem .base u{text-decoration:none;display:inline-block;min-width:70px;border-bottom:3px dashed var(--ink)}
+.vq.fill .opt{font-size:18px;padding:6px 12px}
+.sq-row{font-size:20px}
+.sq{gap:12px}
+.form .mat{min-height:120px}
+
+/* ===== MOBILE FULLSCREEN FIX (28/09/2026) ===== */
+@media (max-width:760px){
+  .bar{height:62px;gap:6px;padding:0 8px}
+  .brand{display:none}
+  .track{min-width:40px;margin:0 6px}
+  .count{min-width:50px;font-size:15px}
+  .ibtn{width:42px;height:42px;font-size:18px;border-width:2.5px}
+  .nav{font-size:20px}
+  #fsBtn.hide-sm,#menuBtn.hide-sm{display:grid}
+  #fsBtn{background:#fff;color:#2B2440;border-color:#fff}
+}
+@media (max-width:420px){
+  #menuBtn.hide-sm{display:none}
+  .ibtn{width:38px;height:38px}
+  .hiker{width:32px;height:35px}
+}
+.toast{max-width:calc(100vw - 24px);text-align:center}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="kiko" viewBox="0 0 120 132">
+      <ellipse cx="60" cy="127" rx="34" ry="5" fill="#2B2440" opacity=".15"/>
+      <path d="M46 106 V116 M74 106 V116" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="44" cy="119" rx="12" ry="7" fill="#FF9F1C" stroke="#2B2440" stroke-width="4"/>
+      <ellipse cx="76" cy="119" rx="12" ry="7" fill="#FF9F1C" stroke="#2B2440" stroke-width="4"/>
+      <path d="M26 76 Q15 74 14 64" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <path d="M14 66 L11 32" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="10" cy="24" rx="6" ry="9" transform="rotate(-6 10 24)" fill="#FFC933" stroke="#2B2440" stroke-width="4"/>
+      <path d="M94 76 Q110 72 112 54" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="112" cy="50" r="6.5" fill="#FFFBF2" stroke="#2B2440" stroke-width="4"/>
+      <rect x="28" y="24" width="72" height="86" rx="10" fill="#FFFBF2" stroke="#2B2440" stroke-width="4.5"/>
+      <rect x="22" y="20" width="72" height="86" rx="12" fill="#1FB5A6" stroke="#2B2440" stroke-width="4.5"/>
+      <path d="M76 18 V44 L81 38 L86 44 V18" fill="#FF6B5B" stroke="#2B2440" stroke-width="4" stroke-linejoin="round"/>
+      <g fill="none" stroke="#2B2440" stroke-width="4" stroke-linecap="round"><path d="M18 34 h9 M18 50 h9 M18 66 h9 M18 82 h9 M18 98 h9"/></g>
+      <rect x="33" y="48" width="52" height="38" rx="10" fill="#FFFBF2" stroke="#2B2440" stroke-width="4"/>
+      <circle cx="49" cy="63" r="5.5" fill="#2B2440"/><circle cx="51" cy="61" r="1.9" fill="#fff"/>
+      <circle cx="69" cy="63" r="5.5" fill="#2B2440"/><circle cx="71" cy="61" r="1.9" fill="#fff"/>
+      <ellipse cx="41" cy="73" rx="5" ry="3.2" fill="#FF8FB1"/><ellipse cx="77" cy="73" rx="5" ry="3.2" fill="#FF8FB1"/>
+      <path d="M52 73 Q59 81 66 73" fill="none" stroke="#2B2440" stroke-width="4" stroke-linecap="round"/>
+      <path d="M58 90 l3 6 6 1 -4.5 4 1 6 -5.5-3 -5.5 3 1-6 -4.5-4 6-1z" fill="#FFC933" stroke="#2B2440" stroke-width="2.5" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="star" viewBox="0 0 100 100"><path d="M50 6 L62 37 L95 39 L69 60 L78 93 L50 75 L22 93 L31 60 L5 39 L38 37Z" fill="currentColor" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/></symbol>
+    <symbol id="spark" viewBox="0 0 100 100"><path d="M50 4 C54 36 64 46 96 50 C64 54 54 64 50 96 C46 64 36 54 4 50 C36 46 46 36 50 4Z" fill="currentColor" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/></symbol>
+    <symbol id="squig" viewBox="0 0 130 30"><path d="M6 15 Q20 2 34 15 T62 15 T90 15 T118 15" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></symbol>
+    <symbol id="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="11"/></symbol>
+    <symbol id="cloud" viewBox="0 0 160 90"><path d="M36 78 Q8 78 10 58 Q12 40 34 42 Q36 16 64 16 Q88 14 96 36 Q104 24 120 28 Q140 32 138 52 Q154 56 150 70 Q146 80 128 78Z" fill="#fff" stroke="#2B2440" stroke-width="5" stroke-linejoin="round"/></symbol>
+    <symbol id="dots" viewBox="0 0 100 60"><g fill="currentColor"><circle cx="10" cy="10" r="7"/><circle cx="40" cy="10" r="7"/><circle cx="70" cy="10" r="7"/><circle cx="25" cy="40" r="7"/><circle cx="55" cy="40" r="7"/><circle cx="85" cy="40" r="7"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="stagewrap" id="wrap">
+<main id="stage" aria-roledescription="slide deck">
+
+<!-- 1 COVER -->
+<section class="slide cover" data-sec="0" data-title="Welcome, questers!">
+  <svg class="deco spin" style="left:40px;top:40px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:660px;top:70px;width:44px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="left:90px;bottom:36px;width:150px;color:var(--teal)"><use href="#squig"/></svg>
+  <svg class="deco" style="left:560px;bottom:60px;width:90px;color:var(--grape)"><use href="#dots"/></svg>
+  <div class="left">
+    <span class="kicker" style="align-self:flex-start">🗝️ English · Grade X–XI</span>
+    <h1>How-To<br><span class="pop" style="color:var(--teal)">Quest!</span></h1>
+    <p class="lead">Every procedure text is a mission: one goal, the right gear, and clear steps in the right order. ⚔️</p>
+    <div class="tags">
+      <span class="tag" style="--tc:var(--sky-t)">🎯 One clear goal</span>
+      <span class="tag" style="--tc:var(--orange-t)">🧺 Materials</span>
+      <span class="tag" style="--tc:var(--grape-t)">🔢 Step by step</span>
+      <span class="tag" style="--tc:var(--coral-t)">📣 Imperatives</span>
+    </div>
+    <div style="display:flex;gap:22px;align-items:center;margin-top:6px">
+      <button class="btn" type="button" data-next style="font-size:24px;padding:14px 30px;--c:var(--teal)">Start the quest →</button>
+      <p class="school">By Mr. Fio 😎</p>
+    </div>
+  </div>
+  <div class="right">
+    <svg class="scene" viewBox="0 0 600 600" role="img" aria-label="Kartu misi berisi checklist langkah-langkah, dengan ikon wajan, perahu kertas, dan ponsel">
+      <defs><clipPath id="blob"><path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z"/></clipPath>
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/></pattern></defs>
+      <g clip-path="url(#blob)">
+        <rect width="600" height="600" fill="#1FB5A6"/>
+        <rect width="600" height="600" fill="url(#grid)"/>
+        <g transform="rotate(-5 300 300)">
+          <rect x="128" y="96" width="350" height="420" rx="26" fill="#2B2440"/>
+          <rect x="118" y="86" width="350" height="420" rx="26" fill="#FFFBF2" stroke="#2B2440" stroke-width="6"/>
+          <path d="M118 150 V112 Q118 86 144 86 H442 Q468 86 468 112 V150Z" fill="#FF6B5B" stroke="#2B2440" stroke-width="6" stroke-linejoin="round"/>
+          <text x="293" y="130" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="30" fill="#fff" stroke="#2B2440" stroke-width="1.5">QUEST: How to…</text>
+          <g font-family="Fredoka, sans-serif" font-weight="600" font-size="24" fill="#2B2440">
+            <rect x="150" y="182" width="34" height="34" rx="8" fill="#7BE0B5" stroke="#2B2440" stroke-width="4"/><path d="M157 199 l8 8 l14 -16" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="200" y="208">Set the goal</text>
+            <rect x="150" y="246" width="34" height="34" rx="8" fill="#7BE0B5" stroke="#2B2440" stroke-width="4"/><path d="M157 263 l8 8 l14 -16" fill="none" stroke="#2B2440" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="200" y="272">Grab the materials</text>
+            <rect x="150" y="310" width="34" height="34" rx="8" fill="#fff" stroke="#2B2440" stroke-width="4"/>
+            <text x="200" y="336">Follow every step</text>
+            <rect x="150" y="374" width="34" height="34" rx="8" fill="#fff" stroke="#2B2440" stroke-width="4"/>
+            <text x="200" y="400">Enjoy the result!</text>
+          </g>
+          <text x="150" y="468" font-family="Fredoka, sans-serif" font-weight="700" font-size="20" fill="#2B2440">XP</text>
+          <rect x="186" y="450" width="250" height="24" rx="12" fill="#fff" stroke="#2B2440" stroke-width="4"/>
+          <rect x="190" y="454" width="125" height="16" rx="8" fill="#FFC933"/>
+        </g>
+        <g font-size="46" text-anchor="middle">
+          <circle cx="508" cy="176" r="46" fill="#FFC933" stroke="#2B2440" stroke-width="5"/><text x="508" y="192">🍳</text>
+          <circle cx="516" cy="330" r="42" fill="#FF8FB1" stroke="#2B2440" stroke-width="5"/><text x="516" y="345" font-size="40">⛵</text>
+          <circle cx="470" cy="470" r="42" fill="#DDEAFF" stroke="#2B2440" stroke-width="5"/><text x="470" y="485" font-size="40">📱</text>
+        </g>
+      </g>
+      <path d="M300 22 C468 22 578 128 578 292 C578 468 452 578 292 578 C128 578 22 462 22 300 C22 132 140 22 300 22Z" fill="none" stroke="#2B2440" stroke-width="7"/>
+    </svg>
+    <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;left:-50px;bottom:-10px;width:190px"><use href="#kiko"/></svg>
+    <div class="bubble" style="position:absolute;left:-90px;bottom:205px;background:var(--sun-t)">Hi, I'm Manu! 📘<br>Ready for a quest?</div>
+  </div>
+</section>
+
+<!-- 2 QUEST MAP -->
+<section class="slide" data-sec="1" data-title="Quest map" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco" style="left:0;right:0;top:360px;width:1600px;height:320px" viewBox="0 0 1600 320" preserveAspectRatio="none"><path d="M40 170 C240 20 360 300 560 170 S900 20 1060 170 S1400 300 1580 150" fill="none" stroke="#2B2440" stroke-width="5" stroke-dasharray="4 18" stroke-linecap="round" opacity=".45"/></svg>
+  <svg class="deco spin" style="right:80px;top:40px;width:64px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:190px;top:110px;width:34px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🗺️ Quest map</span><span class="hint">👆 klik level untuk lompat</span></div><h2>Five levels to <span class="u">clear</span> today</h2></div>
+  <div class="body">
+    <div class="agenda">
+      <button class="stop" type="button" data-go="s-warm" style="--k:var(--teal);--kt:var(--teal-t)"><span class="n">LEVEL 1</span><span class="ico">🎲</span><b>Warm-up</b><span class="s">Manu says, mission cards</span></button>
+      <button class="stop" type="button" data-go="s-under" style="--k:var(--sky);--kt:var(--sky-t)"><span class="n">LEVEL 2</span><span class="ico">💡</span><b>Understand</b><span class="s">Definition, purpose, benefits</span></button>
+      <button class="stop" type="button" data-go="s-struct" style="--k:var(--sun);--kt:var(--sun-t)"><span class="n">LEVEL 3</span><span class="ico">🧩</span><b>Structure</b><span class="s">Goal, materials, steps, closing</span></button>
+      <button class="stop" type="button" data-go="s-lang" style="--k:var(--coral);--kt:var(--coral-t)"><span class="n">LEVEL 4</span><span class="ico">🔤</span><b>Language</b><span class="s">Features, analysis, expressions</span></button>
+      <button class="stop" type="button" data-go="s-prac" style="--k:var(--grape);--kt:var(--grape-t)"><span class="n">BOSS LEVEL</span><span class="ico">🏆</span><b>Practice</b><span class="s">Games and your own procedure</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 1 -->
+<section class="slide divider" data-sec="1" id="s-warm" data-title="Level 1 · Warm-up">
+  <span class="num">01</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:#fff;opacity:.6"><use href="#squig"/></svg>
+  <span class="part-pill">LEVEL 01</span>
+  <h2>Warm-up 🎲</h2>
+  <p class="sub">Listen, move, and follow the instructions. Fast!</p>
+  <div class="kwrap"><div class="bubble">Stand up, everyone! Let's move first!</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- KIKO SAYS -->
+<section class="slide" data-sec="1" data-title="Manu says…">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <svg class="deco bob" style="left:60px;bottom:40px;width:120px;color:var(--pink)"><use href="#dots"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎲 Game</span><span class="hint">guru klik tombol, murid melakukan perintahnya</span></div><h2><span class="u">Manu says</span>…</h2></div>
+  <div class="body">
+    <div class="says">
+      <svg class="kiko bob" viewBox="0 0 120 132" style="width:300px"><use href="#kiko"/></svg>
+      <div>
+        <p class="cmd" id="cmd">Press the button to get your first command! 👇</p>
+        <div class="says-meta"><button class="btn" id="cmdBtn" type="button" style="font-size:24px">🎲 New command</button><span class="score" id="cmdCount">Round 0</span></div>
+        <p class="rule">📜 Rule: do it <b>only</b> when you hear “Manu says”. No “Manu says”? Freeze! 🧊<br><span class="id">Semua perintah ini adalah <b>imperative sentences</b>, bahasa utama procedure text.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION CARDS -->
+<section class="slide" data-sec="1" data-title="Mission cards">
+  <svg class="deco spin" style="right:80px;top:48px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎴 Mission cards</span><span class="hint">👆 jawab dulu, lalu balik kartunya</span></div><h2>Can you explain <span class="u">how</span>…?</h2></div>
+  <div class="body">
+    <div class="flips">
+      <button class="flip" type="button" style="--fc:var(--sun-t)"><div class="in"><div class="f"><span class="emo">🍜</span><span class="q">How do you cook instant noodles?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"<b>Boil</b> some water. <b>Put</b> in the noodles. <b>Wait</b> three minutes."</span><small>Notice: every sentence starts with a <b>verb</b></small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--sky-t)"><div class="in"><div class="f"><span class="emo">🔋</span><span class="q">How do you charge a phone safely?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"<b>First</b>, plug in the charger. <b>Then</b>, connect the cable to your phone."</span><small>Notice: <b>First… Then…</b></small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--pink-t)"><div class="in"><div class="f"><span class="emo">🧼</span><span class="q">How do you wash your hands properly?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"Rub your hands <b>for 20 seconds</b>. <b>Don't forget</b> your thumbs!"</span><small>Notice: <b>how long</b> + a <b>warning</b></small></div></div></button>
+      <button class="flip" type="button" style="--fc:var(--teal-t)"><div class="in"><div class="f"><span class="emo">🛵</span><span class="q">How do you order food on a delivery app?</span><small class="tap">tap to flip ↻</small></div><div class="b"><span class="ans">"<b>Open</b> the app, <b>choose</b> a menu, and <b>tap</b> Order."</span><small>Notice: steps in the <b>right order</b></small></div></div></button>
+    </div>
+  </div>
+</section>
+
+<!-- APERSEPSI -->
+<section class="slide" data-sec="1" data-title="Guess the text">
+  <svg class="deco twinkle" style="right:120px;top:60px;width:50px;color:var(--sun)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:60px;width:170px;color:var(--teal)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🤔 Think about it</span></div><h2>A message from a friend…</h2></div>
+  <div class="body center">
+    <div class="chat">
+      <div class="row"><span class="av">🧑</span><div class="bubble side q">"Bro, how do you make es teh? I want to try at home!"</div></div>
+      <div class="row me"><div class="bubble tr-tail a">"Easy! You need a tea bag, sugar, hot water and ice. <mark>First</mark>, <mark>put</mark> the tea bag in a glass. <mark>Then</mark>, <mark>pour</mark> hot water. <mark>After that</mark>, <mark>add</mark> sugar and <mark>stir</mark>. <mark>Finally</mark>, <mark>add</mark> ice. Done!"</div><span class="av">😄</span></div>
+      <div class="reveal"><button class="btn" type="button" id="apBtn" style="font-size:24px">So… what kind of text is that? 🤔</button><span id="apOut" hidden class="bigsticker" style="background:var(--teal)">It's a PROCEDURE TEXT! 🎉</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 2 -->
+<section class="slide divider" data-sec="2" id="s-under" data-title="Level 2 · Understanding">
+  <span class="num">02</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:760px;top:120px;width:50px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">LEVEL 02</span>
+  <h2>Understanding 💡</h2>
+  <p class="sub">What a procedure text is, why we need it, and where we meet it.</p>
+  <div class="kwrap"><div class="bubble">Let's unlock the secret of every "how to"!</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- DEFINITION -->
+<section class="slide" data-sec="2" data-title="What is it?">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="right:40px;bottom:40px;width:120px;color:var(--sky)"><use href="#ring"/></svg>
+  <svg class="kiko bob" viewBox="0 0 120 132" style="position:absolute;right:110px;bottom:70px;width:170px;z-index:3"><use href="#kiko"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">📖 Definition</span></div><h2>What is a <span class="u">procedure text</span>?</h2></div>
+  <div class="body center" style="gap:34px">
+    <p class="defn"><span class="quote">“</span>A procedure text is a text that tells the reader <mark>how to make, use, or do something</mark> through a series of <mark>steps in the correct order</mark>.</p>
+    <p class="idline"><span class="badge">ID</span><span class="id">Procedure text adalah teks yang memberi petunjuk cara membuat, menggunakan, atau melakukan sesuatu melalui langkah-langkah yang berurutan.</span></p>
+  </div>
+</section>
+
+<!-- FUNCTION -->
+<section class="slide" data-sec="2" data-title="Why write it?">
+  <svg class="deco twinkle" style="right:90px;top:60px;width:48px;color:var(--pink)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎯 Social function</span></div><h2>Why do people <span class="u">write</span> it?</h2></div>
+  <div class="body center">
+    <div class="g3 fn">
+      <div class="stk tl hov" style="--t:var(--sky-t)"><span class="ico">🧭</span><h3>To instruct</h3><p>Tell the reader <b>how to make or do</b> something, step by step.</p></div>
+      <div class="stk tr hov" style="--t:var(--sun-t)"><span class="ico">⚙️</span><h3>To explain use</h3><p>Show <b>how to use or operate</b> a tool, a device, or an app.</p></div>
+      <div class="stk tl hov" style="--t:var(--pink-t)"><span class="ico">🛡️</span><h3>To guide safely</h3><p>Help the reader get the <b>right result</b> without mistakes or danger.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- GOALS -->
+<section class="slide" data-sec="2" data-title="Learning goals">
+  <svg class="deco twinkle" style="right:100px;top:60px;width:48px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🚀 Quest goals</span></div><h2>By the end of today, <span class="u">I can…</span></h2></div>
+  <div class="body center">
+    <div class="goals">
+      <div class="stk goal tl" style="--gc:var(--teal)"><span class="medal">1</span><b>Explain</b><span>the social function of a procedure text</span></div>
+      <div class="stk goal tr" style="--gc:var(--sky)"><span class="medal">2</span><b>Identify</b><span>its structure and what each part contains</span></div>
+      <div class="stk goal tl" style="--gc:var(--orange)"><span class="medal">3</span><b>Analyze</b><span>imperatives, sequencers and other features</span></div>
+      <div class="stk goal tr" style="--gc:var(--coral)"><span class="medal">4</span><b>Write</b><span>my own clear, step-by-step procedure</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section class="slide" data-sec="2" data-title="Where you'll use it">
+  <svg class="deco spin" style="right:70px;top:46px;width:60px;color:var(--sun)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🌍 Benefits</span></div><h2>Why is it <span class="u">useful</span> for you?</h2></div>
+  <div class="body center">
+    <div class="ben">
+      <div class="stk hov" style="--bc:var(--sun-t)"><span class="ico">🍳</span><div><b>Recipes</b><span>Cook your favourite food from an English recipe.</span></div></div>
+      <div class="stk hov" style="--bc:var(--sky-t)"><span class="ico">📱</span><div><b>Manuals & apps</b><span>Set up a new gadget or app without asking anyone.</span></div></div>
+      <div class="stk hov" style="--bc:var(--pink-t)"><span class="ico">🎬</span><div><b>Tutorial content</b><span>Write a script for your own YouTube or TikTok tutorial.</span></div></div>
+      <div class="stk hov" style="--bc:var(--teal-t)"><span class="ico">🧪</span><div><b>School projects</b><span>Follow and write lab and project steps clearly.</span></div></div>
+      <div class="stk hov" style="--bc:var(--coral-t)"><span class="ico">🧯</span><div><b>Safety</b><span>Understand emergency and evacuation instructions.</span></div></div>
+      <div class="stk hov" style="--bc:var(--grape-t)"><span class="ico">🎤</span><div><b>Tests & speaking</b><span>"Explain how to…" in reading and speaking tasks.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPES -->
+<section class="slide" data-sec="2" data-title="Four kinds of mission">
+  <svg class="deco spin" style="right:80px;top:50px;width:62px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🎭 Types</span><span class="hint">👆 klik tiap jenis</span></div><h2>Four kinds of <span class="u">mission</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="tabs" role="tablist" id="typeTabs">
+      <button class="tab" role="tab" type="button" aria-selected="true" data-t="0">🍳 How to make</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-t="1">📱 How to use</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-t="2">⚽ How to do / play</button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-t="3">🌟 How to be</button>
+    </div>
+    <div class="stk typepanel" id="typePanel" role="tabpanel"></div>
+  </div>
+</section>
+
+<!-- VS -->
+<section class="slide" data-sec="2" data-title="Procedure vs Recount">
+  <div class="head"><div class="krow"><span class="kicker">⚔️ Don't mix them up!</span></div><h2>Procedure <span class="u">vs</span> Recount</h2></div>
+  <div class="body">
+    <div class="vs">
+      <div class="stk col tl" style="background:var(--teal-t)"><h3 style="background:var(--teal)">PROCEDURE</h3>
+        <dl><dt>Purpose</dt><dd>Tells how to make, use or do something</dd><dt>Structure</dt><dd>Goal → Materials → Steps → (Closing)</dd><dt>Tense</dt><dd>Simple present · imperative (Cut, Add, Press)</dd><dt>Example</dt><dd>🍳 How to Make Nasi Goreng</dd></dl></div>
+      <div class="vsmid"><span>VS</span></div>
+      <div class="stk col tr" style="background:var(--sky-t)"><h3 style="background:var(--sky)">RECOUNT</h3>
+        <dl><dt>Purpose</dt><dd>Retells past events or experiences</dd><dt>Structure</dt><dd>Orientation → Events → Reorientation</dd><dt>Tense</dt><dd>Simple past (went, cooked, pressed)</dd><dt>Example</dt><dd>🏔️ My Trip to Mount Lawu</dd></dl></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 3 -->
+<section class="slide divider" data-sec="3" id="s-struct" data-title="Level 3 · Structure">
+  <span class="num">03</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:#fff"><use href="#star"/></svg>
+  <svg class="deco" style="left:120px;bottom:80px;width:200px;color:var(--coral)"><use href="#squig"/></svg>
+  <span class="part-pill">LEVEL 03</span>
+  <h2>Generic Structure 🧩</h2>
+  <p class="sub">Every mission has a goal, the right gear, clear steps, and a happy ending.</p>
+  <div class="kwrap"><div class="bubble">Let's open my recipe pages! 📖</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- STRUCTURE EXPLORER -->
+<section class="slide" data-sec="3" data-title="Structure explorer" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🧭 Explore</span><span class="hint">👆 klik bagian teks atau tombol</span></div><h2>Four parts of the <span class="u">mission</span></h2></div>
+  <div class="body">
+    <div class="explore">
+      <article class="paper" id="text1" data-show="g">
+        <h4>🍳 How to Make Simple Nasi Goreng</h4>
+        <div class="part" data-part="g"><span class="lbl">Goal</span>Nasi goreng is a favourite breakfast in many Indonesian homes. Here is an easy way to cook a plate for yourself in about 15 minutes.</div>
+        <div class="part" data-part="m"><span class="lbl">Materials</span>
+          <div class="mats"><div><b>Ingredients</b><ul><li>1 plate of cold cooked rice</li><li>1 egg</li><li>2 cloves of garlic</li><li>3 shallots</li><li>1 tablespoon of sweet soy sauce</li><li>a pinch of salt</li><li>2 tablespoons of cooking oil</li></ul></div><div><b>Tools</b><ul><li>a frying pan</li><li>a spatula</li><li>a knife</li><li>a plate</li></ul></div></div></div>
+        <div class="part" data-part="s"><span class="lbl">Steps</span><ol>
+          <li>First, peel and slice the garlic and shallots thinly.</li>
+          <li>Then, heat the oil in a frying pan over medium heat.</li>
+          <li>Next, fry the garlic and shallots for about one minute until they smell good.</li>
+          <li>After that, crack the egg into the pan and scramble it quickly.</li>
+          <li>Add the rice and stir well so that it does not stick to the pan.</li>
+          <li>Pour in the sweet soy sauce, sprinkle some salt, and mix everything evenly.</li>
+          <li>Finally, cook for two more minutes, then turn off the stove.</li></ol></div>
+        <div class="part" data-part="c"><span class="lbl">Closing</span>Serve your nasi goreng while it is still hot. Enjoy your breakfast! Be careful: don't leave the stove on when you are not cooking.</div>
+      </article>
+      <div class="side">
+        <div class="stages four" id="stages">
+          <button class="stage" type="button" data-s="g" aria-pressed="true" style="--k:var(--g);--kt:var(--sky-t)"><span class="dotn">1</span>Goal</button>
+          <button class="stage" type="button" data-s="m" aria-pressed="false" style="--k:var(--m);--kt:var(--orange-t)"><span class="dotn">2</span>Materials</button>
+          <button class="stage" type="button" data-s="s" aria-pressed="false" style="--k:var(--st);--kt:var(--grape-t)"><span class="dotn">3</span>Steps</button>
+          <button class="stage" type="button" data-s="c" aria-pressed="false" style="--k:var(--cl);--kt:var(--teal-t)"><span class="dotn">4</span>Closing</button>
+        </div>
+        <div class="stk segcard" id="segCard"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSIONS -->
+<section class="slide" data-sec="3" data-title="Same structure, other missions">
+  <svg class="deco spin" style="right:80px;top:50px;width:60px;color:var(--pink)"><use href="#star"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔁 Same map</span><span class="hint">👆 ganti misi, strukturnya tetap sama</span></div><h2>Same structure, <span class="u">different</span> missions</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px;justify-content:center">
+    <div class="tabs" role="tablist" id="mTabs"></div>
+    <p class="mtitle" id="mTitle"></p>
+    <div class="mission" id="mBody"></div>
+  </div>
+</section>
+
+<!-- SEGMENTATION SUMMARY -->
+<section class="slide" data-sec="3" data-title="What each part contains">
+  <div class="head"><div class="krow"><span class="kicker">📦 Segmentation</span></div><h2>What goes <span class="u">inside</span> each part?</h2></div>
+  <div class="body center">
+    <div class="segsum" style="gap:14px">
+      <div class="segrow" style="--k:var(--g);--kt:var(--sky-t)"><div class="nm">① Goal / Aim<small>the mission</small></div><div>A <b>title</b>: How to + verb · (optional) 1–2 intro sentences: <b>what</b> you will make or do, why it is useful, how long it takes</div><div class="len">Title + 0–2 sentences<i>"How to Make…", "How to Use…"</i></div></div>
+      <div class="segrow" style="--k:var(--m);--kt:var(--orange-t)"><div class="nm">② Materials<small>the gear</small></div><div><b>Ingredients</b>, <b>tools</b>, equipment or requirements, with exact <b>quantities</b> and sizes</div><div class="len">A list, not a story<i>Use numbers: 2 cloves, 250 ml</i></div></div>
+      <div class="segrow" style="--k:var(--st);--kt:var(--grape-t)"><div class="nm">③ Steps<small>the method</small></div><div>Actions in the <b>correct order</b> · one main action per step · details of <b>how long, how much, how, where</b> · warnings</div><div class="len">3–10 numbered steps<i>Start with a verb or sequencer</i></div></div>
+      <div class="segrow" style="--k:var(--cl);--kt:var(--teal-t)"><div class="nm">④ Closing<small>optional</small></div><div>The <b>result</b>, how to serve or check it, a final tip, or a friendly wish</div><div class="len">1–2 short sentences<i>"Your … is ready. Enjoy!"</i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER 4 -->
+<section class="slide divider" data-sec="4" id="s-lang" data-title="Level 4 · Language">
+  <span class="num">04</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco" style="left:130px;bottom:80px;width:120px;color:#fff;opacity:.5"><use href="#dots"/></svg>
+  <span class="part-pill">LEVEL 04</span>
+  <h2>Language Features 🔤</h2>
+  <p class="sub">The power-ups that make instructions clear and easy to follow.</p>
+  <div class="kwrap"><div class="bubble">Collect all six power-ups! ⚡</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- SIX FEATURES -->
+<section class="slide" data-sec="4" data-title="Six language features">
+  <div class="head"><div class="krow"><span class="kicker">⚡ Power-ups</span></div><h2>Six <span class="u">language features</span></h2></div>
+  <div class="body center">
+    <div class="feats">
+      <div class="stk feat hov" style="--ft:var(--coral-t)"><div class="top"><span class="ico">📣</span><h3>Imperative sentences</h3></div><p>Commands that start with a <b>base verb</b>. The subject <i>you</i> is hidden.</p><span class="ex">Cut the onion. · Press the button.</span></div>
+      <div class="stk feat hov" style="--ft:var(--teal-t)"><div class="top"><span class="ico">🔢</span><h3>Sequencers</h3></div><p>Show the <b>order</b> of the steps.</p><span class="ex">first, then, next, after that, finally</span></div>
+      <div class="stk feat hov" style="--ft:var(--sky-t)"><div class="top"><span class="ico">🎛️</span><h3>Adverbials</h3></div><p>Tell <b>how, how long, and where</b> to do each step.</p><span class="ex">slowly, for 3 minutes, in a pan</span></div>
+      <div class="stk feat hov" style="--ft:var(--pink-t)"><div class="top"><span class="ico">⚖️</span><h3>Quantities & precise nouns</h3></div><p>Exact amounts and names of materials.</p><span class="ex">2 cloves of garlic, 250 ml of water</span></div>
+      <div class="stk feat hov" style="--ft:var(--orange-t)"><div class="top"><span class="ico">🔧</span><h3>Action verbs</h3></div><p>Specific verbs for each kind of task.</p><span class="ex">chop, stir, fold, tap, plug in</span></div>
+      <div class="stk feat hov" style="--ft:var(--grape-t)"><div class="top"><span class="ico">⚠️</span><h3>Simple present & warnings</h3></div><p>General truths, <b>don't</b>, <b>make sure</b>, <b>should</b>.</p><span class="ex">Don't touch it. · Make sure it is off.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HIGHLIGHTER -->
+<section class="slide" data-sec="4" data-title="Colour highlighter" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">🖍️ Highlighter</span><span class="hint">👆 nyalakan warna, bisa lebih dari satu</span></div><h2>Spot the <span class="u">features</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="chips" id="featBar">
+      <button class="chip" type="button" data-f="v" aria-pressed="true"><i></i>Imperative verbs</button>
+      <button class="chip" type="button" data-f="c" aria-pressed="true"><i></i>Sequencers</button>
+      <button class="chip" type="button" data-f="t" aria-pressed="false"><i></i>Adverbials (how · how long · where)</button>
+      <button class="chip" type="button" data-f="p" aria-pressed="false"><i></i>Quantities</button>
+      <button class="chip" type="button" data-f="n" aria-pressed="false"><i></i>Warnings & purpose</button>
+    </div>
+    <article class="paper lf hl-v hl-c" id="text2" style="flex:1">
+      <div class="part" data-part="g"><span class="lbl">Goal</span><b>How to Make Simple Nasi Goreng.</b> Here is an easy way to cook a plate for yourself <span class="t">in about 15 minutes</span>.</div>
+      <div class="part" data-part="m"><span class="lbl">Materials</span><span class="p">1 plate of</span> cold cooked rice · <span class="p">1</span> egg · <span class="p">2 cloves of</span> garlic · <span class="p">3</span> shallots · <span class="p">1 tablespoon of</span> sweet soy sauce · <span class="p">a pinch of</span> salt · <span class="p">2 tablespoons of</span> cooking oil · a frying pan, a spatula, a knife</div>
+      <div class="part" data-part="s"><span class="lbl">Steps</span><ol>
+        <li><span class="c">First</span>, <span class="v">peel</span> and <span class="v">slice</span> the garlic and shallots <span class="t">thinly</span>.</li>
+        <li><span class="c">Then</span>, <span class="v">heat</span> the oil <span class="t">in a frying pan</span> <span class="t">over medium heat</span>.</li>
+        <li><span class="c">Next</span>, <span class="v">fry</span> the garlic and shallots <span class="t">for about one minute</span> <span class="c">until</span> they smell good.</li>
+        <li><span class="c">After that</span>, <span class="v">crack</span> the egg <span class="t">into the pan</span> and <span class="v">scramble</span> it <span class="t">quickly</span>.</li>
+        <li><span class="v">Add</span> the rice and <span class="v">stir</span> <span class="t">well</span> <span class="n">so that it does not stick to the pan</span>.</li>
+        <li><span class="v">Pour in</span> the sweet soy sauce, <span class="v">sprinkle</span> some salt, and <span class="v">mix</span> everything <span class="t">evenly</span>.</li>
+        <li><span class="c">Finally</span>, <span class="v">cook</span> <span class="t">for two more minutes</span>, <span class="c">then</span> <span class="v">turn off</span> the stove.</li></ol></div>
+      <div class="part" data-part="c"><span class="lbl">Closing</span><span class="v">Serve</span> your nasi goreng <span class="t">while it is still hot</span>. <span class="v">Enjoy</span> your breakfast! <span class="n">Be careful: don't leave the stove on</span> when you are not cooking.</div>
+    </article>
+  </div>
+</section>
+
+<!-- SENTENCE ANALYZER -->
+<section class="slide" data-sec="4" data-title="Sentence lab">
+  <svg class="deco twinkle" style="right:90px;top:56px;width:46px;color:var(--sun)"><use href="#spark"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🔬 Sentence lab</span><span class="hint">👆 pilih satu kalimat</span></div><h2>Break the <span class="u">instruction</span> apart</h2></div>
+  <div class="body">
+    <div class="analyzer">
+      <div class="sent-list" id="sentList"></div>
+      <div class="stk out" id="sentOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPRESSIONS -->
+<section class="slide" data-sec="4" data-title="Expression bank">
+  <div class="head"><div class="krow"><span class="kicker">💬 Expression bank</span><span class="hint">📋 klik Copy untuk menyalin</span></div><h2>Build-up <span class="u">expressions</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs" role="tablist" id="xTabs"></div>
+    <div class="xwrap"><table class="xtable" id="xTable"></table></div>
+  </div>
+</section>
+
+<!-- DIVIDER 5 -->
+<section class="slide divider" data-sec="5" id="s-prac" data-title="Boss level · Practice">
+  <span class="num">05</span>
+  <svg class="deco spin" style="left:70px;top:60px;width:80px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="left:820px;top:130px;width:52px;color:var(--pink)"><use href="#spark"/></svg>
+  <span class="part-pill">BOSS LEVEL</span>
+  <h2>Practice Time! 🏆</h2>
+  <p class="sub">Three mini games, then write your own procedure.</p>
+  <div class="kwrap"><div class="bubble">Boss level! Can you clear it with full XP? 🎯</div><svg class="kiko bob" viewBox="0 0 120 132" style="width:220px"><use href="#kiko"/></svg></div>
+</section>
+
+<!-- GAME 1 -->
+<section class="slide" data-sec="5" data-title="Game 1 · Step order">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 1</span><span class="hint">👆 klik langkah sesuai urutan · klik lagi untuk mengembalikan</span></div><h2>🍜 Put the steps <span class="u">in order</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:14px">
+    <div class="qa" style="flex:1;min-height:0">
+      <div class="qcol"><h4>🧺 Steps</h4><div class="pool" id="pool"></div></div>
+      <div class="qcol"><h4>📜 How to Cook Instant Noodles</h4><div class="answer" id="answer"></div></div>
+    </div>
+    <div class="qbar"><button class="btn" id="checkOrder" type="button">✔ Check</button><button class="btn ghost" id="resetOrder" type="button">↺ Reset</button><p class="fb" id="orderFb" aria-live="polite"></p></div>
+  </div>
+</section>
+
+<!-- GAME 2 -->
+<section class="slide" data-sec="5" data-title="Game 2 · Which part?">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 2</span><span class="score" id="sqScore">⭐ 0 / 6</span></div><h2>🌶️ Which <span class="u">part</span> is it?</h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:16px;justify-content:center">
+    <div class="legend"><span><i style="background:var(--g)">G</i>Goal</span><span><i style="background:var(--orange)">M</i>Materials</span><span><i style="background:var(--st)">S</i>Steps</span><span><i style="background:var(--cl)">C</i>Closing</span></div>
+    <div class="sq" id="sq"></div>
+    <p class="fb" id="sqFb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- GAME 3 -->
+<section class="slide" data-sec="5" data-title="Game 3 · Fix the instruction">
+  <div class="head"><div class="krow"><span class="kicker">🎮 Game 3</span><span class="score" id="vqScore">⭐ 0 / 8</span></div><h2>Complete the <span class="u">instruction</span></h2></div>
+  <div class="body" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+    <div class="vq fill" id="vq"></div>
+    <p class="fb" id="vqFb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- BUILDER -->
+<section class="slide" data-sec="5" data-title="Write your procedure" style="padding-top:44px">
+  <div class="head"><div class="krow"><span class="kicker">✍️ Your quest</span><span class="hint">ganti contoh dengan misimu sendiri</span></div><h2>Build <span class="u">your own</span> procedure</h2></div>
+  <div class="body">
+    <div class="builder">
+      <form class="form" id="bForm" onsubmit="return false">
+        <fieldset class="fset" style="--k:var(--g);--kt:var(--sky-t)"><legend>① Goal</legend>
+          <label class="flabel">TITLE (How to …)<input id="bTitle" value="How to Make Es Teh Manis"></label>
+          <label class="flabel">Intro (optional)<input id="bIntro" value="Es teh manis is the perfect drink on a hot afternoon in Solo."></label>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--m);--kt:var(--orange-t)"><legend>② Materials</legend>
+          <label class="flabel">One item per line, with quantity<textarea id="bMat" class="mat">1 tea bag
+2 tablespoons of sugar
+200 ml of hot water
+5 ice cubes
+a tall glass and a spoon</textarea></label>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--st);--kt:var(--grape-t)"><legend>③ Steps</legend>
+          <div id="evWrap" style="display:grid;gap:8px"></div>
+          <div><button class="btn ghost sm" type="button" id="addEv">+ Add step</button></div>
+        </fieldset>
+        <fieldset class="fset" style="--k:var(--cl);--kt:var(--teal-t)"><legend>④ Closing</legend>
+          <label class="flabel">Closing expression<select id="bClose"><option>Your drink is ready. Enjoy it while it is cold!</option><option>Now your … is ready to use.</option><option>Serve it while it is still hot. Enjoy!</option><option>Good luck and have fun!</option><option>That's it! Easy, right?</option></select></label>
+          <label class="flabel">Tip / warning (optional)<input id="bTip" value="Be careful when you pour the hot water."></label>
+        </fieldset>
+      </form>
+      <div class="bout">
+        <article class="paper" id="bOut"></article>
+        <div class="stk" style="padding:16px 20px">
+          <ul class="checks" id="bChecks"></ul>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button class="btn sm" type="button" id="copyText">📋 Copy my text</button><button class="btn ghost sm" type="button" id="clearAll">🧹 Clear the example</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINALE -->
+<section class="slide" data-sec="1" data-title="Quest complete!" id="finale" style="--c:var(--coral);--t:var(--coral-t)">
+  <svg class="deco spin" style="right:70px;top:50px;width:70px;color:var(--sun)"><use href="#star"/></svg>
+  <svg class="deco twinkle" style="right:200px;top:110px;width:46px;color:var(--pink)"><use href="#spark"/></svg>
+  <svg class="deco" style="right:60px;bottom:40px;width:170px;color:var(--teal)"><use href="#squig"/></svg>
+  <div class="head"><div class="krow"><span class="kicker">🏆 Quest complete!</span></div><h2>You cleared the <span class="u">quest</span>! 🎉</h2></div>
+  <div class="body">
+    <div class="finale">
+      <div style="display:flex;flex-direction:column;gap:22px;align-items:flex-start">
+        <p style="font:600 30px/1.3 var(--display)">How do you feel about procedure texts now?</p>
+        <div class="feel" id="feel">
+          <button type="button" data-m="Legendary! You can write any 'how to' now! 🚀">🤩</button>
+          <button type="button" data-m="Nice! One more practice and you'll level up. 💪">🙂</button>
+          <button type="button" data-m="That's okay! Review the structure and the expression bank. 📚">😐</button>
+          <button type="button" data-m="No worries! Ask your teacher or a friend, and replay the games. 🤝">😵‍💫</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px">
+          <svg class="kiko bob" viewBox="0 0 120 132" style="width:180px"><use href="#kiko"/></svg>
+          <div class="bubble" id="feelMsg" style="max-width:420px;margin-bottom:150px;background:var(--sun-t)">Tap a face! 👆</div>
+        </div>
+      </div>
+      <div class="t321">
+        <p style="font:700 26px var(--display)">🎟️ Exit ticket: 3 · 2 · 1</p>
+        <div class="stk tl" style="--nc:var(--teal)"><span class="n">3</span><div><b>parts of a procedure text</b><span>that I can name and explain</span></div></div>
+        <div class="stk tr" style="--nc:var(--sky)"><span class="n">2</span><div><b>imperative sentences</b><span>that I can say right now</span></div></div>
+        <div class="stk tl" style="--nc:var(--coral)"><span class="n">1</span><div><b>“how to” I can teach a friend</b><span>tell it in 4 steps!</span></div></div>
+        <p class="school" style="margin-top:6px">By Mr. Fio 😎</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<nav class="bar" aria-label="Slide controls">
+  <div class="brand"><svg viewBox="0 0 120 132"><use href="#kiko"/></svg><span>How-To Quest</span></div>
+  <div class="track" id="track"><div class="fill" id="fill"></div><svg class="hiker" id="hiker" viewBox="0 0 120 132"><use href="#kiko"/></svg></div>
+  <span class="count" id="count">1 / 1</span>
+  <button class="ibtn hide-sm" id="menuBtn" type="button" title="All slides (M)" aria-label="All slides">☰</button>
+  <button class="ibtn hide-sm" id="fsBtn" type="button" title="Fullscreen (F)" aria-label="Fullscreen">⛶</button>
+  <button class="ibtn nav" id="prev" type="button" aria-label="Previous slide">←</button>
+  <button class="ibtn nav" id="next" type="button" aria-label="Next slide">→</button>
+</nav>
+
+<div class="menu" id="menu" role="dialog" aria-label="All slides"><div class="menu-box"><h3>🗺️ All slides <button class="btn ghost sm" type="button" id="menuClose">✕ Close</button></h3><div class="mgrid" id="mgrid"></div></div></div>
+<div class="rotate-tip" id="rotateTip">📱↻ Putar HP ke landscape, atau tekan ⛶ untuk layar penuh. <button class="btn sm ghost" type="button" id="rtClose" style="margin-left:auto">OK</button></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const PAGE_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
+const $=s=>document.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const slides=$$('#stage > .slide');
+const N=slides.length;
+const SEC={0:'var(--coral)',1:'var(--teal)',2:'var(--sky)',3:'var(--sun)',4:'var(--coral)',5:'var(--grape)'};
+let cur=0;
+
+/* ---------- scale stage ---------- */
+function fit(){
+  const w=$('#wrap').clientWidth, h=$('#wrap').clientHeight;
+  const pad=Math.min(w,h)<500?10:28;
+  const s=Math.min((w-pad*2)/1616,(h-pad*2)/916);
+  $('#stage').style.setProperty('--s',Math.max(s,.1));
+}
+addEventListener('resize',fit);fit();
+
+/* ---------- helpers ---------- */
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,1800);}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('📋 Copied!'),()=>toast('Copy blocked: select the text manually'));}
+  else toast('Copy blocked: select the text manually');
+}
+function confetti(n=90){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cols=['#FFC933','#FF6B5B','#1FB5A6','#3D8BFF','#8B5CF6','#FF8FB1'];
+  for(let i=0;i<n;i++){
+    const d=document.createElement('i');d.className='cf';
+    const w=8+Math.random()*8;
+    d.style.cssText=`left:${Math.random()*100}vw;width:${w}px;height:${w*1.4}px;background:${cols[i%cols.length]};--dx:${(Math.random()-.5)*240}px;--rot:${(Math.random()*4-2)*360}deg;animation-duration:${2.2+Math.random()*1.8}s;animation-delay:${Math.random()*.4}s`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),4800);
+  }
+}
+
+/* ---------- navigation ---------- */
+const track=$('#track');
+slides.forEach((s,i)=>{if(s.classList.contains('divider')){const f=document.createElement('span');f.className='flag';f.style.left=(i/(N-1)*100)+'%';f.style.background=SEC[s.dataset.sec];track.appendChild(f);}});
+function go(i,push=true){
+  i=Math.max(0,Math.min(N-1,i));
+  slides[cur].classList.remove('active');
+  cur=i;const s=slides[cur];s.classList.add('active');
+  const pct=(cur/(N-1)*100);
+  $('#fill').style.width=pct+'%';$('#fill').style.background=SEC[s.dataset.sec]||'var(--sun)';
+  $('#hiker').style.left=pct+'%';
+  $('#count').textContent=(cur+1)+' / '+N;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===N-1;
+  if(push) try{history.replaceState(null,'','#'+(cur+1));}catch(e){}
+  $$('.mitem').forEach((m,j)=>m.classList.toggle('cur',j===cur));
+  if(s.id==='finale') setTimeout(()=>confetti(120),250);
+}
+$('#prev').addEventListener('click',()=>go(cur-1));
+$('#next').addEventListener('click',()=>go(cur+1));
+$$('[data-next]').forEach(b=>b.addEventListener('click',()=>go(cur+1)));
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById(b.dataset.go);go(slides.indexOf(t));}));
+const typing=()=>{const a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);};
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){$('#menu').classList.remove('open');return;}
+  if(typing()||e.altKey||e.ctrlKey||e.metaKey) return;
+  if(['ArrowRight','PageDown'].includes(e.key)||(e.key===' '&&document.activeElement.tagName!=='BUTTON')){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(N-1);
+  else if(e.key==='f'||e.key==='F')fs();
+  else if(e.key==='m'||e.key==='M')openMenu();
+});
+let tx=null,ty=null;
+$('#wrap').addEventListener('touchstart',e=>{if(typing())return;tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+$('#wrap').addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)go(cur+(dx<0?1:-1));tx=null;},{passive:true});
+/* ---------- fullscreen: desktop, Android, iPad; iPhone -> open in new tab ---------- */
+const inFrame=(()=>{try{return window.self!==window.top;}catch(e){return true;}})();
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
+function fsIcon(){const on=!!fsEl(),b=$('#fsBtn');b.textContent=on?'✕':'⛶';b.title=on?'Keluar layar penuh (F)':'Layar penuh (F)';b.setAttribute('aria-label',on?'Exit fullscreen':'Fullscreen');}
+function lockLandscape(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}}
+function openStandalone(){
+  try{
+    const url=URL.createObjectURL(new Blob([PAGE_SRC],{type:'text/html'}))+'#'+(cur+1);
+    const w=window.open(url,'_blank');
+    if(w){toast('📱 Dibuka di tab baru, putar HP ke landscape ↻');return true;}
+  }catch(e){}
+  return false;
+}
+function fsFail(){
+  if(inFrame&&openStandalone())return;
+  $('#rotateTip').classList.add('show');
+  toast('↻ Putar HP ke landscape untuk tampilan penuh');
+}
+function fs(){
+  const d=document,el=d.documentElement;
+  if(fsEl()){try{(d.exitFullscreen||d.webkitExitFullscreen).call(d);}catch(e){}return;}
+  const enabled=d.fullscreenEnabled!==undefined?d.fullscreenEnabled:d.webkitFullscreenEnabled;
+  if(enabled===false||!(el.requestFullscreen||el.webkitRequestFullscreen)){fsFail();return;}
+  try{
+    const p=el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen();
+    if(p&&typeof p.then==='function')p.then(lockLandscape,fsFail);
+    else setTimeout(()=>{fsEl()?lockLandscape():fsFail();},350);
+  }catch(e){fsFail();}
+}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{fsIcon();fit();if(!fsEl()){try{screen.orientation.unlock();}catch(e){}}}));
+$('#fsBtn').addEventListener('click',fs);
+$('#mgrid').innerHTML=slides.map((s,i)=>`<button class="mitem" type="button" style="--c:${SEC[s.dataset.sec]}"><b>${i+1}</b><span>${s.dataset.title||''}</span></button>`).join('');
+$$('.mitem').forEach((m,i)=>m.addEventListener('click',()=>{go(i);$('#menu').classList.remove('open');}));
+function openMenu(){$('#menu').classList.add('open');}
+$('#menuBtn').addEventListener('click',openMenu);
+$('#menuClose').addEventListener('click',()=>$('#menu').classList.remove('open'));
+$('#menu').addEventListener('click',e=>{if(e.target.id==='menu')$('#menu').classList.remove('open');});
+$('#rotateTip').classList.add('show');$('#rtClose').addEventListener('click',()=>$('#rotateTip').classList.remove('show'));
+
+
+/* ---------- warm-up: Manu says ---------- */
+const cmds=['stand up','clap your hands twice','touch your nose','wave to the person next to you','raise your right hand','turn around slowly','give your friend a thumbs up','close your eyes for three seconds','point to the whiteboard','jump once','sit down','smile at your teacher','touch your head with your left hand','stamp your feet three times'];
+let round=0,lastCmd=-1;
+$('#cmdBtn').addEventListener('click',()=>{
+  let i;do{i=Math.floor(Math.random()*cmds.length);}while(i===lastCmd);lastCmd=i;
+  const says=Math.random()<.72,c=$('#cmd');round++;
+  const t=cmds[i].charAt(0).toUpperCase()+cmds[i].slice(1);
+  c.classList.toggle('trap',!says);
+  c.innerHTML=says?`<span><span class="ks">Manu says:</span> ${cmds[i]}! 👉</span>`:`<span>${t}! <span class="ks">🤫</span></span>`;
+  $('#cmdCount').textContent='Round '+round;
+});
+$$('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('on')));
+$('#apBtn').addEventListener('click',()=>{$('#apOut').hidden=false;$('#apBtn').hidden=true;confetti(70);});
+
+/* ---------- types ---------- */
+const types=[
+ ['🍳','How to make','Instructions to <b>make or cook</b> something. Usually lists ingredients or materials first.','<i>How to Make Nasi Goreng</i> · <i>How to Fold a Paper Boat</i> · <i>How to Make a Bottle Rocket</i>','var(--sun-t)'],
+ ['📱','How to use / operate','A <b>manual</b> that explains how to use a device, tool, or app, often with safety warnings.','<i>How to Use a Fire Extinguisher</i> · <i>How to Join a Google Classroom</i> · a phone manual','var(--sky-t)'],
+ ['⚽','How to do / play','Steps or rules for an <b>activity or game</b>, or a process such as registering or applying.','<i>How to Play Gobak Sodor</i> · <i>How to Register for a School Club</i>','var(--pink-t)'],
+ ['🌟','How to be / behave','Tips for <b>behaviour or habits</b>. Steps may not need a strict order, but they still use imperatives.','<i>How to Be a Good Listener</i> · <i>How to Stay Focused While Studying</i>','var(--grape-t)']
+];
+function showType(i){
+  $$('#typeTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t==i));
+  const d=types[i];const p=$('#typePanel');p.style.background=d[4];
+  p.innerHTML=`<span class="ico" style="background:#fff">${d[0]}</span><div><h3>${d[1]}</h3><p>${d[2]}</p><p class="ex">📚 Example: ${d[3]}</p></div>`;
+}
+$$('#typeTabs .tab').forEach(t=>t.addEventListener('click',()=>showType(+t.dataset.t)));showType(0);
+
+/* ---------- structure explorer ---------- */
+const seg={
+ g:{c:'var(--g)',t:'Goal / Aim',d:'Tells the reader what the mission is: what they will make, use, or do.',rows:[['Title','How to Make Simple Nasi Goreng'],['What','cook a plate of nasi goreng'],['Why','a favourite Indonesian breakfast'],['How long','about 15 minutes']],tip:'The title alone can be the goal. Start it with <b>How to + verb</b>.'},
+ m:{c:'var(--m)',t:'Materials',d:'Everything you need before you start: ingredients, tools, equipment.',rows:[['Ingredients','rice, egg, garlic, shallots, soy sauce, salt, oil'],['Tools','frying pan, spatula, knife, plate'],['Quantities','1 plate of, 2 cloves of, a pinch of'],['Form','a list, not full sentences']],tip:'Write exact amounts, so the reader gets the same result as you.'},
+ s:{c:'var(--st)',t:'Steps',d:'The heart of the text: numbered actions in the correct order.',rows:[['Order','prepare → heat → fry → add → mix → finish'],['Verbs','peel, slice, heat, fry, crack, add, stir, pour'],['Sequencers','First, Then, Next, After that, Finally'],['Details','thinly, over medium heat, for about one minute']],tip:'One step = one main action. Start with a verb or a sequencer.'},
+ c:{c:'var(--cl)',t:'Closing',d:'Ends the mission: the result, how to serve or check it, and a final tip.',rows:[['Result','Serve your nasi goreng while it is still hot.'],['Wish','Enjoy your breakfast!'],['Warning','Be careful: don’t leave the stove on.']],tip:'It is optional, but one short sentence makes the text feel finished.'}
+};
+function showSeg(s){
+  $('#text1').dataset.show=s;
+  $$('#stages .stage').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s));
+  const d=seg[s],c=$('#segCard');c.style.setProperty('--k',d.c);
+  c.innerHTML=`<h3>${d.t}</h3><p style="margin-top:6px;font-size:19px">${d.d}</p><ul class="seg-list">${d.rows.map(r=>`<li><b>${r[0]}</b><span>${r[1]}</span></li>`).join('')}</ul><p class="tipbox">💡 <b>Tip:</b> ${d.tip}</p>`;
+}
+$$('#stages .stage').forEach(b=>b.addEventListener('click',()=>showSeg(b.dataset.s)));
+$$('#text1 .part').forEach(p=>p.addEventListener('click',()=>showSeg(p.dataset.part)));
+showSeg('g');
+
+/* ---------- missions ---------- */
+const M=[
+ {tab:'⛵ Craft',title:'How to Fold a Paper Boat',g:'Make a small boat that really floats, in about five minutes.',m:['1 sheet of A4 paper','a flat table'],s:['Fold the paper in half from top to bottom.','Fold the top corners down to the middle.','Fold the bottom strips up on both sides.','Open the middle and flatten it into a square.','Pull the top corners out gently to open the boat.'],c:'Your boat is ready. Put it on water and watch it float!'},
+ {tab:'🧯 Safety manual',title:'How to Use a Fire Extinguisher (APAR)',g:'Use this guide for a small fire. Remember one word: <b>PASS</b>.',m:['a fire extinguisher (APAR)','a safe exit behind you'],s:['<b>P</b>ull the safety pin.','<b>A</b>im the nozzle at the base of the fire.','<b>S</b>queeze the handle slowly.','<b>S</b>weep from side to side until the fire is out.'],c:'Never turn your back on the fire. If it grows, leave the room immediately!'},
+ {tab:'💻 Digital',title:'How to Join a Google Classroom',g:'Join your English class online and see all your assignments.',m:['a phone or laptop','an internet connection','the class code from your teacher'],s:['Open the Google Classroom app.','Tap the <b>+</b> button at the top right.','Select <b>Join class</b>.','Type the class code carefully.','Tap <b>Join</b>.'],c:'Now you can find your assignments on the Classwork page.'}
+];
+$('#mTabs').innerHTML=M.map((m,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${m.tab}</button>`).join('');
+function showM(i){
+  $$('#mTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  const m=M[i];$('#mTitle').textContent='📜 '+m.title;
+  $('#mBody').innerHTML=`<div class="mblk" style="--k:var(--g)"><h4>① Goal</h4><div class="mb">${m.g}</div></div><div class="mblk" style="--k:var(--m)"><h4>② Materials</h4><div class="mb"><ul>${m.m.map(x=>`<li>${x}</li>`).join('')}</ul></div></div><div class="mblk" style="--k:var(--st)"><h4>③ Steps</h4><div class="mb"><ol>${m.s.map(x=>`<li>${x}</li>`).join('')}</ol></div></div><div class="mblk" style="--k:var(--cl)"><h4>④ Closing</h4><div class="mb">${m.c}</div></div>`;
+}
+$$('#mTabs .tab').forEach(t=>t.addEventListener('click',()=>showM(+t.dataset.i)));showM(0);
+
+/* ---------- highlighter ---------- */
+$$('#featBar .chip').forEach(c=>c.addEventListener('click',()=>{const on=c.getAttribute('aria-pressed')!=='true';c.setAttribute('aria-pressed',on);$('#text2').classList.toggle('hl-'+c.dataset.f,on);}));
+
+/* ---------- sentence analyzer ---------- */
+const K={seq:'var(--teal)',verb:'var(--coral)',obj:'#6B6480',place:'var(--grape)',time:'var(--sky)',how:'var(--orange)',qty:'var(--pink)',neg:'#E5484D',clause:'#2B2440'};
+const sents=[
+ {s:'First, peel and slice the garlic and shallots thinly.',ch:[['First','Sequencer','seq'],['peel and slice','Imperative verbs','verb'],['the garlic and shallots','Object','obj'],['thinly','How (manner)','how']],p:'Sequencer + V1 + O + Adverb of manner',n:'There is <b>no subject</b>. In an imperative, the subject <i>you</i> is hidden, and the verb comes first in its base form (V1).'},
+ {s:'Heat the oil in a frying pan over medium heat.',ch:[['Heat','Imperative verb','verb'],['the oil','Object','obj'],['in a frying pan','Where (place)','place'],['over medium heat','How (condition)','how']],p:'V1 + O + Place + How',n:'Adverbials make the step <b>precise</b>: the reader knows exactly where and how to do it.'},
+ {s:'Fry the garlic for about one minute until it smells good.',ch:[['Fry','Imperative verb','verb'],['the garlic','Object','obj'],['for about one minute','How long','time'],['until it smells good','Time clause','clause']],p:'V1 + O + for + duration + until + clause',n:'<b>for</b> + duration tells how long. <b>until</b> tells when to stop. Inside the clause we use <b>simple present</b>: <i>smells</i>.'},
+ {s:'Pour in 1 tablespoon of sweet soy sauce.',ch:[['Pour in','Phrasal verb','verb'],['1 tablespoon of','Quantity','qty'],['sweet soy sauce','Noun (material)','obj']],p:'V1 + Number + Unit + of + Noun',n:'Units need a plural when the number is more than one: <i>1 tablespoon</i>, but <i>2 tablespoons</i>.'},
+ {s:'Stir well so that the rice does not stick to the pan.',ch:[['Stir','Imperative verb','verb'],['well','How (manner)','how'],['so that the rice does not stick to the pan','Purpose clause','clause']],p:'V1 + Adverb + so that + S + V1 (present)',n:'<b>so that</b> explains the <b>reason</b> for the step, which helps the reader avoid mistakes.'},
+ {s:'Don’t leave the stove on when you are not cooking.',ch:[['Don’t','Negative imperative','neg'],['leave','Verb (V1)','verb'],['the stove','Object','obj'],['on','Particle','how'],['when you are not cooking','Time clause','clause']],p:'Don’t + V1 + O + (when + clause)',n:'A <b>warning</b> uses <i>Don’t / Never + V1</i>. Other patterns: <i>Be careful…</i>, <i>Make sure…</i>'}
+];
+$('#sentList').innerHTML=sents.map((d,i)=>`<button class="sent" type="button"><span class="sn">${i+1}</span><span>${d.s}</span></button>`).join('');
+function showSent(i){
+  $$('#sentList .sent').forEach((b,j)=>b.setAttribute('aria-pressed',i===j));
+  const d=sents[i];
+  $('#sentOut').innerHTML=`<span class="kicker" style="--c:var(--coral)">Sentence ${i+1}</span><p class="s">${d.s}</p><div class="chunks">${d.ch.map((c,j)=>`<span class="chunk" style="--k:${K[c[2]]};animation-delay:${j*70}ms"><span class="w">${c[0]}</span><span class="r">${c[1]}</span></span>`).join('')}</div><span class="pattern">${d.p}</span><p class="note">💡 ${d.n}</p>`;
+}
+$$('#sentList .sent').forEach((b,i)=>b.addEventListener('click',()=>showSent(i)));showSent(0);
+
+/* ---------- expressions ---------- */
+const X={
+ '🎯 Goal':[['How to + V1 + object','How to Make Simple Nasi Goreng'],['Here is an easy way to + V1 …','Here is an easy way to fold a paper boat.'],['This guide shows you how to …','This guide shows you how to join a Google Classroom.'],['Follow these steps to …','Follow these steps to plant a chili seedling.'],['It only takes … minutes to …','It only takes ten minutes to make this drink.']],
+ '🧺 Materials':[['You will need: …','You will need: a pot, a bowl, and a spoon.'],['Ingredients: … / Tools: …','Ingredients: 2 eggs, 1 onion, a pinch of salt'],['number + unit + of + noun','250 ml of water, 2 cloves of garlic'],['a sheet / a pack / a piece of …','a sheet of A4 paper, a pack of noodles'],['Make sure you have …','Make sure you have your class code ready.']],
+ '➡️ Sequencing':[['First, / To begin, …','First, wash your hands with soap.'],['Then, / Next, / After that, …','After that, add the sugar.'],['When / Once + clause, …','Once the water boils, put in the noodles.'],['While + V-ing, …','While stirring, pour in the milk slowly.'],['Before / After + V-ing, …','Before cutting, wash the vegetables.'],['Finally, / Lastly, …','Finally, put the ice cubes into the glass.']],
+ '🔧 Action verbs':[['🍳 Cooking: chop, slice, peel, boil, fry, stir, pour, mix','Chop the chili into small pieces.'],['✂️ Craft: fold, cut, glue, draw, paint, attach, trim','Glue the two pieces together.'],['📱 Devices & apps: press, tap, select, type, open, plug in','Tap the Save button at the bottom.'],['🌱 Garden & lab: plant, water, measure, observe, record','Measure 100 ml of water in the beaker.']],
+ '⚠️ Tips & warnings':[['Be careful (not) to …','Be careful not to burn your fingers.'],['Don’t / Never + V1 …','Never leave the stove unattended.'],['Make sure (that) …','Make sure the lid is closed tightly.'],['You should / shouldn’t …','You shouldn’t open the rice cooker too early.'],['If …, (then) …','If the dough is too dry, add a little water.']],
+ '🏁 Closing':[['Your … is ready (to …)!','Your paper boat is ready to sail!'],['Serve … while it is …','Serve the soup while it is still hot.'],['Enjoy your …!','Enjoy your homemade nasi goreng!'],['Now you can …','Now you can see your assignments online.'],['Good luck and have fun!','Good luck and have fun with your new plant!']]
+};
+const xk=Object.keys(X);
+$('#xTabs').innerHTML=xk.map((k,i)=>`<button class="tab" role="tab" type="button" aria-selected="${i===0}" data-i="${i}">${k}</button>`).join('');
+function showX(i){
+  $$('#xTabs .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.i==i));
+  $('#xTable').innerHTML=X[xk[i]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><button class="copy" type="button" data-c="${r[1].replace(/"/g,'&quot;')}">Copy</button></td></tr>`).join('');
+  $$('#xTable .copy').forEach(b=>b.addEventListener('click',()=>copyText(b.dataset.c)));
+}
+$$('#xTabs .tab').forEach(t=>t.addEventListener('click',()=>showX(+t.dataset.i)));showX(0);
+
+/* ---------- game 1: order ---------- */
+const order=['First, prepare a small pot, a bowl, a fork, and one pack of instant noodles.','Then, boil about 400 ml of water in the pot.','When the water boils, put the noodles into the pot.','Cook the noodles for three minutes and stir them gently.','After that, turn off the stove and pour the noodles into the bowl.','Finally, add the seasoning, mix well, and enjoy your noodles!'];
+const shuffled=[3,5,1,4,0,2];
+function buildOrder(){
+  $('#pool').innerHTML='';$('#answer').innerHTML='';$('#orderFb').textContent='';$('#orderFb').className='fb';
+  shuffled.forEach(i=>{const b=document.createElement('button');b.type='button';b.className='pill';b.textContent=order[i];b.dataset.i=i;b.addEventListener('click',()=>{b.classList.remove('ok','no');(b.parentElement.id==='pool'?$('#answer'):$('#pool')).appendChild(b);});$('#pool').appendChild(b);});
+}
+$('#checkOrder').addEventListener('click',()=>{
+  const a=$$('#answer .pill'),fb=$('#orderFb');
+  if(a.length<order.length){fb.textContent='👉 Pindahkan semua langkah ke kotak jawaban dulu.';fb.className='fb bad';return;}
+  let right=0;a.forEach((b,i)=>{const ok=+b.dataset.i===i;b.classList.toggle('ok',ok);b.classList.toggle('no',!ok);if(ok)right++;});
+  if(right===order.length){fb.textContent='🎉 Perfect! Your noodles are ready. +100 XP';fb.className='fb good';confetti();}
+  else{fb.textContent=`${right}/${order.length} in the right place. Follow the sequencers and think like a cook! 🔍`;fb.className='fb bad';}
+});
+$('#resetOrder').addEventListener('click',buildOrder);buildOrder();
+
+/* ---------- game 2: G/M/S/C ---------- */
+const sq=[['How to Plant a Chili Seedling','g'],['You will need a small pot, some soil, 2 chili seeds, and a cup of water.','m'],['Make a hole about 1 cm deep in the soil.','s'],['Water the soil every morning, but don’t give it too much water.','s'],['In about two weeks, your seedling will appear. Good luck!','c'],['Materials: a phone with internet and your class code.','m']];
+let sqS=0,sqD=0;
+$('#sq').innerHTML=sq.map((r,i)=>`<div class="sq-row"><span>${r[0]}</span><div class="sq-btns" data-i="${i}"><button class="opt" type="button" data-a="g">G</button><button class="opt" type="button" data-a="m">M</button><button class="opt" type="button" data-a="s">S</button><button class="opt" type="button" data-a="c">C</button></div></div>`).join('');
+$$('#sq .sq-btns').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+  const ans=sq[+g.dataset.i][1],ok=b.dataset.a===ans;b.classList.add(ok?'ok':'no');if(!ok)g.querySelector(`[data-a="${ans}"]`).classList.add('ok');
+  sqD++;if(ok)sqS++;$('#sqScore').textContent=`⭐ ${sqS} / ${sq.length}`;
+  const fb=$('#sqFb');
+  if(sqD===sq.length){if(sqS===sq.length){fb.textContent='🎉 Excellent! You know the map by heart.';fb.className='fb good';confetti();}else{fb.textContent='👍 Good try! Check the segmentation slide again.';fb.className='fb bad';}}
+  else{fb.textContent=ok?'✅ Correct!':'❌ Oops, the green one is right.';fb.className='fb '+(ok?'good':'bad');}
+}));
+
+/* ---------- game 3: fill the instruction ---------- */
+const vq=[['___ the onion into small pieces.',['Cut','Cuts','Cutting'],'Cut'],['___ touch the hot pan!',['Not','Don’t','Doesn’t'],'Don’t'],['Stir the soup ___.',['slow','slowly','slower'],'slowly'],['___, pour the milk into a glass.',['Yesterday','First','Last week'],'First'],['Add two ___ of sugar.',['tablespoon','tablespoons','tablespoon’s'],'tablespoons'],['___ careful with the knife.',['Be','Being','Are'],'Be'],['Press the button ___ five seconds.',['for','since','ago'],'for'],['Make sure the lid ___ closed.',['is','was','were'],'is']];
+let vs=0,vd=0;
+$('#vq').innerHTML=vq.map((r,i)=>`<div class="vitem"><span class="base">${r[0].replace('___','<u>&nbsp;</u>')}</span><div class="opts" data-i="${i}">${r[1].map(o=>`<button class="opt" type="button">${o}</button>`).join('')}</div></div>`).join('');
+$$('#vq .opts').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||g.dataset.done)return;g.dataset.done=1;
+  const ans=vq[+g.dataset.i][2],ok=b.textContent===ans;b.classList.add(ok?'ok':'no');if(!ok)[...g.children].find(x=>x.textContent===ans).classList.add('ok');
+  const u=g.parentElement.querySelector('u');if(u)u.textContent=ans;
+  vd++;if(ok)vs++;$('#vqScore').textContent=`⭐ ${vs} / ${vq.length}`;
+  const fb=$('#vqFb');
+  if(vd===vq.length){fb.textContent=(vs===vq.length?'🎉 Perfect! ':'💡 ')+'Remember: an imperative starts with V1 (Cut, Be), and warnings use Don’t + V1.';fb.className='fb '+(vs===vq.length?'good':'bad');if(vs===vq.length)confetti();}
+  else{fb.textContent=ok?'✅ Nice!':'❌ Not quite, look at the green answer.';fb.className='fb '+(ok?'good':'bad');}
+}));
+
+/* ---------- builder ---------- */
+const conns=['First,','Then,','Next,','After that,','When it is ready,','Meanwhile,','Finally,','Lastly,'];
+const evDefault=[['First,','boil 200 ml of water in a kettle.'],['Then,','put the tea bag into the glass and pour the hot water over it.'],['After that,','wait for three minutes, then take out the tea bag.'],['Next,','add two tablespoons of sugar and stir well until it dissolves.'],['Finally,','put the ice cubes into the glass.']];
+function evRow(c,t){
+  const d=document.createElement('div');d.className='ev-row';
+  const opts=conns.includes(c)?conns:[c,...conns];
+  d.innerHTML=`<select>${opts.map(o=>`<option${o===c?' selected':''}>${o}</option>`).join('')}<option value="">(none)</option></select><textarea rows="2" placeholder="Start with a verb: cut, add, press…"></textarea>`;
+  d.querySelector('textarea').value=t;
+  d.querySelectorAll('select,textarea').forEach(el=>el.addEventListener('input',render));
+  $('#evWrap').appendChild(d);
+}
+evDefault.forEach(e=>evRow(e[0],e[1]));
+$('#addEv').addEventListener('click',()=>{if($$('#evWrap .ev-row').length>=10){toast('Ten steps is plenty! 😄');return;}evRow('Then,','');render();});
+const esc=s=>s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const dot=s=>{s=s.trim();return s&&!/[.!?]$/.test(s)?s+'.':s;};
+function parts(){
+  const v=id=>$(id).value.trim();
+  const mats=$('#bMat').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  const rows=$$('#evWrap .ev-row').map(r=>({c:r.querySelector('select').value,t:r.querySelector('textarea').value.trim()})).filter(r=>r.t);
+  const steps=rows.map(r=>dot(r.c?r.c+' '+r.t:cap(r.t)));
+  const close=[v('#bClose'),dot(cap(v('#bTip')))].filter(Boolean).join(' ');
+  return {title:v('#bTitle'),intro:dot(cap(v('#bIntro'))),mats,rows,steps,close};
+}
+const notVerb=new Set('i you we they he she it the a an my your this that there'.split(' '));
+function render(){
+  const p=parts();
+  $('#bOut').innerHTML=`<h4>${esc(p.title||'How to …')}</h4>`+
+   (p.intro?`<div class="part" data-part="g"><span class="lbl">Goal</span>${esc(p.intro)}</div>`:'')+
+   (p.mats.length?`<div class="part" data-part="m"><span class="lbl">Materials</span><ul>${p.mats.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`:'')+
+   (p.steps.length?`<div class="part" data-part="s"><span class="lbl">Steps</span><ol>${p.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div>`:'')+
+   (p.close?`<div class="part" data-part="c"><span class="lbl">Closing</span>${esc(p.close)}</div>`:'');
+  const imp=p.rows.filter(r=>{const w=(r.t.toLowerCase().match(/[a-z']+/)||[''])[0];return w&&!notVerb.has(w)&&!/(ed|ing)$/.test(w)&&!/[^s]s$/.test(w);}).length;
+  const qty=p.mats.filter(m=>/\d|^(a|an|one|two|three|half|some)\b/i.test(m)).length;
+  const seqUsed=new Set(p.rows.map(r=>r.c).filter(Boolean));
+  const checks=[[/^how to\s+\w+/i.test(p.title),'Title starts with “How to + verb”'],[p.mats.length>=3,`At least 3 materials (${p.mats.length})`],[p.mats.length>0&&qty===p.mats.length,`Quantities written (${qty}/${p.mats.length})`],[p.steps.length>=4,`At least 4 steps (${p.steps.length})`],[p.rows.length>0&&imp===p.rows.length,`Steps start with a verb (${imp}/${p.rows.length})`],[seqUsed.size>=3,`3+ different sequencers (${seqUsed.size})`],[p.close.length>0,'Closing sentence'],[p.close.length>0&&/\b(be careful|don’t|don't|never|make sure|should)\b/i.test(p.close),'A tip or warning']];
+  $('#bChecks').innerHTML=checks.map(c=>`<li class="${c[0]?'ok':''}">${c[1]}</li>`).join('');
+}
+$$('#bForm input,#bForm select,#bForm textarea').forEach(el=>el.addEventListener('input',render));
+$('#copyText').addEventListener('click',()=>{const p=parts();copyText([p.title,p.intro,p.mats.length?'Materials:\n'+p.mats.map(m=>'- '+m).join('\n'):'',p.steps.length?'Steps:\n'+p.steps.map((s,i)=>(i+1)+'. '+s).join('\n'):'',p.close].filter(Boolean).join('\n\n'));});
+$('#clearAll').addEventListener('click',()=>{['#bTitle','#bIntro','#bMat','#bTip'].forEach(id=>$(id).value='');$('#bTitle').value='How to ';$('#evWrap').innerHTML='';['First,','Then,','Next,','Finally,'].forEach(c=>evRow(c,''));render();toast('✨ Ready for your own mission!');});
+render();
+
+/* ---------- finale ---------- */
+$$('#feel button').forEach(b=>b.addEventListener('click',()=>{$$('#feel button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#feelMsg').textContent=b.dataset.m;}));
+
+/* ---------- start ---------- */
+addEventListener('hashchange',()=>{const h=parseInt(location.hash.slice(1),10);if(h>=1&&h<=N&&h-1!==cur)go(h-1,false);});
+const h=parseInt((location.hash||'').slice(1),10);
+slides[0].classList.add('active');
+go(h>=1&&h<=N?h-1:0,false);
+})();
+</script>
+
+</body></html>
